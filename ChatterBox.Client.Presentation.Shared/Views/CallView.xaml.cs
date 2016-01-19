@@ -1,5 +1,6 @@
 ﻿using ChatterBox.Client.Presentation.Shared.Converters;
 using ChatterBox.Client.Presentation.Shared.ViewModels;
+using System.Diagnostics;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Data;
@@ -10,19 +11,37 @@ namespace ChatterBox.Client.Presentation.Shared.Views
     {
         private MediaElement _selfMediaElement = null;
         private MediaElement _peerMediaElement = null;
+        private ConversationViewModel _oldConversationViewModel;
 
         public CallView()
         {
             InitializeComponent();
             SetVideoPresenters();
             DataContextChanged += CallView_DataContextChanged;
+#if WIN10
+            RegisterPropertyChangedCallback(VisibilityProperty, new DependencyPropertyChangedCallback((o, p) =>
+            {
+                SetLayout();
+            }));
+#endif
         }
 
         private void CallView_DataContextChanged(FrameworkElement sender, DataContextChangedEventArgs args)
         {
+            if (_oldConversationViewModel != null)
+            {
+                _oldConversationViewModel.RemoteNativeVideoSizeChanged -= ConversationViewModel_RemoteNativeVideoSizeChanged;
+            }
             var conversationViewModel = DataContext as ConversationViewModel;
             conversationViewModel.RegisterAudioElement(SoundPlayElement);
             conversationViewModel.RegisterVideoElements(_selfMediaElement, _peerMediaElement);
+            conversationViewModel.RemoteNativeVideoSizeChanged += ConversationViewModel_RemoteNativeVideoSizeChanged;
+            _oldConversationViewModel = conversationViewModel;
+        }
+
+        private void ConversationViewModel_RemoteNativeVideoSizeChanged()
+        {
+            SetLayout();
         }
 
         private void SetVideoPresenters()
@@ -83,11 +102,38 @@ namespace ChatterBox.Client.Presentation.Shared.Views
 #endif
         }
 
+        private void SetLayout()
+        {
+            // set the size for peer placeholder
+            PeerPlaceholder.Width = VideoGrid.ActualWidth;
+            PeerPlaceholder.Height = VideoGrid.ActualHeight;
+
+            var conversationViewModel = DataContext as ConversationViewModel;
+            var remoteVideoSize = conversationViewModel.RemoteNativeVideoSize;
+
+            // if remote size is bigger than current canvas size it will be centered
+            // otherwise it is set on top left
+            double leftMargin = 0;
+            if (remoteVideoSize.Width > VideoGrid.ActualWidth)
+            {
+                leftMargin = (VideoGrid.ActualWidth - remoteVideoSize.Width) / 2f;
+            }
+
+            double topMargin = 0;
+            if (remoteVideoSize.Height > VideoGrid.ActualHeight)
+            {
+                topMargin = (VideoGrid.ActualHeight - remoteVideoSize.Height) / 2f;
+            }
+            PeerVideoPresenter.Margin = new Thickness(leftMargin, topMargin, 0, 0);
+
+            // set the size and position for self placeholder
+            SelfBorder.Width = VideoGrid.ActualWidth * 0.25D;
+            SelfBorder.Height = VideoGrid.ActualHeight * 0.25D;
+        }
 
         private void VideoGrid_SizeChanged(object sender, SizeChangedEventArgs e)
         {
-            SelfPlaceholder.Width = SelfVideoPresenter.Width = e.NewSize.Width * 0.25D;
-            SelfPlaceholder.Height = SelfVideoPresenter.Height = e.NewSize.Height * 0.25D;
+            SetLayout();
         }
     }
 }
