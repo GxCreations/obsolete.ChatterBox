@@ -471,7 +471,7 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
                     IsOtherConversationInCallMode = false;
                     LocalSwapChainPanelHandle = 0;
                     RemoteSwapChainPanelHandle = 0;
-                    StopSound();
+                    var taskVar = StopSound();
                     break;
                 case VoipStateEnum.LocalRinging:
                     if (voipState.PeerId == UserId)
@@ -482,7 +482,7 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
                         IsCallConnected = false;
                         IsMicEnabled = true; //Start new calls with mic enabled
                         IsVideoEnabled = voipState.IsVideoEnabled;
-                        PlaySound(isIncomingCall: true);
+                        var task = PlaySound(isIncomingCall: true);
                     }
                     else
                     {
@@ -498,7 +498,7 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
                         IsCallConnected = false;
                         IsMicEnabled = true; //Start new calls with mic enabled
                         IsVideoEnabled = voipState.IsVideoEnabled;
-                        PlaySound(isIncomingCall: false);
+                        var task = PlaySound(isIncomingCall: false);
                     }
                     else
                     {
@@ -512,7 +512,7 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
                         IsLocalRinging = false;
                         IsRemoteRinging = false;
                         IsCallConnected = true;
-                        StopSound();
+                        var task = StopSound();
                     }
                     else
                     {
@@ -528,7 +528,7 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
                         IsCallConnected = true;
                         IsSelfVideoAvailable = IsVideoEnabled;
                         IsPeerVideoAvailable = voipState.IsVideoEnabled;
-                        StopSound();
+                        var task = StopSound();
                     }
                     else
                     {

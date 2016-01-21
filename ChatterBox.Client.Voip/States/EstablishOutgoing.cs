@@ -17,6 +17,8 @@ using Windows.UI.Core;
 using ChatterBox.Client.Voip.Utils;
 using ChatterBox.Client.Common.Settings;
 
+#pragma warning disable 1998
+
 namespace ChatterBox.Client.Common.Communication.Voip.States
 {
     internal class VoipState_EstablishOutgoing : BaseVoipState

@@ -27,6 +27,8 @@ using Windows.UI.Popups;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 
+#pragma warning disable 4014
+
 namespace ChatterBox.Client.Win8dot1
 {
     /// <summary>

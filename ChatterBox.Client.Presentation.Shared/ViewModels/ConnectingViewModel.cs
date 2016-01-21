@@ -12,7 +12,6 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
     {
         private readonly ISocketConnection _connection;
         private bool _isConnecting;
-        private readonly CoreDispatcher _dispatcher;
         private string _status;
 
         public ConnectingViewModel(IForegroundUpdateService foregroundUpdateService,

@@ -10,7 +10,7 @@ namespace ChatterBox.Client.Universal.Background.Tasks
 
         #region IBackgroundTask Members
 
-        public async void Run(IBackgroundTaskInstance taskInstance)
+        public void Run(IBackgroundTaskInstance taskInstance)
         {
             try {
                 var triggerDetail = (AppServiceTriggerDetails) taskInstance.TriggerDetails;
