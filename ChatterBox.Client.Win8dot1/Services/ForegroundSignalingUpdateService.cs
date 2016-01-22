@@ -45,7 +45,7 @@ namespace ChatterBox.Client.Win8dot1.Services
 
         protected void RunOnUiThread(Action fn)
         {
-            _uiDispatcher.RunAsync(CoreDispatcherPriority.Normal, new DispatchedHandler(fn));
+            var asyncOp = _uiDispatcher.RunAsync(CoreDispatcherPriority.Normal, new DispatchedHandler(fn));
         }
 
         public void OnUpdateFrameFormat(FrameFormat frameFormat)

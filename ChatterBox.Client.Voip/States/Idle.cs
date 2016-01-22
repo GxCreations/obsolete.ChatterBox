@@ -7,6 +7,8 @@ using ChatterBox.Common.Communication.Messages.Relay;
 using ChatterBox.Client.Common.Communication.Foreground.Dto;
 using System.Threading.Tasks;
 
+#pragma warning disable 1998
+
 namespace ChatterBox.Client.Common.Communication.Voip.States
 {
     internal class VoipState_Idle : BaseVoipState

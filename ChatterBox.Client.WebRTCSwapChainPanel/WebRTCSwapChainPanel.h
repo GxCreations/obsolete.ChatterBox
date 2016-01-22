@@ -3,7 +3,8 @@
 namespace ChatterBox {
 namespace Client {
 namespace WebRTCSwapChainPanel {
-    
+
+	[Windows::Foundation::Metadata::WebHostHidden] // to fix C4453 warning
     public ref class WebRTCSwapChainPanel sealed : Windows::UI::Xaml::Controls::SwapChainPanel
     {
     public:
@@ -23,6 +24,7 @@ namespace WebRTCSwapChainPanel {
         {
             uint32 get();
         }
+		
 		static property Windows::UI::Xaml::DependencyProperty^ SwapChainPanelHandleProperty
 		{
 			Windows::UI::Xaml::DependencyProperty^ get()

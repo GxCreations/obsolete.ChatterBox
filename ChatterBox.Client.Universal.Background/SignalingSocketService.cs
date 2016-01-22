@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using Windows.Networking;
 using Windows.Networking.Sockets;
 using ChatterBox.Client.Common.Communication.Signaling;
@@ -45,6 +46,7 @@ namespace ChatterBox.Client.Universal.Background
             }
             catch (Exception exception)
             {
+                Debug.Write("Failed to connect to signalling server: ex: " + exception.Message);
                 return new ConnectionStatus
                 {
                     IsConnected = false

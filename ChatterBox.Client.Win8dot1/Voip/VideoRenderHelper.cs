@@ -8,7 +8,11 @@ namespace ChatterBox.Client.Win8dot1.Voip
 {
     internal class VideoRenderHelper : IVideoRenderHelper
     {
-        public event RenderFormatUpdateHandler RenderFormatUpdate;
+        public event RenderFormatUpdateHandler RenderFormatUpdate
+        {
+            add { throw new NotImplementedException(); }
+            remove { }
+        }
 
         private CoreDispatcher _dispatcher;
         private MediaElement _mediaElement;
@@ -27,7 +31,7 @@ namespace ChatterBox.Client.Win8dot1.Voip
                 {
                     _mediaElement.SetMediaStreamSource(source);
                 });
-                _dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, new DispatchedHandler(fn));
+                var asyncOp = _dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, new DispatchedHandler(fn));
             }
         }
 

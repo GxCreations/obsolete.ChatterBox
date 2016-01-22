@@ -18,6 +18,8 @@ using Windows.Networking.Connectivity;
 using Windows.Storage;
 using Windows.System.Threading;
 
+#pragma warning disable 4014
+
 namespace ChatterBox.Client.Common.Communication.Voip
 {
     internal class VoipContext
@@ -285,7 +287,7 @@ namespace ChatterBox.Client.Common.Communication.Voip
                     {
                         if (evt.Candidate != null)
                         {
-                            QueueIceCandidate(evt.Candidate);
+                            var task = QueueIceCandidate(evt.Candidate);
                         }
                     };
 

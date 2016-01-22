@@ -14,6 +14,8 @@ using ChatterBox.Client.Common.Signaling.Dto;
 using ChatterBox.Common.Communication.Serialization;
 using System.Threading;
 
+#pragma warning disable 1998
+
 namespace ChatterBox.Client.Common.Communication.Voip.States
 {
     internal class VoipState_RemoteRinging : BaseVoipState

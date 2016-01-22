@@ -12,6 +12,8 @@ using ChatterBox.Client.Common.Communication.Foreground.Dto;
 using System.Linq;
 using System.Collections.Generic;
 
+#pragma warning disable 1998
+
 namespace ChatterBox.Client.Common.Communication.Voip.States
 {
     internal class VoipState_ActiveCall : BaseVoipState

@@ -13,7 +13,6 @@ namespace ChatterBox.Client.Common.Signaling
     {
         private readonly IClientChannel _clientChannel;
         private readonly ISignalingSocketChannel _signalingSocketChannel;
-        private bool _isConnecting;
 
         private static readonly object _connectingLock = new object();
 

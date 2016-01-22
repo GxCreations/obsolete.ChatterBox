@@ -377,9 +377,10 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
             {
 #if WIN10
                     return true;
-#endif
+#else
                 return false;
-           }
+#endif
+            }
         }
 
         #endregion

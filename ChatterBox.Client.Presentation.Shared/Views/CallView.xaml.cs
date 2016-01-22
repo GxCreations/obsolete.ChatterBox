@@ -8,8 +8,8 @@ namespace ChatterBox.Client.Presentation.Shared.Views
 {
     public sealed partial class CallView
     {
-        private MediaElement _selfMediaElement;
-        private MediaElement _peerMediaElement;
+        private MediaElement _selfMediaElement = null;
+        private MediaElement _peerMediaElement = null;
 
         public CallView()
         {
