@@ -66,9 +66,9 @@
                     Visibility="{Binding IsMicEnabled, Mode=OneWay, Converter={StaticResource InvertedBooleanToVisibilityConverter}}" />
 
             <Button Command="{Binding SwitchVideoCommand}" Style="{StaticResource Button.Conversation.Call.Video.Disable}"
-                    Visibility="{Binding IsVideoEnabled, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                    Visibility="{Binding ShowVideoOnButton, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}" />
             <Button Command="{Binding SwitchVideoCommand}" Style="{StaticResource Button.Conversation.Call.Video.Enable}"
-                    Visibility="{Binding IsVideoEnabled, Converter={StaticResource InvertedBooleanToVisibilityConverter}}" />
+                    Visibility="{Binding ShowVideoOffButton, Converter={StaticResource BooleanToVisibilityConverter}}" />
         </StackPanel>
         <MediaElement Name="SoundPlayElement" Grid.Row="2" />
     </Grid>

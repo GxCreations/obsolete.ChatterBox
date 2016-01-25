@@ -191,6 +191,38 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
             set { SetProperty(ref _isSelfVideoAvailable, value); }
         }
 
+        private bool _isAudioOnlyCall;
+
+        public bool IsAudioOnlyCall
+        {
+            get { return _isAudioOnlyCall; }
+            set {
+                SetProperty(ref _isAudioOnlyCall, value);
+                UpdateShowVideoButtonFlags();
+            }
+        }
+
+
+        private bool _showVideoOnButton;
+        public bool ShowVideoOnButton
+        {
+            get { return _showVideoOnButton; }
+            set { SetProperty(ref _showVideoOnButton, value); }
+        }
+
+        private bool _showVideoOffButton;
+        public bool ShowVideoOffButton
+        {
+            get { return _showVideoOffButton; }
+            set { SetProperty(ref _showVideoOffButton, value); }
+        }
+
+        private void UpdateShowVideoButtonFlags()
+        {
+            ShowVideoOnButton = !IsAudioOnlyCall && IsVideoEnabled;
+            ShowVideoOffButton = !IsAudioOnlyCall && !IsVideoEnabled;
+        }
+
         public string Name
         {
             get { return _name; }
@@ -293,6 +325,7 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
             set
             {
                 SetProperty(ref _isVideoEnabled, value);
+                UpdateShowVideoButtonFlags();
             }
         }
 
@@ -326,6 +359,7 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
 
         private void OnVideoCallCommandExecute()
         {
+            IsAudioOnlyCall = false;
             _voipChannel.RegisterVideoElements(_selfVideoElement, _peerVideoElement);
             _voipChannel.Call(new OutgoingCallRequest
             {
@@ -341,12 +375,13 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
 
         private void OnCallCommandExecute()
         {
+            IsAudioOnlyCall = true;
             _voipChannel.Call(new OutgoingCallRequest
             {
                 PeerUserId = UserId,
                 VideoEnabled = false
             });
-            IsSelfVideoAvailable = true;
+            IsSelfVideoAvailable = false;
         }
 
         public event Action<ConversationViewModel> OnCloseConversation;
@@ -483,6 +518,7 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
                         IsMicEnabled = true; //Start new calls with mic enabled
                         IsVideoEnabled = voipState.IsVideoEnabled;
                         var task = PlaySound(isIncomingCall: true);
+                        IsAudioOnlyCall = !voipState.IsVideoEnabled;
                     }
                     else
                     {
