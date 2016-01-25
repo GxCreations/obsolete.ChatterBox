@@ -78,6 +78,14 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
         private void OnPeerDataUpdated()
         {
             var peers = SignaledPeerData.Peers;
+            ObservableCollection<ConversationViewModel> copyConversations = new ObservableCollection<ConversationViewModel>(Conversations);
+            foreach (var contact in copyConversations)
+            {
+                if(!peers.Any(p => p.UserId == contact.UserId))
+                {
+                    Conversations.Remove(contact);
+                }
+            }
             foreach (var peer in peers)
             {
                 var contact = Conversations.SingleOrDefault(s => s.UserId == peer.UserId);
