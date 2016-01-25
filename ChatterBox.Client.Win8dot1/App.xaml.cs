@@ -1,4 +1,5 @@
-﻿using ChatterBox.Client.Common.Background;
+﻿using ChatterBox.Client.Common.Avatars;
+using ChatterBox.Client.Common.Background;
 using ChatterBox.Client.Common.Communication.Foreground;
 using ChatterBox.Client.Common.Communication.Signaling;
 using ChatterBox.Client.Common.Communication.Voip;
@@ -17,12 +18,10 @@ using ChatterBox.Common.Communication.Contracts;
 using Microsoft.Practices.Unity;
 using System;
 using System.Diagnostics;
-using System.Threading.Tasks;
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
 using Windows.ApplicationModel.Background;
 using Windows.ApplicationModel.Core;
-using Windows.UI.Core;
 using Windows.UI.Popups;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -43,7 +42,7 @@ namespace ChatterBox.Client.Win8dot1
         public App()
         {
             InitializeComponent();
-            Suspending += OnSuspending;
+            Suspending += OnSuspending;            
         }
 
         public UnityContainer Container { get; } = new UnityContainer();
@@ -69,6 +68,8 @@ namespace ChatterBox.Client.Win8dot1
 
                 return;
             }
+
+            await AvatarLink.ExpandAvatarsToLocal();
 
             Container.RegisterInstance(CoreApplication.MainView.CoreWindow.Dispatcher);
 
@@ -155,18 +156,17 @@ namespace ChatterBox.Client.Win8dot1
 
         private void QuitApp()
         {
-          UnRegisterAllBackgroundTask();
-          Current.Exit();
-
+            UnRegisterAllBackgroundTask();
+            Current.Exit();
         }
 
         void UnRegisterAllBackgroundTask()
         {
-          var helper = new TaskHelper();
+            var helper = new TaskHelper();
 
-          var regOp = helper.GetTask(nameof(PushNotificationTask));
-          if (regOp != null)
-            regOp.Unregister(true);
+            var regOp = helper.GetTask(nameof(PushNotificationTask));
+            if (regOp != null)
+                regOp.Unregister(true);
         }
 
         private static async System.Threading.Tasks.Task RegisterForPush(bool registerAgain = true)
@@ -191,9 +191,12 @@ namespace ChatterBox.Client.Win8dot1
         private void OnSuspending(object sender, SuspendingEventArgs e)
         {
             var deferral = e.SuspendingOperation.GetDeferral();
+
+            Container.Resolve<IVoipChannel>().Hangup();
             webrtc_winrt_api.Media.OnAppSuspending();
+
             deferral.Complete();
-        }
+        }        
 
         protected override void OnWindowCreated(WindowCreatedEventArgs args)
         {
@@ -224,5 +227,5 @@ namespace ChatterBox.Client.Win8dot1
                 }
             }
         }
-  }
+    }
 }
