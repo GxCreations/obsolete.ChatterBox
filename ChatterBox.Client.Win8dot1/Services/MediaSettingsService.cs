@@ -6,11 +6,11 @@ using webrtc_winrt_api;
 
 namespace ChatterBox.Client.Win8dot1.Services
 {
-    internal class WebRTCSettingsService : IWebRTCSettingsService
+    internal class MediaSettingsService : IMediaSettingsService
     {
         private VoipContext _voipContext;
 
-        public WebRTCSettingsService(VoipContext voipContext)
+        public MediaSettingsService(VoipContext voipContext)
         {
             _voipContext = voipContext;
         }
@@ -101,6 +101,7 @@ namespace ChatterBox.Client.Win8dot1.Services
         {
             get
             {
+#warning remove direct WebRTC dependency
                 return WebRTC.GetAudioCodecs();
             }
         }
@@ -109,6 +110,7 @@ namespace ChatterBox.Client.Win8dot1.Services
         {
             get
             {
+#warning remove direct WebRTC dependency
                 return WebRTC.GetVideoCodecs();
             }
         }
@@ -134,7 +136,7 @@ namespace ChatterBox.Client.Win8dot1.Services
             WebRTC.SetPreferredVideoCaptureFormat(Width, Height, FrameRate);
         }
 
-        Task IWebRTCSettingsService.InitializeWebRTC()
+        Task IMediaSettingsService.InitializeMedia()
         {
             return _voipContext.InitializeWebRTC();
         }

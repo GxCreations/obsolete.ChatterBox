@@ -95,7 +95,7 @@
     <Compile Include="Services\SignalingSocketOperation.cs" />
     <Compile Include="Services\SignalingSocketService.cs" />
     <Compile Include="Services\ForegroundSignalingUpdateService.cs" />
-    <Compile Include="Services\WebRTCSettingsService.cs" />
+    <Compile Include="Services\MediaSettingsService.cs" />
     <Compile Include="Voip\Hub.cs" />
     <Compile Include="Voip\VideoRenderHelper.cs" />
     <Compile Include="Voip\VoipCoordinator.cs" />

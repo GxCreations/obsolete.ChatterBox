@@ -64,9 +64,9 @@ namespace ChatterBox.Client.Common.Communication.Voip
             }
 
             string videoDeviceId = string.Empty;
-            if (_localSettings.Values.ContainsKey(WebRTCSettingsIds.VideoDeviceSettings))
+            if (_localSettings.Values.ContainsKey(MediaSettingsIds.VideoDeviceSettings))
             {
-                videoDeviceId = (string)_localSettings.Values[WebRTCSettingsIds.VideoDeviceSettings];
+                videoDeviceId = (string)_localSettings.Values[MediaSettingsIds.VideoDeviceSettings];
             }
             var videoDevices = Media.GetVideoCaptureDevices();
             var selectedVideoDevice = videoDevices.FirstOrDefault(d => d.Id.Equals(videoDeviceId));
@@ -77,9 +77,9 @@ namespace ChatterBox.Client.Common.Communication.Voip
             }
 
             string audioDeviceId = string.Empty;
-            if (_localSettings.Values.ContainsKey(WebRTCSettingsIds.AudioDeviceSettings))
+            if (_localSettings.Values.ContainsKey(MediaSettingsIds.AudioDeviceSettings))
             {
-                audioDeviceId = (string)_localSettings.Values[WebRTCSettingsIds.AudioDeviceSettings];
+                audioDeviceId = (string)_localSettings.Values[MediaSettingsIds.AudioDeviceSettings];
             }
             var audioDevices = Media.GetAudioCaptureDevices();
             var selectedAudioDevice = audioDevices.FirstOrDefault(d => d.Id.Equals(audioDeviceId));
@@ -90,9 +90,9 @@ namespace ChatterBox.Client.Common.Communication.Voip
             }
 
             string audioPlayoutDeviceId = string.Empty;
-            if (_localSettings.Values.ContainsKey(WebRTCSettingsIds.AudioPlayoutDeviceSettings))
+            if (_localSettings.Values.ContainsKey(MediaSettingsIds.AudioPlayoutDeviceSettings))
             {
-                audioPlayoutDeviceId = (string)_localSettings.Values[WebRTCSettingsIds.AudioPlayoutDeviceSettings];
+                audioPlayoutDeviceId = (string)_localSettings.Values[MediaSettingsIds.AudioPlayoutDeviceSettings];
             }
             var audioPlayoutDevices = Media.GetAudioPlayoutDevices();
             var selectedAudioPlayoutDevice = audioPlayoutDevices.FirstOrDefault(d => d.Id.Equals(audioPlayoutDeviceId));
@@ -103,30 +103,30 @@ namespace ChatterBox.Client.Common.Communication.Voip
             }
 
             int videoCodecId = int.MinValue;
-            if (_localSettings.Values.ContainsKey(WebRTCSettingsIds.VideoCodecSettings))
+            if (_localSettings.Values.ContainsKey(MediaSettingsIds.VideoCodecSettings))
             {
-                videoCodecId = (int)_localSettings.Values[WebRTCSettingsIds.VideoCodecSettings];
+                videoCodecId = (int)_localSettings.Values[MediaSettingsIds.VideoCodecSettings];
             }
             var videoCodecs = WebRTC.GetVideoCodecs();
             var selectedVideoCodec = videoCodecs.FirstOrDefault(c => c.Id.Equals(videoCodecId));
             VideoCodec = selectedVideoCodec ?? videoCodecs.FirstOrDefault();
 
             int audioCodecId = int.MinValue;
-            if (_localSettings.Values.ContainsKey(WebRTCSettingsIds.AudioCodecSettings))
+            if (_localSettings.Values.ContainsKey(MediaSettingsIds.AudioCodecSettings))
             {
-                audioCodecId = (int)_localSettings.Values[WebRTCSettingsIds.AudioCodecSettings];
+                audioCodecId = (int)_localSettings.Values[MediaSettingsIds.AudioCodecSettings];
             }
             var audioCodecs = WebRTC.GetAudioCodecs();
             var selectedAudioCodec = audioCodecs.FirstOrDefault(c => c.Id.Equals(audioCodecId));
             AudioCodec = selectedAudioCodec ?? audioCodecs.FirstOrDefault();
 
-            if (_localSettings.Values.ContainsKey(WebRTCSettingsIds.PreferredVideoCaptureWidth) &&
-                _localSettings.Values.ContainsKey(WebRTCSettingsIds.PreferredVideoCaptureHeight) &&
-                _localSettings.Values.ContainsKey(WebRTCSettingsIds.PreferredVideoCaptureFrameRate))
+            if (_localSettings.Values.ContainsKey(MediaSettingsIds.PreferredVideoCaptureWidth) &&
+                _localSettings.Values.ContainsKey(MediaSettingsIds.PreferredVideoCaptureHeight) &&
+                _localSettings.Values.ContainsKey(MediaSettingsIds.PreferredVideoCaptureFrameRate))
             {
-                WebRTC.SetPreferredVideoCaptureFormat((int)_localSettings.Values[WebRTCSettingsIds.PreferredVideoCaptureWidth],
-                                                      (int)_localSettings.Values[WebRTCSettingsIds.PreferredVideoCaptureHeight],
-                                                      (int)_localSettings.Values[WebRTCSettingsIds.PreferredVideoCaptureFrameRate]);
+                WebRTC.SetPreferredVideoCaptureFormat((int)_localSettings.Values[MediaSettingsIds.PreferredVideoCaptureWidth],
+                                                      (int)_localSettings.Values[MediaSettingsIds.PreferredVideoCaptureHeight],
+                                                      (int)_localSettings.Values[MediaSettingsIds.PreferredVideoCaptureFrameRate]);
             }
         }
 

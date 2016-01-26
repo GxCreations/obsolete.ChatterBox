@@ -4,7 +4,7 @@ using webrtc_winrt_api;
 
 namespace ChatterBox.Client.Presentation.Shared.Services
 {
-    public interface IWebRTCSettingsService
+    public interface IMediaSettingsService
     {
         IEnumerable<MediaDevice> VideoCaptureDevices { get; }
 
@@ -28,7 +28,7 @@ namespace ChatterBox.Client.Presentation.Shared.Services
 
         void SetPreferredVideoCaptureFormat(int Width, int Height, int FrameRate);
 
-        Task InitializeWebRTC();
+        Task InitializeMedia();
         void StartTrace();
         void StopTrace();
         void SaveTrace(string ip, int port);

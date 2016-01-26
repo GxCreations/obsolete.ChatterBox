@@ -38,7 +38,7 @@ namespace ChatterBox.Client.Universal.Services
         IClientChannel,
         IVoipChannel,
         IForegroundChannel,
-        IWebRTCSettingsService
+        IMediaSettingsService
     {
         private readonly TaskHelper _taskHelper;
         private AppServiceConnection _appConnection;
@@ -52,7 +52,7 @@ namespace ChatterBox.Client.Universal.Services
 
         public bool IsConnected { get; private set; }
 
-        #region IWebRTCSettingsService
+        #region IMediaSettingsService
 
         private Media _media;
 
@@ -83,7 +83,7 @@ namespace ChatterBox.Client.Universal.Services
             set
             {
                 _videoDevice = value;
-                _localSettings.Values[WebRTCSettingsIds.VideoDeviceSettings] = value?.Id;
+                _localSettings.Values[MediaSettingsIds.VideoDeviceSettings] = value?.Id;
             }
         }
 
@@ -98,7 +98,7 @@ namespace ChatterBox.Client.Universal.Services
             set
             {
                 _audioDevice = value;
-                _localSettings.Values[WebRTCSettingsIds.AudioDeviceSettings] = value?.Id;
+                _localSettings.Values[MediaSettingsIds.AudioDeviceSettings] = value?.Id;
             }
         }
 
@@ -113,7 +113,7 @@ namespace ChatterBox.Client.Universal.Services
             set
             {
                 _videoCodec = value;
-                _localSettings.Values[WebRTCSettingsIds.VideoCodecSettings] = value?.Id;
+                _localSettings.Values[MediaSettingsIds.VideoCodecSettings] = value?.Id;
             }
         }
 
@@ -128,7 +128,7 @@ namespace ChatterBox.Client.Universal.Services
             set
             {
                 _audioCodec = value;
-                _localSettings.Values[WebRTCSettingsIds.AudioCodecSettings] = value?.Id;
+                _localSettings.Values[MediaSettingsIds.AudioCodecSettings] = value?.Id;
             }
         }
 
@@ -144,6 +144,7 @@ namespace ChatterBox.Client.Universal.Services
         {
             get
             {
+#warning remove direct WebRTC reference
                 return WebRTC.GetAudioCodecs();
             }
         }
@@ -152,6 +153,7 @@ namespace ChatterBox.Client.Universal.Services
         {
             get
             {
+#warning remove direct WebRTC reference
                 return WebRTC.GetVideoCodecs();
             }
         }
@@ -167,19 +169,20 @@ namespace ChatterBox.Client.Universal.Services
             set
             {
                 _audioPlayoutDevice = value;
-                _localSettings.Values[WebRTCSettingsIds.AudioPlayoutDeviceSettings] = value?.Id;
+                _localSettings.Values[MediaSettingsIds.AudioPlayoutDeviceSettings] = value?.Id;
             }
         }
 
         public void SetPreferredVideoCaptureFormat(int width, int height, int frameRate)
         {
-            _localSettings.Values[WebRTCSettingsIds.PreferredVideoCaptureWidth] = width;
-            _localSettings.Values[WebRTCSettingsIds.PreferredVideoCaptureHeight] = height;
-            _localSettings.Values[WebRTCSettingsIds.PreferredVideoCaptureFrameRate] = frameRate;
+            _localSettings.Values[MediaSettingsIds.PreferredVideoCaptureWidth] = width;
+            _localSettings.Values[MediaSettingsIds.PreferredVideoCaptureHeight] = height;
+            _localSettings.Values[MediaSettingsIds.PreferredVideoCaptureFrameRate] = frameRate;
         }
 
-        public async Task InitializeWebRTC()
+        public async Task InitializeMedia()
         {
+#warning remove direct WebRTC reference
             WebRTC.Initialize(_uiDispatcher);
             _media = await Media.CreateMediaAsync();
             await _media.EnumerateAudioVideoCaptureDevices();
