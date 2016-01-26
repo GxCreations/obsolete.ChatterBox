@@ -156,6 +156,7 @@ namespace ChatterBox.Client.Win8dot1
 
         private void QuitApp()
         {
+            Container.Resolve<IVoipChannel>().Hangup();
             UnRegisterAllBackgroundTask();
             Current.Exit();
         }

@@ -1,4 +1,5 @@
-﻿using ChatterBox.Client.Common.Background;
+﻿using ChatterBox.Client.Common.Avatars;
+using ChatterBox.Client.Common.Background;
 using ChatterBox.Client.Common.Communication.Foreground.Dto;
 using ChatterBox.Client.Common.Communication.Signaling;
 using ChatterBox.Client.Common.Communication.Voip;
@@ -25,7 +26,6 @@ using Windows.UI.Popups;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
-using ChatterBox.Client.Common.Avatars;
 
 namespace ChatterBox.Client.Universal
 {
@@ -316,7 +316,7 @@ namespace ChatterBox.Client.Universal
             {
                 PushNotificationHelper.RegisterPushNotificationChannel();
 
-                var pushNotificationTask = await helper.RegisterTask(nameof(PushNotificationTask), typeof(PushNotificationTask).FullName, 
+                var pushNotificationTask = await helper.RegisterTask(nameof(PushNotificationTask), typeof(PushNotificationTask).FullName,
                   new PushNotificationTrigger(), registerAgain).AsTask();
                 if (pushNotificationTask == null)
                 {
@@ -332,21 +332,21 @@ namespace ChatterBox.Client.Universal
 
         private void QuitApp()
         {
-          UnRegisterAllBackgroundTask();
-          Current.Exit();
-
+            Container.Resolve<IVoipChannel>().Hangup();
+            UnRegisterAllBackgroundTask();
+            Current.Exit();
         }
 
         void UnRegisterAllBackgroundTask()
         {
-          var helper = new TaskHelper();
-          var signalingReg = helper.GetTask(nameof(SignalingTask));
-          if (signalingReg != null)
-              signalingReg.Unregister(true);
+            var helper = new TaskHelper();
+            var signalingReg = helper.GetTask(nameof(SignalingTask));
+            if (signalingReg != null)
+                signalingReg.Unregister(true);
 
-          var regOp = helper.GetTask(nameof(PushNotificationTask));
-          if (regOp != null)
-              regOp.Unregister(true);
+            var regOp = helper.GetTask(nameof(PushNotificationTask));
+            if (regOp != null)
+                regOp.Unregister(true);
         }
 
         private static async System.Threading.Tasks.Task<IBackgroundTaskRegistration> RegisterSignalingTask(TaskHelper helper, bool registerAgain = true)
@@ -379,5 +379,5 @@ namespace ChatterBox.Client.Universal
                 }
             }
         }
-  }
+    }
 }
