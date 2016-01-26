@@ -292,6 +292,8 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
             }
         }
 
+        public event Action RemoteNativeVideoSizeChanged;
+
         public Windows.Foundation.Size RemoteNativeVideoSize
         {
             get
@@ -300,7 +302,8 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
             }
             set
             {
-                SetProperty(ref _remoteNativeVideoSize, value);
+                if (SetProperty(ref _remoteNativeVideoSize, value))
+                    RemoteNativeVideoSizeChanged?.Invoke();
             }
         }
 
