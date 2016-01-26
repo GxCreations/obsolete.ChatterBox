@@ -187,6 +187,11 @@ namespace ChatterBox.Client.Universal.Services
             Debug.WriteLine("WebRTC initialized");
         }
 
+        public void SyncWithNTP(long ntpTIme)
+        {
+            InvokeHubChannel<IVoipChannel>(ntpTIme);
+        }
+
         public void StartTrace()
         {
           InvokeHubChannel<IVoipChannel>();

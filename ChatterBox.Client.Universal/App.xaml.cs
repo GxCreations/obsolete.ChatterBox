@@ -110,6 +110,7 @@ namespace ChatterBox.Client.Universal
                 Container.RegisterInstance<IVoipChannel>(Container.Resolve<HubClient>(), new ContainerControlledLifetimeManager());
                 Container.RegisterInstance<IWebRTCSettingsService>(Container.Resolve<HubClient>(), new ContainerControlledLifetimeManager());
                 Container.RegisterType<ISocketConnection, SocketConnection>(new ContainerControlledLifetimeManager());
+                Container.RegisterType<NtpService>(new ContainerControlledLifetimeManager());
                 Container.RegisterType<MainViewModel>(new ContainerControlledLifetimeManager());
                 Container.RegisterType<SettingsViewModel>(new ContainerControlledLifetimeManager());
             }

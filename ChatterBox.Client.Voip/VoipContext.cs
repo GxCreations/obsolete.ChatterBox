@@ -130,6 +130,11 @@ namespace ChatterBox.Client.Common.Communication.Voip
             }
         }
 
+        public void SyncWithNTP(long ntpTIme)
+        {
+            WebRTC.SynNTPTime(ntpTIme);
+        }
+
         public void StartTrace()
         {
             WebRTC.StartTracing();
