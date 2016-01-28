@@ -2,6 +2,7 @@
 using ChatterBox.Client.Common.Communication.Signaling.Dto;
 using ChatterBox.Client.Common.Settings;
 using ChatterBox.Client.Common.Signaling;
+using ChatterBox.Client.Common.Signaling.PersistedData;
 using Microsoft.Practices.Unity;
 using System;
 using System.Diagnostics;
@@ -20,6 +21,9 @@ namespace ChatterBox.Client.Win8dot1.Channels
         private IUnityContainer _unityContainer;
         public void DisconnectSignalingServer()
         {
+            SignaledPeerData.Reset();
+            SignalingStatus.Reset();
+            SignaledRelayMessages.Reset();
             if (_streamSocket != null)
                 _streamSocket.Dispose();
             _streamSocket = null;
@@ -34,6 +38,9 @@ namespace ChatterBox.Client.Win8dot1.Channels
 
         public ConnectionStatus ConnectToSignalingServer(ConnectionOwner connectionOwner)
         {
+            SignaledPeerData.Reset();
+            SignalingStatus.Reset();
+            SignaledRelayMessages.Reset();
             _streamSocket = new StreamSocket();
             _streamSocket.ConnectAsync(new HostName(SignalingSettings.SignalingServerHost),
                                        SignalingSettings.SignalingServerPort, SocketProtectionLevel.PlainSocket)
