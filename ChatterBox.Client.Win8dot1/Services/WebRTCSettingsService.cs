@@ -139,9 +139,9 @@ namespace ChatterBox.Client.Win8dot1.Services
             return _voipContext.InitializeWebRTC();
         }
 
-        public void SyncWithNTP(long ntpTIme)
+        public void SyncWithNTP(long ntpTime)
         {
-            _voipContext.SyncWithNTP(ntpTIme);
+            _voipContext.SyncWithNTP(ntpTime);
         }
 
         public void StartTrace()

@@ -187,32 +187,32 @@ namespace ChatterBox.Client.Universal.Services
             Debug.WriteLine("WebRTC initialized");
         }
 
-        public void SyncWithNTP(long ntpTIme)
+        public void SyncWithNTP(long ntpTime)
         {
-            InvokeHubChannel<IVoipChannel>(ntpTIme);
+            InvokeHubChannel<IVoipChannel>(ntpTime);
         }
 
         public void StartTrace()
         {
-          InvokeHubChannel<IVoipChannel>();
+            InvokeHubChannel<IVoipChannel>();
         }
 
         public void StopTrace()
         {
-           InvokeHubChannel<IVoipChannel>();
+            InvokeHubChannel<IVoipChannel>();
         }
         public void SaveTrace(TraceServerConfig traceServer)
         {
-          InvokeHubChannel<IVoipChannel>(traceServer);
+            InvokeHubChannel<IVoipChannel>(traceServer);
         }
         public void SaveTrace(string ip, int port)
         {
-          TraceServerConfig traceServer = new TraceServerConfig
-          {
-            Ip = ip,
-            Port = port
-          };
-          SaveTrace(traceServer);
+            TraceServerConfig traceServer = new TraceServerConfig
+            {
+                Ip = ip,
+                Port = port
+            };
+            SaveTrace(traceServer);
         }
 
         public void ReleaseDevices()

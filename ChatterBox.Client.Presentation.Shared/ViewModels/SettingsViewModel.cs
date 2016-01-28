@@ -399,32 +399,32 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
 
         public bool NtpSyncEnabled
         {
-          get
-          {
-            return _ntpSyncEnabled;
-          }
-          set
-          {
-            if (!SetProperty(ref _ntpSyncEnabled, value))
+            get
             {
-              return;
+                return _ntpSyncEnabled;
             }
-
-            if (_ntpSyncEnabled)
+            set
             {
-              //start ntp server sync
-              NtpSyncInProgress = true;
-              _ntpService.GetNetworkTime(NtpServerIP);
+                if (!SetProperty(ref _ntpSyncEnabled, value))
+                {
+                    return;
+                }
 
-            }
-            else
-            {
-              //donothing
-              NtpSyncInProgress = false;
-              _ntpService.abortSync();
+                if (_ntpSyncEnabled)
+                {
+                    //start ntp server sync
+                    NtpSyncInProgress = true;
+                    _ntpService.GetNetworkTime(NtpServerIP);
 
+                }
+                else
+                {
+                    //donothing
+                    NtpSyncInProgress = false;
+                    _ntpService.abortSync();
+
+                }
             }
-          }
         }
         public bool IsWin10App
         {
@@ -587,21 +587,21 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
             }
         }
 
-    #endregion
+        #endregion
         #region NTP sync
 
         private void handleNtpTimeSync( long ntpTime)
         {
-          Debug.WriteLine($"new ntp time: {ntpTime}");
-          NtpSyncInProgress = false;
-          _webrtcSettingsService.SyncWithNTP(ntpTime);
+            Debug.WriteLine($"new ntp time: {ntpTime}");
+            NtpSyncInProgress = false;
+            _webrtcSettingsService.SyncWithNTP(ntpTime);
 
         }
 
         private void handleNtpSynFailed()
         {
 
-          NtpSyncInProgress = false;
+            NtpSyncInProgress = false;
 
         }
         #endregion
