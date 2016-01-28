@@ -26,6 +26,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Services\IWebRTCSettingsService.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\LayoutService.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\LayoutType.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\NtpService.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\ServicesBindingHelper.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)StyleSelectors\InstantMessageStyleSelector.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ViewModels\ConnectingViewModel.cs" />

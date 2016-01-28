@@ -191,19 +191,24 @@ namespace ChatterBox.Client.Common.Communication.Voip
             Context.RemoteVideoRenderer.SetMediaElement(Dispatcher, peer);
         }
 
+        public void SyncWithNTP(long ntpTime)
+        {
+            Context.SyncWithNTP(ntpTime);
+        }
+
         public void StartTrace()
         {
-          Context.StartTrace();
+            Context.StartTrace();
         }
 
         public void StopTrace()
         {
-          Context.StopTrace();
+            Context.StopTrace();
         }
 
         public void SaveTrace(TraceServerConfig traceServer)
         {
-          Context.SaveTrace(traceServer.Ip, traceServer.Port);
+            Context.SaveTrace(traceServer.Ip, traceServer.Port);
         }
 
         public void SuspendVoipVideo()

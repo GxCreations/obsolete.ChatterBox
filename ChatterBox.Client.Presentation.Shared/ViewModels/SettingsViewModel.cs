@@ -25,8 +25,12 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
         private string _signalingServerHost;
         private int _signalingServerPort;
         private IWebRTCSettingsService _webrtcSettingsService;
+        private NtpService _ntpService;
         private CoreDispatcher _dispatcher;
         private bool _appInsightsEnabled;
+        private bool _ntpSyncEnabled = false;
+        private Boolean _ntpSyncInProgress = false;
+        private string _ntpServerIP = "time.windows.com";
         private bool _webrtcTraceEnabled;
         private string _webRTCTraceServerIP="127.0.0.1";
         private string _webRTCTraceServerPort="55000";
@@ -41,6 +45,10 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
             _dispatcher = dispatcher;
 
             _webrtcSettingsService = container.Resolve<IWebRTCSettingsService>();
+            _ntpService = container.Resolve<NtpService>();
+
+            _ntpService.OnNTPSyncFailed += handleNtpSynFailed;
+            _ntpService.OnNTPTimeAvailable += handleNtpTimeSync;
 
             CloseCommand = new DelegateCommand(OnCloseCommandExecute);
             SaveCommand = new DelegateCommand(OnSaveCommandExecute);
@@ -311,6 +319,24 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
             set { SetProperty(ref _signalingServerPort, value); }
         }
 
+        public string NtpServerIP
+        {
+          get { return _ntpServerIP; }
+          set { SetProperty(ref _ntpServerIP, value); }
+        }
+
+        public Boolean NtpSyncInProgress
+        {
+          get { return _ntpSyncInProgress; }
+          set
+          {
+            if (!SetProperty(ref _ntpSyncInProgress, value))
+            {
+              return;
+            }
+          }
+        }
+
         public string WebRTCTraceServerIp
         {
             get { return _webRTCTraceServerIP; }
@@ -371,6 +397,35 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
             }
         }
 
+        public bool NtpSyncEnabled
+        {
+            get
+            {
+                return _ntpSyncEnabled;
+            }
+            set
+            {
+                if (!SetProperty(ref _ntpSyncEnabled, value))
+                {
+                    return;
+                }
+
+                if (_ntpSyncEnabled)
+                {
+                    //start ntp server sync
+                    NtpSyncInProgress = true;
+                    _ntpService.GetNetworkTime(NtpServerIP);
+
+                }
+                else
+                {
+                    //donothing
+                    NtpSyncInProgress = false;
+                    _ntpService.abortSync();
+
+                }
+            }
+        }
         public bool IsWin10App
         {
             get
@@ -532,6 +587,23 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
             }
         }
 
+        #endregion
+        #region NTP sync
+
+        private void handleNtpTimeSync( long ntpTime)
+        {
+            Debug.WriteLine($"new ntp time: {ntpTime}");
+            NtpSyncInProgress = false;
+            _webrtcSettingsService.SyncWithNTP(ntpTime);
+
+        }
+
+        private void handleNtpSynFailed()
+        {
+
+            NtpSyncInProgress = false;
+
+        }
         #endregion
 
         #region WebRTC settings helpers
