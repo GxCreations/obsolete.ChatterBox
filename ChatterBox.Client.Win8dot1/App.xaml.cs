@@ -61,13 +61,14 @@ namespace ChatterBox.Client.Win8dot1
                 launchArg = ToastNotificationLaunchArguments.FromXmlString(args.Arguments);
             }
 
-            if (args.PreviousExecutionState == ApplicationExecutionState.Running)
+            if (args.PreviousExecutionState == ApplicationExecutionState.Running ||
+                args.PreviousExecutionState == ApplicationExecutionState.Suspended)
             {
                 Resume();
                 ProcessLaunchArgument(launchArg);
 
                 return;
-            }
+            } 
 
             await AvatarLink.ExpandAvatarsToLocal();
 
@@ -89,7 +90,6 @@ namespace ChatterBox.Client.Win8dot1
                 .RegisterType<IForegroundChannel, ForegroundSignalingUpdateService>(new ContainerControlledLifetimeManager())
                 .RegisterType<IForegroundUpdateService, ForegroundSignalingUpdateService>(new ContainerControlledLifetimeManager())
                 .RegisterType<IClientChannel, ClientChannel>(new ContainerControlledLifetimeManager())
-                .RegisterType<ISocketConnection, SocketConnection>(new ContainerControlledLifetimeManager())
                 .RegisterType<IVoipCoordinator, VoipCoordinator>()
                 .RegisterType<IHub, Voip.Hub>(new ContainerControlledLifetimeManager())
                 .RegisterType<VoipContext>(new ContainerControlledLifetimeManager())
@@ -196,6 +196,7 @@ namespace ChatterBox.Client.Win8dot1
             Container.Resolve<IVoipChannel>().Hangup();
             webrtc_winrt_api.Media.OnAppSuspending();
 
+            Container.Resolve<ISocketConnection>().Disconnect();
             deferral.Complete();
         }        
 
