@@ -55,9 +55,11 @@ void WebRTCSwapChainPanel::UpdateHandle(int64 handle) {
     if (!DuplicateHandle(GetCurrentProcess(), (HANDLE)handle,
       GetCurrentProcess(), &dupHandle, 0, TRUE, DUPLICATE_SAME_ACCESS))
     {
-      DWORD error = GetLastError();
-      throw ref new COMException(HRESULT_FROM_WIN32(error),
-        ref new String(L"Failed to duplicate foreground swap chain handle"));
+      // Silently ignore cases where duplicating a swap chain handle fails
+      // It can occur if the background host quickly changes the handle twice,
+      // causing the first one to no longer be valid.
+      OutputDebugString(L"Failed to duplicate foreground swap chain handle");
+      return;
     }
     hr = nativePanel->SetSwapChainHandle(dupHandle);
     if (FAILED(hr))
