@@ -6,7 +6,8 @@ using ChatterBox.Client.Common.Communication.Signaling;
 using ChatterBox.Client.Common.Communication.Signaling.Dto;
 using ChatterBox.Client.Common.Communication.Voip;
 using ChatterBox.Client.Common.Communication.Voip.Dto;
-using ChatterBox.Client.Common.Settings;
+using ChatterBox.Client.Common.Media;
+using ChatterBox.Client.Common.Media.Dto;
 using ChatterBox.Client.Presentation.Shared.MVVM;
 using ChatterBox.Client.Presentation.Shared.Services;
 using ChatterBox.Client.Universal.Background.DeferralWrappers;
@@ -17,14 +18,13 @@ using ChatterBox.Common.Communication.Messages.Registration;
 using ChatterBox.Common.Communication.Messages.Relay;
 using ChatterBox.Common.Communication.Messages.Standard;
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
-using webrtc_winrt_api;
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.AppService;
+using Windows.Foundation;
 using Windows.Graphics.Display;
 using Windows.Storage;
 using Windows.UI.Core;
@@ -38,7 +38,7 @@ namespace ChatterBox.Client.Universal.Services
         IClientChannel,
         IVoipChannel,
         IForegroundChannel,
-        IMediaSettingsService
+        IMediaSettingsChannel
     {
         private readonly TaskHelper _taskHelper;
         private AppServiceConnection _appConnection;
@@ -52,157 +52,123 @@ namespace ChatterBox.Client.Universal.Services
 
         public bool IsConnected { get; private set; }
 
-        #region IMediaSettingsService
+        #region IMediaSettingsChannel
 
-        private Media _media;
+        //private Media _media;
 
-        public IEnumerable<MediaDevice> VideoCaptureDevices
+        public MediaDevices GetVideoCaptureDevices()
         {
-            get
-            {
-                return _media.GetVideoCaptureDevices();
-            }
+            return InvokeHubChannel<IMediaSettingsChannel, MediaDevices>();
         }
 
-        public IEnumerable<MediaDevice> AudioCaptureDevices
+        public MediaDevices GetAudioCaptureDevices()
         {
-            get
-            {
-                return _media.GetAudioCaptureDevices();
-            }
+            return InvokeHubChannel<IMediaSettingsChannel, MediaDevices>();
         }
 
-        private MediaDevice _videoDevice;
-        public MediaDevice VideoDevice
+        public MediaDevices GetAudioPlayoutDevices()
         {
-            get
-            {
-                return _videoDevice;
-            }
-
-            set
-            {
-                _videoDevice = value;
-                _localSettings.Values[MediaSettingsIds.VideoDeviceSettings] = value?.Id;
-            }
+            return InvokeHubChannel<IMediaSettingsChannel, MediaDevices>();
         }
 
-        private MediaDevice _audioDevice;
-        public MediaDevice AudioDevice
+        public CodecInfos GetAudioCodecs()
         {
-            get
-            {
-                return _audioDevice;
-            }
-
-            set
-            {
-                _audioDevice = value;
-                _localSettings.Values[MediaSettingsIds.AudioDeviceSettings] = value?.Id;
-            }
+            return InvokeHubChannel<IMediaSettingsChannel, CodecInfos>();
         }
 
-        private CodecInfo _videoCodec;
-        public CodecInfo VideoCodec
+        public CodecInfos GetVideoCodecs()
         {
-            get
-            {
-                return _videoCodec;
-            }
-
-            set
-            {
-                _videoCodec = value;
-                _localSettings.Values[MediaSettingsIds.VideoCodecSettings] = value?.Id;
-            }
+            return InvokeHubChannel<IMediaSettingsChannel, CodecInfos>();
         }
 
-        private CodecInfo _audioCodec;
-        public CodecInfo AudioCodec
+        public MediaDevice GetVideoDevice()
         {
-            get
-            {
-                return _audioCodec;
-            }
-
-            set
-            {
-                _audioCodec = value;
-                _localSettings.Values[MediaSettingsIds.AudioCodecSettings] = value?.Id;
-            }
+            return InvokeHubChannel<IMediaSettingsChannel, MediaDevice>();
+        }
+        public void SetVideoDevice(MediaDevice device)
+        {
+            InvokeHubChannel<IMediaSettingsChannel>(device);
         }
 
-        public IEnumerable<MediaDevice> AudioPlayoutDevices
+        public MediaDevice GetAudioDevice()
         {
-            get
-            {
-                return _media.GetAudioPlayoutDevices();
-            }
+            return InvokeHubChannel<IMediaSettingsChannel, MediaDevice>();
+        }
+        public void SetAudioDevice(MediaDevice device)
+        {
+            InvokeHubChannel<IMediaSettingsChannel>(device);
         }
 
-        public IEnumerable<CodecInfo> AudioCodecs
+        public CodecInfo GetVideoCodec()
         {
-            get
-            {
-#warning remove direct WebRTC reference
-                return WebRTC.GetAudioCodecs();
-            }
+            return InvokeHubChannel<IMediaSettingsChannel, CodecInfo>();
+        }
+        public void SetVideoCodec(CodecInfo codec)
+        {
+            InvokeHubChannel<IMediaSettingsChannel>(codec);
         }
 
-        public IEnumerable<CodecInfo> VideoCodecs
+        public CodecInfo GetAudioCodec()
         {
-            get
-            {
-#warning remove direct WebRTC reference
-                return WebRTC.GetVideoCodecs();
-            }
+            return InvokeHubChannel<IMediaSettingsChannel, CodecInfo>();
+        }
+        public void SetAudioCodec(CodecInfo codec)
+        {
+            InvokeHubChannel<IMediaSettingsChannel>(codec);
         }
 
-        private MediaDevice _audioPlayoutDevice;
-        public MediaDevice AudioPlayoutDevice
+        public MediaDevice GetAudioPlayoutDevice()
         {
-            get
-            {
-                return _audioPlayoutDevice;
-            }
+            return InvokeHubChannel<IMediaSettingsChannel, MediaDevice>();
+        }
+        public void SetAudioPlayoutDevice(MediaDevice device)
+        {
+            InvokeHubChannel<IMediaSettingsChannel>(device);
+        }
 
-            set
-            {
-                _audioPlayoutDevice = value;
-                _localSettings.Values[MediaSettingsIds.AudioPlayoutDeviceSettings] = value?.Id;
-            }
+        public CaptureCapabilities GetVideoCaptureCapabilities(MediaDevice device)
+        {
+            return InvokeHubChannel<IMediaSettingsChannel, CaptureCapabilities>(device);
+        }
+        public IAsyncOperation<CaptureCapabilities> GetVideoCaptureCapabilitiesAsync(MediaDevice device)
+        {
+            return Task.Run(() => { return GetVideoCaptureCapabilities(device); }).AsAsyncOperation();
         }
 
         public void SetPreferredVideoCaptureFormat(int width, int height, int frameRate)
         {
-            _localSettings.Values[MediaSettingsIds.PreferredVideoCaptureWidth] = width;
-            _localSettings.Values[MediaSettingsIds.PreferredVideoCaptureHeight] = height;
-            _localSettings.Values[MediaSettingsIds.PreferredVideoCaptureFrameRate] = frameRate;
+            SetPreferredVideoCaptureFormat(new VideoCaptureFormat(width, height, frameRate));
         }
 
-        public async Task InitializeMedia()
+        public void SetPreferredVideoCaptureFormat(VideoCaptureFormat format)
         {
-#warning remove direct WebRTC reference
-            WebRTC.Initialize(_uiDispatcher);
-            _media = await Media.CreateMediaAsync();
-            await _media.EnumerateAudioVideoCaptureDevices();
+            InvokeHubChannel<IMediaSettingsChannel>(format);
+        }
 
-            Debug.WriteLine("WebRTC initialized");
+        public void InitializeMedia()
+        {
+            InvokeHubChannel<IMediaSettingsChannel>();
+        }
+        public IAsyncAction InitializeMediaAsync()
+        {
+            return Task.Run(() => InitializeMedia()).AsAsyncAction();
         }
 
         public void StartTrace()
         {
-          InvokeHubChannel<IVoipChannel>();
+          InvokeHubChannel<IMediaSettingsChannel>();
         }
 
         public void StopTrace()
         {
-           InvokeHubChannel<IVoipChannel>();
+           InvokeHubChannel<IMediaSettingsChannel>();
         }
+
         public void SaveTrace(TraceServerConfig traceServer)
         {
-          InvokeHubChannel<IVoipChannel>(traceServer);
+          InvokeHubChannel<IMediaSettingsChannel>(traceServer);
         }
+
         public void SaveTrace(string ip, int port)
         {
           TraceServerConfig traceServer = new TraceServerConfig
@@ -215,7 +181,7 @@ namespace ChatterBox.Client.Universal.Services
 
         public void ReleaseDevices()
         {
-            Media.OnAppSuspending();
+            InvokeHubChannel<IMediaSettingsChannel>();
         }
 
         #endregion

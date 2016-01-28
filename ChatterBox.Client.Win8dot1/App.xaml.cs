@@ -6,6 +6,7 @@ using ChatterBox.Client.Common.Communication.Voip;
 using ChatterBox.Client.Common.Notifications;
 using ChatterBox.Client.Common.Settings;
 using ChatterBox.Client.Common.Signaling;
+using ChatterBox.Client.Common.Media;
 using ChatterBox.Client.Presentation.Shared.Services;
 using ChatterBox.Client.Presentation.Shared.ViewModels;
 using ChatterBox.Client.Presentation.Shared.Views;
@@ -25,6 +26,7 @@ using Windows.ApplicationModel.Core;
 using Windows.UI.Popups;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
+using MediaSettingsChannel = ChatterBox.Client.Win8dot1.Channels.MediaSettingsChannel;
 
 #pragma warning disable 4014
 
@@ -95,7 +97,7 @@ namespace ChatterBox.Client.Win8dot1
                 .RegisterType<VoipContext>(new ContainerControlledLifetimeManager())
                 .RegisterType<IVoipChannel, VoipChannel>(new ContainerControlledLifetimeManager())
                 .RegisterType<ISocketConnection, SocketConnection>(new ContainerControlledLifetimeManager())
-                .RegisterType<IMediaSettingsService, MediaSettingsService>()
+                .RegisterType<IMediaSettingsChannel, MediaSettingsChannel>()
                 .RegisterType<SettingsViewModel>(new ContainerControlledLifetimeManager())
                 .RegisterInstance<MainViewModel>(Container.Resolve<MainViewModel>(), new ContainerControlledLifetimeManager());
 

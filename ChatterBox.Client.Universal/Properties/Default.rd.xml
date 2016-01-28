@@ -27,6 +27,7 @@
     <Namespace Name="ChatterBox.Client.Common.Communication.Signaling.Dto" Dynamic="All" Serialize="All"  Browse="All"  DataContractJsonSerializer="All" Activate="All"/>
     <Namespace Name="ChatterBox.Client.Common.Communication.Voip.Dto" Dynamic="All" Serialize="All"  Browse="All"  DataContractJsonSerializer="All" Activate="All"/>
     <Namespace Name="ChatterBox.Client.Common.Communication.Foreground.Dto" Dynamic="All" Serialize="All"  Browse="All"  DataContractJsonSerializer="All"  Activate="All"/>
+    <Namespace Name="ChatterBox.Client.Common.Media.Dto" Dynamic="All" Serialize="All"  Browse="All"  DataContractJsonSerializer="All" Activate="All"/>
     <Namespace Name="ChatterBox.Common.Communication.Messages" Dynamic="All" Serialize="All"  Browse="All"  DataContractJsonSerializer="All"  Activate="All"/>
     <Namespace Name="ChatterBox.Common.Communication.Messages.Peers" Dynamic="All" Serialize="All"  Browse="All"  DataContractJsonSerializer="All"  Activate="All"/>
     <Namespace Name="ChatterBox.Common.Communication.Messages.Registration" Dynamic="All" Serialize="All"  Browse="All"  DataContractJsonSerializer="All"  Activate="All"/>

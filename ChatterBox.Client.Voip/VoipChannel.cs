@@ -71,7 +71,6 @@ namespace ChatterBox.Client.Common.Communication.Voip
         {
             Task.Run(() =>
             {
-
                 Debug.WriteLine("VoipChannel.Hangup ");
                 Context.WithState(st => st.Hangup()).Wait();
             });

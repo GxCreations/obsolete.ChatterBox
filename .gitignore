@@ -1,0 +1,17 @@
+ChatterBox.Client.Win8dot1/obj/
+ChatterBox.Client.Win8dot1/bin/x86/Debug/App.xbf
+ChatterBox.Client.WebRTCSwapChainPanel/Debug/
+ChatterBox.Client.Win8dot1/bin/
+ChatterBox.Client.Universal/obj/
+ChatterBox.Server/bin/
+ChatterBox.Common.Communication/obj/
+ChatterBox.Server/obj/
+*.sdf
+*.opendb
+project.lock.json
+ChatterBox.Common.Communication/bin/
+ChatterBox.Client.Universal/bin/
+ChatterBoxClient.Universal.BackgroundRenderer/Debug/
+packages/
+Debug/
+.vs/config/applicationhost.config

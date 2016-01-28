@@ -1,5 +1,6 @@
 ﻿using ChatterBox.Client.Common.Communication.Foreground.Dto;
 using ChatterBox.Client.Common.Communication.Voip.States;
+using ChatterBox.Client.Common.Communication.Voip.Dto;
 using ChatterBox.Client.Common.Settings;
 using ChatterBox.Common.Communication.Messages.Relay;
 using ChatterBox.Client.Voip;
@@ -11,12 +12,22 @@ using System.Diagnostics;
 using System.Threading.Tasks;
 using Windows.Graphics.Display;
 using webrtc_winrt_api;
+using WebRTCMedia = webrtc_winrt_api.Media;
 using System.Threading;
 using Windows.UI.Core;
 using System.Collections.Generic;
 using Windows.Networking.Connectivity;
 using Windows.Storage;
 using Windows.System.Threading;
+
+using DtoMediaDevice = ChatterBox.Client.Common.Media.Dto.MediaDevice;
+using DtoMediaDevices = ChatterBox.Client.Common.Media.Dto.MediaDevices;
+using DtoCodecInfo = ChatterBox.Client.Common.Media.Dto.CodecInfo;
+using DtoCodecInfos = ChatterBox.Client.Common.Media.Dto.CodecInfos;
+using DtoMediaRatio = ChatterBox.Client.Common.Media.Dto.MediaRatio;
+using DtoCaptureCapability = ChatterBox.Client.Common.Media.Dto.CaptureCapability;
+using DtoCaptureCapabilities = ChatterBox.Client.Common.Media.Dto.CaptureCapabilities;
+using DtoVideoCaptureFormat = ChatterBox.Client.Common.Media.Dto.VideoCaptureFormat;
 
 #pragma warning disable 4014
 
@@ -46,6 +57,196 @@ namespace ChatterBox.Client.Common.Communication.Voip
             ResetRenderers();
         }
 
+        #region IMediaSettingsChannel
+
+        public DtoMediaDevices GetVideoCaptureDevices()
+        {
+            return DtoExtensions.ToDto(Media.GetVideoCaptureDevices().ToArray());
+        }
+
+        public DtoMediaDevices GetAudioCaptureDevices()
+        {
+            return DtoExtensions.ToDto(Media.GetAudioCaptureDevices().ToArray());
+        }
+
+        public DtoMediaDevices GetAudioPlayoutDevices()
+        {
+            return DtoExtensions.ToDto(Media.GetAudioPlayoutDevices().ToArray());
+        }
+
+        public DtoCodecInfos GetAudioCodecs()
+        {
+            return DtoExtensions.ToDto(WebRTC.GetAudioCodecs().ToArray());
+        }
+
+        public DtoCodecInfos GetVideoCodecs()
+        {
+            return DtoExtensions.ToDto(WebRTC.GetVideoCodecs().ToArray());
+        }
+
+        private DtoMediaDevice _videoDevice;
+        public DtoMediaDevice GetVideoDevice()
+        {
+            lock (this)
+            {
+                return _videoDevice;
+            }
+        }
+        public void SetVideoDevice(DtoMediaDevice device)
+        {
+            lock(this)
+            {
+                _videoDevice = device;
+                _localSettings.Values[MediaSettingsIds.VideoDeviceSettings] = device?.Id;
+            }
+        }
+
+        private DtoMediaDevice _audioDevice;
+        public DtoMediaDevice GetAudioDevice()
+        {
+            lock(this)
+            {
+                return _audioDevice;
+            }
+        }
+        public void SetAudioDevice(DtoMediaDevice device)
+        {
+            lock(this)
+            {
+                _audioDevice = device;
+                _localSettings.Values[MediaSettingsIds.AudioDeviceSettings] = device?.Id;
+                if ((null != device) &&
+                    (null != Media))
+                {
+                    Media.SelectAudioDevice(DtoExtensions.FromDto(device));
+                }
+            }
+        }
+
+        private DtoCodecInfo _videoCodec;
+        public DtoCodecInfo GetVideoCodec()
+        {
+            lock(this)
+            {
+                return _videoCodec;
+            }
+        }
+        public void SetVideoCodec(DtoCodecInfo codec)
+        {
+            lock(this)
+            {
+                _videoCodec = codec;
+                _localSettings.Values[MediaSettingsIds.VideoCodecSettings] = codec?.Id;
+            }
+        }
+
+        private DtoCodecInfo _audioCodec;
+        public DtoCodecInfo GetAudioCodec()
+        {
+            lock(this)
+            {
+                return _audioCodec;
+            }
+        }
+        public void SetAudioCodec(DtoCodecInfo codec)
+        {
+            lock(this)
+            {
+                _audioCodec = codec;
+                _localSettings.Values[MediaSettingsIds.AudioCodecSettings] = codec?.Id;
+            }
+        }
+
+        private DtoMediaDevice _audioPlayoutDevice;
+        public DtoMediaDevice GetAudioPlayoutDevice()
+        {
+            lock(this)
+            {
+                return _audioPlayoutDevice;
+            }
+        }
+        public void SetAudioPlayoutDevice(DtoMediaDevice device)
+        {
+            lock(this)
+            {
+                _audioPlayoutDevice = device;
+                _localSettings.Values[MediaSettingsIds.AudioPlayoutDeviceSettings] = device?.Id;
+                if ((null != device) &&
+                    (null != Media))
+                {
+                    Media.SelectAudioPlayoutDevice(DtoExtensions.FromDto(device));
+                }
+            }
+        }
+
+        public async Task<DtoCaptureCapabilities> GetVideoCaptureCapabilities(DtoMediaDevice device)
+        {
+            MediaDevice checkDevice = DtoExtensions.FromDto(device);
+            var capabilities = await checkDevice.GetVideoCaptureCapabilities();
+            return DtoExtensions.ToDto(capabilities.ToArray());
+        }
+
+        public void SetPreferredVideoCaptureFormat(int width, int height, int frameRate)
+        {
+            lock(this)
+            {
+                _localSettings.Values[MediaSettingsIds.PreferredVideoCaptureWidth] = width;
+                _localSettings.Values[MediaSettingsIds.PreferredVideoCaptureHeight] = height;
+                _localSettings.Values[MediaSettingsIds.PreferredVideoCaptureFrameRate] = frameRate;
+            }
+        }
+
+        public void SetPreferredVideoCaptureFormat(DtoVideoCaptureFormat format)
+        {
+            SetPreferredVideoCaptureFormat(format.Width, format.Height, format.FrameRate);
+        }
+
+        public async Task InitializeMediaAsync()
+        {
+            if (Media == null)
+            {
+                WebRTC.Initialize(_dispatcher);
+                Media = await WebRTCMedia.CreateMediaAsync();
+                if (DisplayOrientations.None != _displayOrientation)
+                {
+                    WebRTCMedia.SetDisplayOrientation(_displayOrientation);
+                }
+                await Media.EnumerateAudioVideoCaptureDevices();
+            }
+        }
+
+        public void StartTrace()
+        {
+            WebRTC.StartTracing();
+            AppPerformanceCheck();
+        }
+
+        public void StopTrace()
+        {
+            WebRTC.StopTracing();
+            if (_appPerfTimer != null)
+            {
+                _appPerfTimer.Cancel();
+            }
+        }
+
+        public void SaveTrace(string ip, int port)
+        {
+            WebRTC.SaveTrace(ip, port);
+        }
+        public void SaveTrace(TraceServerConfig traceServer)
+        {
+            SaveTrace(traceServer.Ip, traceServer.Port);
+        }
+
+        public void ReleaseDevices()
+        {
+            WebRTCMedia.OnAppSuspending();
+        }
+
+
+        #endregion
+
         /// <summary>
         /// On Win10 in a background task, WebRTC initialization has to be done
         /// when we have access to the resources.  That's inside an active
@@ -53,14 +254,19 @@ namespace ChatterBox.Client.Common.Communication.Voip
         /// This function must be called after VoipCoordinator.StartVoipTask()
         /// </summary>
         /// <returns></returns>
-        public async Task InitializeWebRTC()
+        public async Task InitializeRTC()
         {
             if (Media == null)
             {
                 WebRTC.Initialize(_dispatcher);
-                Media = Media.CreateMedia();
-                Media.SetDisplayOrientation(_displayOrientation);
+                Media = WebRTCMedia.CreateMedia();
+                WebRTCMedia.SetDisplayOrientation(_displayOrientation);
                 await Media.EnumerateAudioVideoCaptureDevices();
+            }
+
+            if (DisplayOrientations.None != _displayOrientation)
+            {
+                WebRTCMedia.SetDisplayOrientation(_displayOrientation);
             }
 
             string videoDeviceId = string.Empty;
@@ -109,7 +315,7 @@ namespace ChatterBox.Client.Common.Communication.Voip
             }
             var videoCodecs = WebRTC.GetVideoCodecs();
             var selectedVideoCodec = videoCodecs.FirstOrDefault(c => c.Id.Equals(videoCodecId));
-            VideoCodec = selectedVideoCodec ?? videoCodecs.FirstOrDefault();
+            SetVideoCodec(DtoExtensions.ToDto(selectedVideoCodec ?? videoCodecs.FirstOrDefault()));
 
             int audioCodecId = int.MinValue;
             if (_localSettings.Values.ContainsKey(MediaSettingsIds.AudioCodecSettings))
@@ -118,7 +324,7 @@ namespace ChatterBox.Client.Common.Communication.Voip
             }
             var audioCodecs = WebRTC.GetAudioCodecs();
             var selectedAudioCodec = audioCodecs.FirstOrDefault(c => c.Id.Equals(audioCodecId));
-            AudioCodec = selectedAudioCodec ?? audioCodecs.FirstOrDefault();
+            SetAudioCodec(DtoExtensions.ToDto(selectedAudioCodec ?? audioCodecs.FirstOrDefault()));
 
             if (_localSettings.Values.ContainsKey(MediaSettingsIds.PreferredVideoCaptureWidth) &&
                 _localSettings.Values.ContainsKey(MediaSettingsIds.PreferredVideoCaptureHeight) &&
@@ -130,24 +336,6 @@ namespace ChatterBox.Client.Common.Communication.Voip
             }
         }
 
-        public void StartTrace()
-        {
-            WebRTC.StartTracing();
-            AppPerformanceCheck();
-        }
-
-        public void StopTrace()
-        {
-            WebRTC.StopTracing();
-            if (_appPerfTimer != null)
-            {
-              _appPerfTimer.Cancel();
-            }
-        }
-        public void SaveTrace(string ip, int port)
-        {
-            WebRTC.SaveTrace(ip, port);
-        }
 
         private ThreadPoolTimer _appPerfTimer = null;
 
@@ -196,11 +384,7 @@ namespace ChatterBox.Client.Common.Communication.Voip
                 });
         }
 
-        public CodecInfo AudioCodec { get; set; }
-
-        public CodecInfo VideoCodec { get; set; }
-
-        public Media Media { get; private set; }
+        public WebRTCMedia Media { get; private set; }
 
         private bool _isVideoEnabled;
         public bool IsVideoEnabled
@@ -245,31 +429,34 @@ namespace ChatterBox.Client.Common.Communication.Voip
         private SemaphoreSlim _iceBufferSemaphore = new SemaphoreSlim(1, 1);
         private async Task QueueIceCandidate(RTCIceCandidate candidate)
         {
-            await _iceBufferSemaphore.WaitAsync();
-            _bufferedIceCandidates.Add(candidate);
-            if (_iceCandidateBufferTimer == null)
+            using (var @lock = new Lock(_iceBufferSemaphore))
             {
-                // Flush the ice candidates in 100ms.
-                _iceCandidateBufferTimer = new Timer(FlushBufferedIceCandidates, null, 100, Timeout.Infinite);
+                await @lock.WaitAsync();
+                _bufferedIceCandidates.Add(candidate);
+                if (_iceCandidateBufferTimer == null)
+                {
+                    // Flush the ice candidates in 100ms.
+                    _iceCandidateBufferTimer = new Timer(FlushBufferedIceCandidates, null, 100, Timeout.Infinite);
+                }
             }
-            _iceBufferSemaphore.Release();
         }
 
         private async void FlushBufferedIceCandidates(object state)
         {
-            await _iceBufferSemaphore.WaitAsync();
-            _iceCandidateBufferTimer = null;
-
-            // Chunk in groups of 10 to not blow the size limit
-            // on the storage used by the receiving side.
-            while (_bufferedIceCandidates.Count > 0)
+            using (var @lock = new Lock(_iceBufferSemaphore))
             {
-                var candidates = _bufferedIceCandidates.Take(10).ToArray();
-                _bufferedIceCandidates = _bufferedIceCandidates.Skip(10).ToList();
-                await WithState(async st => await st.SendLocalIceCandidates(candidates));
-            }
+                await @lock.WaitAsync();
+                _iceCandidateBufferTimer = null;
 
-            _iceBufferSemaphore.Release();
+                // Chunk in groups of 10 to not blow the size limit
+                // on the storage used by the receiving side.
+                while (_bufferedIceCandidates.Count > 0)
+                {
+                    var candidates = _bufferedIceCandidates.Take(10).ToArray();
+                    _bufferedIceCandidates = _bufferedIceCandidates.Skip(10).ToList();
+                    await WithState(async st => await st.SendLocalIceCandidates(candidates));
+                }
+            }
         }
 
         private RTCPeerConnection _peerConnection { get; set; }
@@ -356,30 +543,28 @@ namespace ChatterBox.Client.Common.Communication.Voip
             Task.Run(() => _hub.OnVoipState(GetVoipState()));
         }
 
+
         // Semaphore used to make sure only one call
         // is executed at any given time.
         private readonly SemaphoreSlim _sem = new SemaphoreSlim(1, 1);
 
         public async Task WithState(Func<BaseVoipState, Task> fn)
         {
-            await _sem.WaitAsync();
-            Debug.WriteLine("WithState - Semaphore - Got");
+            using (var @lock = new Lock(_sem))
+            {
+                await @lock.WaitAsync();
 
-            try
-            {
-                await fn(State);
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine(ex.Message);
-            }
-            finally
-            {
-                Debug.WriteLine("WithState - Semaphore - Release");
-                _sem.Release();
+                try
+                {
+                    await fn(State);
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine(ex.Message);
+                }
             }
         }
-
+ 
         private UInt32 _foregroundProcessId;
         public UInt32 ForegroundProcessId
         {
@@ -399,7 +584,7 @@ namespace ChatterBox.Client.Common.Communication.Voip
             }
         }
 
-        private DisplayOrientations _displayOrientation;
+        private DisplayOrientations _displayOrientation = DisplayOrientations.None;
         public DisplayOrientations DisplayOrientation
         {
             get
@@ -416,7 +601,7 @@ namespace ChatterBox.Client.Common.Communication.Voip
                     _displayOrientation = value;
                     if (Media != null)
                     {
-                        Media.SetDisplayOrientation(_displayOrientation);
+                        WebRTCMedia.SetDisplayOrientation(_displayOrientation);
                     }
                 }
             }
