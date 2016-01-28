@@ -41,83 +41,118 @@ namespace ChatterBox.Client.Common.Communication.Voip
 
         public MediaDevices GetVideoCaptureDevices()
         {
-            return Context.GetVideoCaptureDevices();
+            return Task.Run(() => {
+                return Context.WithContextFunc<MediaDevices>(ctx => { return ctx.GetVideoCaptureDevices(); });
+            }).Result;
         }
 
         public MediaDevices GetAudioCaptureDevices()
         {
-            return Context.GetAudioCaptureDevices();
+            return Task.Run(() => {
+                return Context.WithContextFunc<MediaDevices>(ctx => { return ctx.GetAudioCaptureDevices(); });
+            }).Result;
         }
 
         public MediaDevices GetAudioPlayoutDevices()
         {
-            return Context.GetAudioPlayoutDevices();
+            return Task.Run(() => {
+                return Context.WithContextFunc<MediaDevices>(ctx => { return ctx.GetAudioPlayoutDevices(); });
+            }).Result;
         }
 
         public CodecInfos GetAudioCodecs()
         {
-            return Context.GetAudioCodecs();
+            return Task.Run(() => {
+                return Context.WithContextFunc<CodecInfos>(ctx => { return ctx.GetAudioCodecs(); });
+            }).Result;
         }
 
         public CodecInfos GetVideoCodecs()
         {
-            return Context.GetVideoCodecs();
+            return Task.Run(() => {
+                return Context.WithContextFunc<CodecInfos>(ctx => { return ctx.GetVideoCodecs(); });
+            }).Result;
         }
 
         public MediaDevice GetVideoDevice()
         {
-            return Context.GetVideoDevice();
+            return Task.Run(() => {
+                return Context.WithContextFunc<MediaDevice>(ctx => { return ctx.GetVideoDevice(); });
+            }).Result;
         }
         public void SetVideoDevice(MediaDevice device)
         {
-            Context.SetVideoDevice(device);
+            Task.Run(async () => {
+                await Context.WithContextAction<MediaDevice>((ctx, value) => { ctx.SetVideoDevice(value); }, device);
+            }).Wait();
         }
 
         public MediaDevice GetAudioDevice()
         {
-            return Context.GetAudioDevice();
+            return Task.Run(() => {
+                return Context.WithContextFunc<MediaDevice>(ctx => { return ctx.GetAudioDevice(); });
+            }).Result;
         }
         public void SetAudioDevice(MediaDevice device)
         {
-            Context.SetAudioDevice(device);
+            Task.Run(async () => {
+                await Context.WithContextAction<MediaDevice>((ctx, value) => { ctx.SetAudioDevice(value); }, device);
+            }).Wait();
         }
 
         public CodecInfo GetVideoCodec()
         {
-            return Context.GetVideoCodec();
+            return Task.Run(() => {
+                return Context.WithContextFunc<CodecInfo>(ctx => { return ctx.GetVideoCodec(); });
+            }).Result;
         }
         public void SetVideoCodec(CodecInfo codec)
         {
-            Context.SetVideoCodec(codec);
+            Task.Run(async () => {
+                await Context.WithContextAction<CodecInfo>((ctx, value) => { ctx.SetVideoCodec(value); }, codec);
+            }).Wait();
         }
 
         public CodecInfo GetAudioCodec()
         {
-            return Context.GetAudioCodec();
+            return Task.Run(() => {
+                return Context.WithContextFunc<CodecInfo>(ctx => { return ctx.GetAudioCodec(); });
+            }).Result;
         }
         public void SetAudioCodec(CodecInfo codec)
         {
-            Context.SetAudioCodec(codec);
+            Task.Run(async () => {
+                await Context.WithContextAction<CodecInfo>((ctx, value) => { ctx.SetAudioCodec(value); }, codec);
+            }).Wait();
         }
 
 
         public MediaDevice GetAudioPlayoutDevice()
         {
-            return Context.GetAudioPlayoutDevice();
+            return Task.Run(() => {
+                return Context.WithContextFunc<MediaDevice>(ctx => { return ctx.GetAudioPlayoutDevice(); });
+            }).Result;
         }
         public void SetAudioPlayoutDevice(MediaDevice device)
         {
-            Context.SetAudioPlayoutDevice(device);
+            Task.Run(async () => {
+                await Context.WithContextAction<MediaDevice>((ctx, value) => { ctx.SetAudioPlayoutDevice(value); }, device);
+            }).Wait();
         }
 
         public CaptureCapabilities GetVideoCaptureCapabilities(MediaDevice device)
         {
-            return Task.Run< CaptureCapabilities >(() => Context.GetVideoCaptureCapabilities(device).Result).Result;
+            return Task.Run<CaptureCapabilities>(() => {
+                return Context.WithContextFunc<MediaDevice, CaptureCapabilities>((ctx, value) => { return ctx.GetVideoCaptureCapabilities(value); }, device);
+            }).Result;
         }
 
         public IAsyncOperation<CaptureCapabilities> GetVideoCaptureCapabilitiesAsync(MediaDevice device)
         {
-            return Context.GetVideoCaptureCapabilities(device).AsAsyncOperation();
+            return Task.Run(async () =>
+            {
+                return await await Context.WithContextFunc<MediaDevice, Task< CaptureCapabilities>>(async (ctx, value) => { return await ctx.GetVideoCaptureCapabilitiesAsync(value); }, device);
+            }).AsAsyncOperation();
         }
 
         public void SetPreferredVideoCaptureFormat(int width, int height, int frameRate)
@@ -126,29 +161,41 @@ namespace ChatterBox.Client.Common.Communication.Voip
         }
         public void SetPreferredVideoCaptureFormat(VideoCaptureFormat format)
         {
-            Context.SetPreferredVideoCaptureFormat(format);
+            Task.Run(async () => {
+                await Context.WithContextAction<VideoCaptureFormat>((ctx, value) => { ctx.SetPreferredVideoCaptureFormat(value); }, format);
+            }).Wait();
         }
 
         public void InitializeMedia()
         {
             // TODO please remove this method and auto-init WebRTC as needed (Fred LaBel)
-            Task.Run(() => { Context.InitializeMediaAsync().Wait(); }).Wait();
+            Task.Run(async () =>
+            {
+                await Context.WithContextAction(async ctx => { await ctx.InitializeMediaAsync(); });
+            });
         }
 
         public IAsyncAction InitializeMediaAsync()
         {
             // TODO please remove this method and auto-init WebRTC as needed (Fred LaBel)
-            return Context.InitializeMediaAsync().AsAsyncAction();
+            return Task.Run(async () =>
+            {
+                await Context.WithContextAction(async ctx => { await ctx.InitializeMediaAsync(); });
+            }).AsAsyncAction();
         }
 
         public void StartTrace()
         {
-            Context.StartTrace();
+            Task.Run(async () => {
+                await Context.WithContextAction(ctx => { ctx.StartTrace(); });
+            }).Wait();
         }
 
         public void StopTrace()
         {
-            Context.StopTrace();
+            Task.Run(async () => {
+                await Context.WithContextAction(ctx => { ctx.StopTrace(); });
+            }).Wait();
         }
 
         public void SaveTrace(string ip, int port)
@@ -163,12 +210,16 @@ namespace ChatterBox.Client.Common.Communication.Voip
 
         public void SaveTrace(TraceServerConfig traceServer)
         {
-            Context.SaveTrace(traceServer);
+            Task.Run(async () => {
+                await Context.WithContextAction<TraceServerConfig>((ctx, value) => { ctx.SaveTrace(value); }, traceServer);
+            }).Wait();
         }
 
         public void ReleaseDevices()
         {
-            Context.ReleaseDevices();
+            Task.Run(async () => {
+                await Context.WithContextAction(ctx => { ctx.ReleaseDevices(); });
+            }).Wait();
         }
 
         #endregion

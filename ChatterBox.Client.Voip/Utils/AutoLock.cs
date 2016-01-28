@@ -5,12 +5,12 @@ using System.Threading.Tasks;
 
 namespace ChatterBox.Client.Voip.Utils
 {
-    internal class Lock : IDisposable
+    internal class AutoLock : IDisposable
     {
         private readonly SemaphoreSlim _sem;
         private SemaphoreSlim _dispose;
 
-        public Lock(SemaphoreSlim sem)
+        public AutoLock(SemaphoreSlim sem)
         {
             _sem = sem;
             _sem.WaitAsync();

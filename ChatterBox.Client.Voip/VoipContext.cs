@@ -87,99 +87,74 @@ namespace ChatterBox.Client.Common.Communication.Voip
         private DtoMediaDevice _videoDevice;
         public DtoMediaDevice GetVideoDevice()
         {
-            lock (this)
-            {
-                return _videoDevice;
-            }
+            return _videoDevice;
         }
         public void SetVideoDevice(DtoMediaDevice device)
         {
-            lock(this)
-            {
-                _videoDevice = device;
-                _localSettings.Values[MediaSettingsIds.VideoDeviceSettings] = device?.Id;
-            }
+            _videoDevice = device;
+            _localSettings.Values[MediaSettingsIds.VideoDeviceSettings] = device?.Id;
         }
 
         private DtoMediaDevice _audioDevice;
         public DtoMediaDevice GetAudioDevice()
         {
-            lock(this)
-            {
-                return _audioDevice;
-            }
+            return _audioDevice;
         }
         public void SetAudioDevice(DtoMediaDevice device)
         {
-            lock(this)
+            _audioDevice = device;
+            _localSettings.Values[MediaSettingsIds.AudioDeviceSettings] = device?.Id;
+            if ((null != device) &&
+                (null != Media))
             {
-                _audioDevice = device;
-                _localSettings.Values[MediaSettingsIds.AudioDeviceSettings] = device?.Id;
-                if ((null != device) &&
-                    (null != Media))
-                {
-                    Media.SelectAudioDevice(DtoExtensions.FromDto(device));
-                }
+                Media.SelectAudioDevice(DtoExtensions.FromDto(device));
             }
         }
 
         private DtoCodecInfo _videoCodec;
         public DtoCodecInfo GetVideoCodec()
         {
-            lock(this)
-            {
-                return _videoCodec;
-            }
+            return _videoCodec;
         }
         public void SetVideoCodec(DtoCodecInfo codec)
         {
-            lock(this)
-            {
-                _videoCodec = codec;
-                _localSettings.Values[MediaSettingsIds.VideoCodecSettings] = codec?.Id;
-            }
+            _videoCodec = codec;
+            _localSettings.Values[MediaSettingsIds.VideoCodecSettings] = codec?.Id;
         }
 
         private DtoCodecInfo _audioCodec;
         public DtoCodecInfo GetAudioCodec()
         {
-            lock(this)
-            {
-                return _audioCodec;
-            }
+            return _audioCodec;
         }
         public void SetAudioCodec(DtoCodecInfo codec)
         {
-            lock(this)
-            {
-                _audioCodec = codec;
-                _localSettings.Values[MediaSettingsIds.AudioCodecSettings] = codec?.Id;
-            }
+            _audioCodec = codec;
+            _localSettings.Values[MediaSettingsIds.AudioCodecSettings] = codec?.Id;
         }
 
         private DtoMediaDevice _audioPlayoutDevice;
         public DtoMediaDevice GetAudioPlayoutDevice()
         {
-            lock(this)
-            {
-                return _audioPlayoutDevice;
-            }
+            return _audioPlayoutDevice;
         }
         public void SetAudioPlayoutDevice(DtoMediaDevice device)
         {
-            lock(this)
+            _audioPlayoutDevice = device;
+            _localSettings.Values[MediaSettingsIds.AudioPlayoutDeviceSettings] = device?.Id;
+            if ((null != device) &&
+                (null != Media))
             {
-                _audioPlayoutDevice = device;
-                _localSettings.Values[MediaSettingsIds.AudioPlayoutDeviceSettings] = device?.Id;
-                if ((null != device) &&
-                    (null != Media))
-                {
-                    Media.SelectAudioPlayoutDevice(DtoExtensions.FromDto(device));
-                }
+                Media.SelectAudioPlayoutDevice(DtoExtensions.FromDto(device));
             }
         }
 
-        public async Task<DtoCaptureCapabilities> GetVideoCaptureCapabilities(DtoMediaDevice device)
+        public DtoCaptureCapabilities GetVideoCaptureCapabilities(DtoMediaDevice device)
+        {
+            return GetVideoCaptureCapabilitiesAsync(device).Result;
+        }
+
+        public async Task<DtoCaptureCapabilities> GetVideoCaptureCapabilitiesAsync(DtoMediaDevice device)
         {
             MediaDevice checkDevice = DtoExtensions.FromDto(device);
             var capabilities = await checkDevice.GetVideoCaptureCapabilities();
@@ -188,12 +163,9 @@ namespace ChatterBox.Client.Common.Communication.Voip
 
         public void SetPreferredVideoCaptureFormat(int width, int height, int frameRate)
         {
-            lock(this)
-            {
-                _localSettings.Values[MediaSettingsIds.PreferredVideoCaptureWidth] = width;
-                _localSettings.Values[MediaSettingsIds.PreferredVideoCaptureHeight] = height;
-                _localSettings.Values[MediaSettingsIds.PreferredVideoCaptureFrameRate] = frameRate;
-            }
+            _localSettings.Values[MediaSettingsIds.PreferredVideoCaptureWidth] = width;
+            _localSettings.Values[MediaSettingsIds.PreferredVideoCaptureHeight] = height;
+            _localSettings.Values[MediaSettingsIds.PreferredVideoCaptureFrameRate] = frameRate;
         }
 
         public void SetPreferredVideoCaptureFormat(DtoVideoCaptureFormat format)
@@ -391,6 +363,11 @@ namespace ChatterBox.Client.Common.Communication.Voip
         {
             get
             {
+                // TODO: lock(this) in await/async model doesn't work properly. Replace this with safer version (semaphore?)
+                // NOTE: Possible issue with using semaphores is that the semaphore on the class is not re-entrent so
+                //       the VoipChannel may lock with the semaphore, call the context via WithState which calls the
+                //       state machine which then calls back to the Context but it's already locked. Since the semaphore
+                //       is not re-entrant this could cause a deadlock.
                 lock (this)
                 {
                     return _isVideoEnabled;
@@ -429,7 +406,7 @@ namespace ChatterBox.Client.Common.Communication.Voip
         private SemaphoreSlim _iceBufferSemaphore = new SemaphoreSlim(1, 1);
         private async Task QueueIceCandidate(RTCIceCandidate candidate)
         {
-            using (var @lock = new Lock(_iceBufferSemaphore))
+            using (var @lock = new AutoLock(_iceBufferSemaphore))
             {
                 await @lock.WaitAsync();
                 _bufferedIceCandidates.Add(candidate);
@@ -443,7 +420,7 @@ namespace ChatterBox.Client.Common.Communication.Voip
 
         private async void FlushBufferedIceCandidates(object state)
         {
-            using (var @lock = new Lock(_iceBufferSemaphore))
+            using (var @lock = new AutoLock(_iceBufferSemaphore))
             {
                 await @lock.WaitAsync();
                 _iceCandidateBufferTimer = null;
@@ -550,7 +527,7 @@ namespace ChatterBox.Client.Common.Communication.Voip
 
         public async Task WithState(Func<BaseVoipState, Task> fn)
         {
-            using (var @lock = new Lock(_sem))
+            using (var @lock = new AutoLock(_sem))
             {
                 await @lock.WaitAsync();
 
@@ -564,7 +541,73 @@ namespace ChatterBox.Client.Common.Communication.Voip
                 }
             }
         }
- 
+        public async Task WithContextAction(Action<VoipContext> fn)
+        {
+            using (var @lock = new AutoLock(_sem))
+            {
+                await @lock.WaitAsync();
+
+                try
+                {
+                    fn(this);
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine(ex.Message);
+                }
+            }
+        }
+        public async Task WithContextAction<T>(Action<VoipContext, T> fn, T value)
+        {
+            using (var @lock = new AutoLock(_sem))
+            {
+                await @lock.WaitAsync();
+
+                try
+                {
+                    fn(this, value);
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine(ex.Message);
+                }
+            }
+        }
+        public async Task<TResult> WithContextFunc<TResult>(Func<VoipContext, TResult> fn)
+        {
+            using (var @lock = new AutoLock(_sem))
+            {
+                await @lock.WaitAsync();
+
+                try
+                {
+                    return fn(this);
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine(ex.Message);
+                }
+            }
+            return default(TResult);
+        }
+        public async Task<TResult> WithContextFunc<T, TResult>(Func<VoipContext, T, TResult> fn, T value)
+        {
+            using (var @lock = new AutoLock(_sem))
+            {
+                await @lock.WaitAsync();
+
+                try
+                {
+                    return fn(this, value);
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine(ex.Message);
+                }
+            }
+            return default(TResult);
+        }
+
         private UInt32 _foregroundProcessId;
         public UInt32 ForegroundProcessId
         {

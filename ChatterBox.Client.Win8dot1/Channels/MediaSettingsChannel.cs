@@ -89,11 +89,11 @@ namespace ChatterBox.Client.Win8dot1.Channels
 
         public CaptureCapabilities GetVideoCaptureCapabilities(MediaDevice device)
         {
-            return _voipContext.GetVideoCaptureCapabilities(device).Result;
+            return _voipContext.GetVideoCaptureCapabilities(device);
         }
         public IAsyncOperation<CaptureCapabilities> GetVideoCaptureCapabilitiesAsync(MediaDevice device)
         {
-            return _voipContext.GetVideoCaptureCapabilities(device).AsAsyncOperation();
+            return _voipContext.GetVideoCaptureCapabilitiesAsync(device).AsAsyncOperation();
         }
 
         public void SetPreferredVideoCaptureFormat(int width, int height, int frameRate)
