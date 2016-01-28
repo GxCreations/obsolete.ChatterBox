@@ -154,6 +154,10 @@ namespace ChatterBox.Client.Universal.Services
             return Task.Run(() => InitializeMedia()).AsAsyncAction();
         }
 
+        public void SyncWithNTP(long ntpTime)
+        {
+            InvokeHubChannel<IMediaSettingsChannel>(ntpTime);
+        }
         public void StartTrace()
         {
           InvokeHubChannel<IMediaSettingsChannel>();
@@ -171,12 +175,12 @@ namespace ChatterBox.Client.Universal.Services
 
         public void SaveTrace(string ip, int port)
         {
-          TraceServerConfig traceServer = new TraceServerConfig
-          {
-            Ip = ip,
-            Port = port
-          };
-          SaveTrace(traceServer);
+            TraceServerConfig traceServer = new TraceServerConfig
+            {
+                Ip = ip,
+                Port = port
+            };
+            SaveTrace(traceServer);
         }
 
         public void ReleaseDevices()

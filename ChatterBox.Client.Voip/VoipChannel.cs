@@ -11,7 +11,8 @@ using System.Threading.Tasks;
 
 namespace ChatterBox.Client.Common.Communication.Voip
 {
-    internal class VoipChannel : IVoipChannel
+    internal class VoipChannel : 
+        IVoipChannel
     {
         private readonly IHub _hub;
 
@@ -184,25 +185,32 @@ namespace ChatterBox.Client.Common.Communication.Voip
 
         #endregion
 
+        // TODO these methods should probably be within the region above - why aren't they inside the interface?
         public void RegisterVideoElements(MediaElement self, MediaElement peer)
         {
             Context.LocalVideoRenderer.SetMediaElement(Dispatcher, self);
             Context.RemoteVideoRenderer.SetMediaElement(Dispatcher, peer);
         }
 
+        // TODO MediaSettingsChannel also implements this "SyncWithNTP" method (and tracing) - why do they both need this?
+        public void SyncWithNTP(long ntpTime)
+        {
+            Context.SyncWithNTP(ntpTime);
+        }
+
         public void StartTrace()
         {
-          Context.StartTrace();
+            Context.StartTrace();
         }
 
         public void StopTrace()
         {
-          Context.StopTrace();
+            Context.StopTrace();
         }
 
         public void SaveTrace(TraceServerConfig traceServer)
         {
-          Context.SaveTrace(traceServer.Ip, traceServer.Port);
+            Context.SaveTrace(traceServer.Ip, traceServer.Port);
         }
 
         public void SuspendVoipVideo()

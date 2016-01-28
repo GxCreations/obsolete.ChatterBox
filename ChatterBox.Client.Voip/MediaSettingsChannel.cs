@@ -184,6 +184,12 @@ namespace ChatterBox.Client.Common.Communication.Voip
             }).AsAsyncAction();
         }
 
+        public void SyncWithNTP(long ntpTime)
+        {
+            Task.Run(async () => {
+                await Context.WithContextAction<long>((ctx, value) => { ctx.SyncWithNTP(value); }, ntpTime);
+            }).Wait();
+        }
         public void StartTrace()
         {
             Task.Run(async () => {

@@ -97,6 +97,7 @@ namespace ChatterBox.Client.Win8dot1
                 .RegisterType<VoipContext>(new ContainerControlledLifetimeManager())
                 .RegisterType<IVoipChannel, VoipChannel>(new ContainerControlledLifetimeManager())
                 .RegisterType<ISocketConnection, SocketConnection>(new ContainerControlledLifetimeManager())
+                .RegisterType<NtpService>(new ContainerControlledLifetimeManager())
                 .RegisterType<IMediaSettingsChannel, MediaSettingsChannel>()
                 .RegisterType<SettingsViewModel>(new ContainerControlledLifetimeManager())
                 .RegisterInstance<MainViewModel>(Container.Resolve<MainViewModel>(), new ContainerControlledLifetimeManager());

@@ -26,8 +26,12 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
         private string _signalingServerHost;
         private int _signalingServerPort;
         private IMediaSettingsChannel _mediaSettings;
+        private NtpService _ntpService;
         private CoreDispatcher _dispatcher;
         private bool _appInsightsEnabled;
+        private bool _ntpSyncEnabled = false;
+        private Boolean _ntpSyncInProgress = false;
+        private string _ntpServerIP = "time.windows.com";
         private bool _rtcTraceEnabled;
         private string _rtcTraceServerIP="127.0.0.1";
         private string _rtcTraceServerPort="55000";
@@ -42,6 +46,10 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
             _dispatcher = dispatcher;
 
             _mediaSettings = container.Resolve<IMediaSettingsChannel>();
+            _ntpService = container.Resolve<NtpService>();
+
+            _ntpService.OnNTPSyncFailed += handleNtpSynFailed;
+            _ntpService.OnNTPTimeAvailable += handleNtpTimeSync;
 
             CloseCommand = new DelegateCommand(OnCloseCommandExecute);
             SaveCommand = new DelegateCommand(OnSaveCommandExecute);
@@ -312,6 +320,24 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
             set { SetProperty(ref _signalingServerPort, value); }
         }
 
+        public string NtpServerIP
+        {
+          get { return _ntpServerIP; }
+          set { SetProperty(ref _ntpServerIP, value); }
+        }
+
+        public Boolean NtpSyncInProgress
+        {
+          get { return _ntpSyncInProgress; }
+          set
+          {
+            if (!SetProperty(ref _ntpSyncInProgress, value))
+            {
+              return;
+            }
+          }
+        }
+
         public string RTCTraceServerIp
         {
             get { return _rtcTraceServerIP; }
@@ -372,6 +398,35 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
             }
         }
 
+        public bool NtpSyncEnabled
+        {
+            get
+            {
+                return _ntpSyncEnabled;
+            }
+            set
+            {
+                if (!SetProperty(ref _ntpSyncEnabled, value))
+                {
+                    return;
+                }
+
+                if (_ntpSyncEnabled)
+                {
+                    //start ntp server sync
+                    NtpSyncInProgress = true;
+                    _ntpService.GetNetworkTime(NtpServerIP);
+
+                }
+                else
+                {
+                    //donothing
+                    NtpSyncInProgress = false;
+                    _ntpService.abortSync();
+
+                }
+            }
+        }
         public bool IsWin10App
         {
             get
@@ -533,6 +588,24 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
             }
         }
 
+        #endregion
+
+        #region NTP sync
+
+        private void handleNtpTimeSync( long ntpTime)
+        {
+            Debug.WriteLine($"new ntp time: {ntpTime}");
+            NtpSyncInProgress = false;
+            _mediaSettings.SyncWithNTP(ntpTime);
+
+        }
+
+        private void handleNtpSynFailed()
+        {
+
+            NtpSyncInProgress = false;
+
+        }
         #endregion
 
         #region Media settings helpers
