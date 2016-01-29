@@ -1,9 +1,10 @@
 ﻿using System;
 using ChatterBox.Client.Common.Settings;
+using ChatterBox.Client.Common.Media;
+using ChatterBox.Client.Common.Media.Dto;
 using ChatterBox.Client.Presentation.Shared.MVVM;
 using Windows.ApplicationModel;
 using System.Collections.ObjectModel;
-using webrtc_winrt_api;
 using System.Linq;
 using System.Diagnostics;
 using Windows.Storage;
@@ -13,6 +14,7 @@ using Microsoft.Practices.Unity;
 using ChatterBox.Client.Presentation.Shared.Services;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using ChatterBox.Client.Common.Communication.Voip.Dto;
 
 namespace ChatterBox.Client.Presentation.Shared.ViewModels
 {
@@ -24,16 +26,16 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
         private ApplicationDataContainer _localSettings;
         private string _signalingServerHost;
         private int _signalingServerPort;
-        private IWebRTCSettingsService _webrtcSettingsService;
+        private IMediaSettingsChannel _mediaSettings;
         private NtpService _ntpService;
         private CoreDispatcher _dispatcher;
         private bool _appInsightsEnabled;
         private bool _ntpSyncEnabled = false;
         private Boolean _ntpSyncInProgress = false;
         private string _ntpServerIP = "time.windows.com";
-        private bool _webrtcTraceEnabled;
-        private string _webRTCTraceServerIP="127.0.0.1";
-        private string _webRTCTraceServerPort="55000";
+        private bool _rtcTraceEnabled;
+        private string _rtcTraceServerIP="127.0.0.1";
+        private string _rtcTraceServerPort="55000";
         private readonly string[] incompatibleAudioCodecs =
             new string[] { "CN32000", "CN16000", "CN8000", "red8000", "telephone-event8000" };
         private string SelectedFrameRateId = nameof(SelectedFrameRateId) + "Frame";
@@ -44,7 +46,7 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
             _localSettings = ApplicationData.Current.LocalSettings;
             _dispatcher = dispatcher;
 
-            _webrtcSettingsService = container.Resolve<IWebRTCSettingsService>();
+            _mediaSettings = container.Resolve<IMediaSettingsChannel>();
             _ntpService = container.Resolve<NtpService>();
 
             _ntpService.OnNTPSyncFailed += handleNtpSynFailed;
@@ -66,7 +68,7 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
 
         public void OnNavigatedFrom()
         {
-            _webrtcSettingsService.ReleaseDevices();
+            _mediaSettings.ReleaseDevices();
         }
 
         public DelegateCommand CloseCommand { get; set; }
@@ -113,38 +115,38 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
 
             if (SelectedCamera != null)
             {
-                _webrtcSettingsService.VideoDevice = SelectedCamera;
+                _mediaSettings.SetVideoDevice(SelectedCamera);
                 _localSettings.Values[nameof(SelectedCamera)] = SelectedCamera.Id;
             }
 
             if (SelectedMicrophone != null)
             {
-                _webrtcSettingsService.AudioDevice = SelectedMicrophone;
+                _mediaSettings.SetAudioDevice(SelectedMicrophone);
                 _localSettings.Values[nameof(SelectedMicrophone)] = SelectedMicrophone.Id;
             }
 
             if (SelectedVideoCodec != null)
             {
-                _webrtcSettingsService.VideoCodec = SelectedVideoCodec;
+                _mediaSettings.SetVideoCodec(SelectedVideoCodec);
                 _localSettings.Values[nameof(SelectedVideoCodec)] = SelectedVideoCodec.Id;
             }
 
             if (SelectedAudioCodec != null)
             {
-                _webrtcSettingsService.AudioCodec = SelectedAudioCodec;
+                _mediaSettings.SetAudioCodec(SelectedAudioCodec);
                 _localSettings.Values[nameof(SelectedAudioCodec)] = SelectedAudioCodec.Id;
             }
 
             if (SelectedCapFPSItem != null)
             {
-                _webrtcSettingsService.SetPreferredVideoCaptureFormat((int)SelectedCapFPSItem.Width,
-                                                                      (int)SelectedCapFPSItem.Height,
-                                                                      (int)SelectedCapFPSItem.FrameRate);
+                _mediaSettings.SetPreferredVideoCaptureFormat(new VideoCaptureFormat((int)SelectedCapFPSItem.Width,
+                                                              (int)SelectedCapFPSItem.Height,
+                                                              (int)SelectedCapFPSItem.FrameRate));
                 _localSettings.Values[nameof(SelectedCapResItem)] = SelectedCapResItem;
                 _localSettings.Values[SelectedFrameRateId] = (SelectedCapFPSItem != null) ? SelectedCapFPSItem.FrameRate : 0;
             }
 
-            _webrtcSettingsService.AudioPlayoutDevice = SelectedAudioPlayoutDevice;
+            _mediaSettings.SetAudioPlayoutDevice(SelectedAudioPlayoutDevice);
             if (SelectedAudioPlayoutDevice != null)
             {
                 var localSettings = ApplicationData.Current.LocalSettings;
@@ -166,7 +168,7 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
 
         private async Task LoadSettings()
         {
-            await _webrtcSettingsService.InitializeWebRTC();
+            await _mediaSettings.InitializeMediaAsync();
 
             SignalingServerPort = int.Parse(SignalingSettings.SignalingServerPort);
             SignalingServerHost = SignalingSettings.SignalingServerHost;
@@ -175,7 +177,7 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
             AppInsightsEnabled = SignalingSettings.AppInsightsEnabled;
 #endif
 
-            Cameras = new ObservableCollection<MediaDevice>(_webrtcSettingsService.VideoCaptureDevices);
+            Cameras = new ObservableCollection<MediaDevice>(_mediaSettings.GetVideoCaptureDevices().Devices);
             if (_localSettings.Values[nameof(SelectedCamera)] != null)
             {
                 var id = (string)_localSettings.Values[nameof(SelectedCamera)];
@@ -189,9 +191,9 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
             {
                 SelectedCamera = Cameras.FirstOrDefault();
             }
-            _webrtcSettingsService.VideoDevice = SelectedCamera;
+            _mediaSettings.SetVideoDevice(SelectedCamera);
 
-            Microphones = new ObservableCollection<MediaDevice>(_webrtcSettingsService.AudioCaptureDevices);
+            Microphones = new ObservableCollection<MediaDevice>(_mediaSettings.GetAudioCaptureDevices().Devices);
             if (_localSettings.Values[nameof(SelectedMicrophone)] != null)
             {
                 var id = (string)_localSettings.Values[nameof(SelectedMicrophone)];
@@ -205,11 +207,11 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
             {
                 SelectedMicrophone = Microphones.FirstOrDefault();
             }
-            _webrtcSettingsService.AudioDevice = SelectedMicrophone;
+            _mediaSettings.SetAudioDevice(SelectedMicrophone);
 
             AudioCodecs = new ObservableCollection<CodecInfo>();
-            var audioCodecList = _webrtcSettingsService.AudioCodecs;
-            foreach (var audioCodec in audioCodecList)
+            var audioCodecList = _mediaSettings.GetAudioCodecs();
+            foreach (var audioCodec in audioCodecList.Codecs)
             {
                 if (!incompatibleAudioCodecs.Contains(audioCodec.Name + audioCodec.Clockrate))
                 {
@@ -229,9 +231,9 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
             {
                 SelectedAudioCodec = AudioCodecs.FirstOrDefault();
             }
-            _webrtcSettingsService.AudioCodec = SelectedAudioCodec;
+            _mediaSettings.SetAudioCodec(SelectedAudioCodec);
 
-            var videoCodecList = WebRTC.GetVideoCodecs().OrderBy(codec =>
+            var videoCodecList = _mediaSettings.GetVideoCodecs().Codecs.OrderBy(codec =>
             {
                 switch (codec.Name)
                 {
@@ -255,9 +257,9 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
             {
                 SelectedVideoCodec = VideoCodecs.FirstOrDefault();
             }
-            _webrtcSettingsService.VideoCodec = SelectedVideoCodec;
+            _mediaSettings.SetVideoCodec(SelectedVideoCodec);
 
-            AudioPlayoutDevices = new ObservableCollection<MediaDevice>(_webrtcSettingsService.AudioPlayoutDevices);
+            AudioPlayoutDevices = new ObservableCollection<MediaDevice>(_mediaSettings.GetAudioPlayoutDevices().Devices);
             string savedAudioPlayoutDeviceId = null;
             if (_localSettings.Values[nameof(SelectedAudioPlayoutDevice)] != null)
             {
@@ -272,7 +274,7 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
             {
                 SelectedAudioPlayoutDevice = AudioPlayoutDevices.FirstOrDefault();
             }
-            _webrtcSettingsService.AudioPlayoutDevice = SelectedAudioPlayoutDevice;
+            _mediaSettings.SetAudioPlayoutDevice(SelectedAudioPlayoutDevice);
 
 
             IceServers = new ObservableCollection<IceServerViewModel>(
@@ -337,16 +339,16 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
           }
         }
 
-        public string WebRTCTraceServerIp
+        public string RTCTraceServerIp
         {
-            get { return _webRTCTraceServerIP; }
-            set { SetProperty(ref _webRTCTraceServerIP, value); }
+            get { return _rtcTraceServerIP; }
+            set { SetProperty(ref _rtcTraceServerIP, value); }
         }
 
-        public string WebRTCTraceServerPort
+        public string RTCTraceServerPort
         {
-            get { return _webRTCTraceServerPort; }
-            set { SetProperty(ref _webRTCTraceServerPort, value); }
+            get { return _rtcTraceServerPort; }
+            set { SetProperty(ref _rtcTraceServerPort, value); }
         }
 
         public string ApplicationVersion
@@ -372,27 +374,31 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
                 SetProperty(ref _appInsightsEnabled, value);
             }
         }
-        public bool WebRTCTraceEnabled
+        public bool RTCTraceEnabled
         {
             get
             {
-                return _webrtcTraceEnabled;
+                return _rtcTraceEnabled;
             }
             set
             {
-                if (!SetProperty(ref _webrtcTraceEnabled, value))
+                if (!SetProperty(ref _rtcTraceEnabled, value))
                 {
                     return;
                 }
 
-                if (_webrtcTraceEnabled)
+                if (_rtcTraceEnabled)
                 {
-                    _webrtcSettingsService.StartTrace();
+                    _mediaSettings.StartTrace();
                 }
                 else
                 {
-                    _webrtcSettingsService.StopTrace();
-                    _webrtcSettingsService.SaveTrace(_webRTCTraceServerIP, Int32.Parse(_webRTCTraceServerPort));
+                    _mediaSettings.StopTrace();
+                    _mediaSettings.SaveTrace(new TraceServerConfig()
+                    {
+                        Ip = _rtcTraceServerIP,
+                        Port = Int32.Parse(_rtcTraceServerPort)
+                    });
                 }
             }
         }
@@ -440,7 +446,7 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
 
         #endregion
 
-        #region WebRTC settings
+        #region Media settings
 
         private ObservableCollection<MediaDevice> _cameras;
         public ObservableCollection<MediaDevice> Cameras
@@ -588,13 +594,14 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
         }
 
         #endregion
+
         #region NTP sync
 
         private void handleNtpTimeSync( long ntpTime)
         {
             Debug.WriteLine($"new ntp time: {ntpTime}");
             NtpSyncInProgress = false;
-            _webrtcSettingsService.SyncWithNTP(ntpTime);
+            _mediaSettings.SyncWithNTP(ntpTime);
 
         }
 
@@ -606,18 +613,18 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
         }
         #endregion
 
-        #region WebRTC settings helpers
+        #region Media settings helpers
 
         private async void SetSelectedCamera()
         {
             var capRes = new List<string>();
-            IList<CaptureCapability> captureCapabilities = null;
+            CaptureCapabilities captureCapabilities = null;
 
             if (SelectedCamera == null) return;
 
             try
             {
-                captureCapabilities = await SelectedCamera.GetVideoCaptureCapabilities();
+                captureCapabilities = await _mediaSettings.GetVideoCaptureCapabilitiesAsync(SelectedCamera);
             }
             catch (Exception ex)
             {
@@ -638,7 +645,7 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
                 return;
             }
 
-            var uniqueRes = captureCapabilities.GroupBy(test => test.ResolutionDescription)
+            var uniqueRes = captureCapabilities.Capabilities.GroupBy(test => test.ResolutionDescription)
                 .Select(grp => grp.FirstOrDefault()).ToList();
             CaptureCapability defaultResolution = null;
             foreach (var resolution in uniqueRes)
@@ -671,6 +678,11 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
             }
         }
 
+        private async Task<CaptureCapabilities> GetVideoCaptureCapabilities(MediaDevice device)
+        {
+            return await _mediaSettings.GetVideoCaptureCapabilitiesAsync(SelectedCamera);
+        }
+
         void SetSelectedCapResItem()
         {
             if (AllCapFPS == null)
@@ -681,10 +693,10 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
             {
                 AllCapFPS.Clear();
             }
-            var opCap = SelectedCamera.GetVideoCaptureCapabilities();
-            opCap.AsTask().ContinueWith(caps =>
+            var opCap = GetVideoCaptureCapabilities(SelectedCamera);
+            opCap.ContinueWith(caps =>
             {
-                var fpsList = from cap in caps.Result where cap.ResolutionDescription == SelectedCapResItem select cap;
+                var fpsList = from cap in caps.Result.Capabilities where cap.ResolutionDescription == SelectedCapResItem select cap;
                 var t = Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal,
                     () =>
                     {
@@ -708,9 +720,9 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
                             }
                         }
                         SelectedCapFPSItem = defaultFPS;
-                        _webrtcSettingsService.SetPreferredVideoCaptureFormat((int)SelectedCapFPSItem.Width,
-                                                                              (int)SelectedCapFPSItem.Height,
-                                                                              (int)SelectedCapFPSItem.FrameRate);
+                        _mediaSettings.SetPreferredVideoCaptureFormat(new VideoCaptureFormat((int)SelectedCapFPSItem.Width,
+                                                                      (int)SelectedCapFPSItem.Height,
+                                                                      (int)SelectedCapFPSItem.FrameRate));
                     });
                 var uiTask = _dispatcher.RunAsync(CoreDispatcherPriority.Normal, new DispatchedHandler(() =>
                 {
