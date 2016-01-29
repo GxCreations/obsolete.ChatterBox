@@ -123,12 +123,23 @@ namespace ChatterBox.Client.Common.Communication.Voip.States
 
         internal async Task ResumeVoipVideo()
         {
+            if (Context.LocalVideoRenderer.IsRendererAlreadySetup() &&
+                Context.RemoteVideoRenderer.IsRendererAlreadySetup())
+            {
+                return;
+            }
+
             Context.ResetRenderers();
+
             // Setup remote before local as it's more important.
             if (Context.RemoteStream != null)
             {
                 var tracks = Context.RemoteStream.GetVideoTracks();
+#if WIN10
+                var source = Context.Media.CreateMediaSource(tracks[0], "PEER");
+#else
                 var source = Context.Media.CreateMediaStreamSource(tracks[0], 30, "PEER");
+#endif
                 Context.RemoteVideoRenderer.SetupRenderer(Context.ForegroundProcessId, source);
             }
             // TODO: Delay here prevents a crash in the MF media engine when setting up the second
@@ -142,7 +153,11 @@ namespace ChatterBox.Client.Common.Communication.Voip.States
                     track.Suspended = false;
                 }
 
+#if WIN10
+                var source = Context.Media.CreateMediaSource(tracks[0], "LOCAL");
+#else
                 var source = Context.Media.CreateMediaStreamSource(tracks[0], 30, "LOCAL");
+#endif
                 Context.LocalVideoRenderer.SetupRenderer(Context.ForegroundProcessId, source);
             }
         }

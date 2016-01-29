@@ -108,14 +108,12 @@ void Renderer::OnMediaEngineEvent(uint32 meEvent, uintptr_t param1, uint32 param
         break;
     case MF_MEDIA_ENGINE_EVENT_PLAYING:
     case MF_MEDIA_ENGINE_EVENT_FIRSTFRAMEREADY:
-        //_mediaEngineEx->GetVideoSwapchainHandle(&swapChainHandle);
-        //SendSwapChainHandle(swapChainHandle, false);
-        //CloseHandle(swapChainHandle);
         break;
     case MF_MEDIA_ENGINE_EVENT_FORMATCHANGE:
-        _mediaEngineEx->GetVideoSwapchainHandle(&swapChainHandle);
-        SendSwapChainHandle(swapChainHandle, false);
-        CloseHandle(swapChainHandle);
+        if (SUCCEEDED(_mediaEngineEx->GetVideoSwapchainHandle(&swapChainHandle))) {
+          SendSwapChainHandle(swapChainHandle, false);
+          CloseHandle(swapChainHandle);
+        }
         break;
     case MF_MEDIA_ENGINE_EVENT_CANPLAY:
         _mediaEngine->Play();
