@@ -40,5 +40,9 @@ namespace ChatterBox.Client.Win8dot1.Voip
         public void Teardown()
         {
         }
+
+        public void SetDisplaySize(Windows.Foundation.Size size)
+        {
+        }
     }
 }

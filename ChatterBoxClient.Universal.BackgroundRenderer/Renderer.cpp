@@ -14,9 +14,7 @@ using ABI::Windows::Foundation::Collections::IPropertySet;
 Renderer::Renderer() :
     _useHardware(true),
     _foregroundProcessId(0),
-    _gpuVideoBuffersSupported(false),
-    _recalculateScaleEvent(CreateEvent(nullptr, FALSE, FALSE, nullptr)),
-    _shutdownEvent(CreateEvent(nullptr,TRUE,FALSE,nullptr))
+    _gpuVideoBuffersSupported(false)
 {
     InitializeCriticalSection(&_lock);
 }
@@ -25,14 +23,11 @@ Renderer::~Renderer()
 {
   OutputDebugString(L"Renderer::~Renderer()\n");
   Teardown();
-  CloseHandle(_recalculateScaleEvent);
-  CloseHandle(_shutdownEvent);
   DeleteCriticalSection(&_lock);
 }
 
 void Renderer::Teardown() {
   OutputDebugString(L"Renderer::Teardown()\n");
-  SetEvent(_shutdownEvent);
   if (_mediaEngine != nullptr) {
     OutputDebugString(L"_mediaEngine->Shutdown()\n");
     _mediaEngine->Shutdown();
@@ -85,33 +80,13 @@ void Renderer::SetupRenderer(uint32 foregroundProcessId, Windows::Media::Core::I
     {
         throw ref new COMException(hr, ref new String(L"Failed load media from source"));
     }
-    concurrency::create_async([this]
-    {
-        HANDLE evt[2];
-        ComPtr<IMFMediaEngineEx> mediaEngine = _mediaEngineEx;
-        evt[0] = _shutdownEvent;
-        evt[1] = _recalculateScaleEvent;
-        for (;;)
-        {
-            DWORD res = WaitForMultipleObjects(2, evt, FALSE, INFINITE);
-            if (res == WAIT_OBJECT_0)
-            {
-                break;
-            }
-            if (res != WAIT_OBJECT_0 + 1)
-            {
-                std::exception("WaitForMultipleObjects failed");
-            }
-            RecalculateScale(mediaEngine.Get());
-        }
-    });
 }
 
 void Renderer::SetRenderControlSize(Windows::Foundation::Size size)
 {
     EnterCriticalSection(&_lock);
     _renderControlSize = size;
-    SetEvent(_recalculateScaleEvent);
+    AsyncRecalculateScale();
     LeaveCriticalSection(&_lock);
 }
 
@@ -317,22 +292,31 @@ void Renderer::SendSwapChainHandle(HANDLE swapChain)
     size.Height = (float)height;
     EnterCriticalSection(&_lock);
     _videoSize = size;
-    SetEvent(_recalculateScaleEvent);
+    AsyncRecalculateScale();
     LeaveCriticalSection(&_lock);
 }
 
-void Renderer::RecalculateScale(IMFMediaEngineEx* mediaEngine)
+void Renderer::AsyncRecalculateScale()
 {
     EnterCriticalSection(&_lock);
     Windows::Foundation::Size renderControlSize = _renderControlSize;
     Windows::Foundation::Size videoSize = _videoSize;
     LeaveCriticalSection(&_lock);
+    concurrency::create_async([this, renderControlSize, videoSize]
+    {
+        RecalculateScale(renderControlSize, videoSize);
+    });
+}
+
+void Renderer::RecalculateScale(Windows::Foundation::Size renderControlSize,
+    Windows::Foundation::Size videoSize)
+{
     if ((renderControlSize.Width <= 0.0f) || (renderControlSize.Height <= 0.0f) ||
         (videoSize.Width <= 0.0f) || (videoSize.Height <= 0.0f))
     {
         return;
     }
-    if (mediaEngine == nullptr)
+    if (_mediaEngineEx == nullptr)
     {
         return;
     }
@@ -355,5 +339,5 @@ void Renderer::RecalculateScale(IMFMediaEngineEx* mediaEngine)
     rect = MFVideoNormalizedRect{ cropFrX, cropFrY, 1.0f - cropFrX, 1.0f - cropFrY };
     RECT r = { 0, 0, (LONG)renderControlSize.Width , (LONG)renderControlSize.Height };
     MFARGB borderColour = { 0 };
-    mediaEngine->UpdateVideoStream(&rect, &r, &borderColour);
+    _mediaEngineEx->UpdateVideoStream(&rect, &r, &borderColour);
 }

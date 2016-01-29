@@ -44,7 +44,9 @@ private:
     void SetupDirectX();
     void CreateDXDevice();
     void SendSwapChainHandle(HANDLE swapChain);
-    void RecalculateScale(IMFMediaEngineEx* mediaEngine);
+    void AsyncRecalculateScale();
+    void RecalculateScale(Windows::Foundation::Size renderControlSize,
+        Windows::Foundation::Size videoSize);
 
     bool _useHardware;
     Microsoft::WRL::ComPtr<ABI::Windows::Media::IMediaExtensionManager> _mediaExtensionManager;
@@ -60,9 +62,7 @@ private:
     bool _gpuVideoBuffersSupported;
     Windows::Foundation::Size _renderControlSize;
     Windows::Foundation::Size _videoSize;
-    HANDLE _recalculateScaleEvent;
     CRITICAL_SECTION _lock;
-    HANDLE _shutdownEvent;
 };
 
 }}}

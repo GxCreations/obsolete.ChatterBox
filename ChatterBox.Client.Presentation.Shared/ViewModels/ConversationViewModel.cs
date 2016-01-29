@@ -38,8 +38,8 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
         private string _userId;
         private long _localSwapChainHandle;
         private long _remoteSwapChainHandle;
-        private Windows.Foundation.Size _localNativeVideoSize;
-        private Windows.Foundation.Size _remoteNativeVideoSize;
+        private Windows.Foundation.Size _localVideoControlSize;
+        private Windows.Foundation.Size _remoteVideoControlSize;
         private bool _isMicEnabled;
         private bool _isVideoEnabled;
         private bool _isSelected;
@@ -280,30 +280,32 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
             }
         }
 
-        public Windows.Foundation.Size LocalNativeVideoSize
+        public Windows.Foundation.Size LocalVideoControlSize
         {
             get
             {
-                return _localNativeVideoSize;
+                return _localVideoControlSize;
             }
             set
             {
-                SetProperty(ref _localNativeVideoSize, value);
-                _voipChannel.OnLocalControlSize(value);
+                if (SetProperty(ref _localVideoControlSize, value))
+                {
+                    _voipChannel.OnLocalControlSize(value);
+                }
             }
         }
 
         public event Action RemoteNativeVideoSizeChanged;
 
-        public Windows.Foundation.Size RemoteNativeVideoSize
+        public Windows.Foundation.Size RemoteVideoControlSize
         {
             get
             {
-                return _remoteNativeVideoSize;
+                return _remoteVideoControlSize;
             }
             set
             {
-                if (SetProperty(ref _remoteNativeVideoSize, value))
+                if (SetProperty(ref _remoteVideoControlSize, value))
                 {
                     RemoteNativeVideoSizeChanged?.Invoke();
                     _voipChannel.OnRemoteControlSize(value);
@@ -620,26 +622,10 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
             if(obj.IsLocal)
             {
                 LocalSwapChainPanelHandle = obj.SwapChainHandle;
-                var s = new Windows.Foundation.Size();
-                if (ApplicationView.GetForCurrentView().Orientation == ApplicationViewOrientation.Landscape)
-                {
-                    s.Width = (float)obj.Width;
-                    s.Height = (float)obj.Height;
-                }
-                else
-                {
-                    s.Width = (float)obj.Height;
-                    s.Height = (float)obj.Width;
-                }
-                LocalNativeVideoSize = s;
             }
             else
             {
                 RemoteSwapChainPanelHandle = obj.SwapChainHandle;
-                var s = new Windows.Foundation.Size();
-                s.Width = (float)obj.Width;
-                s.Height = (float)obj.Height;
-                RemoteNativeVideoSize = s;
             }
         }
 
