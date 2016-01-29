@@ -11,21 +11,28 @@ using Microsoft::WRL::Details::Make;
 using ABI::Windows::Foundation::Collections::IMap;
 using ABI::Windows::Foundation::Collections::IPropertySet;
 
-Renderer::Renderer() : 
+Renderer::Renderer() :
     _useHardware(true),
     _foregroundProcessId(0),
-    _foregroundSwapChainHandle(nullptr)
+    _gpuVideoBuffersSupported(false),
+    _recalculateScaleEvent(CreateEvent(nullptr, FALSE, FALSE, nullptr)),
+    _shutdownEvent(CreateEvent(nullptr,TRUE,FALSE,nullptr))
 {
+    InitializeCriticalSection(&_lock);
 }
 
 Renderer::~Renderer()
 {
   OutputDebugString(L"Renderer::~Renderer()\n");
   Teardown();
+  CloseHandle(_recalculateScaleEvent);
+  CloseHandle(_shutdownEvent);
+  DeleteCriticalSection(&_lock);
 }
 
 void Renderer::Teardown() {
   OutputDebugString(L"Renderer::Teardown()\n");
+  SetEvent(_shutdownEvent);
   if (_mediaEngine != nullptr) {
     OutputDebugString(L"_mediaEngine->Shutdown()\n");
     _mediaEngine->Shutdown();
@@ -37,20 +44,7 @@ void Renderer::Teardown() {
   _device.Reset();
   _dx11DeviceContext.Reset();
   _dxGIManager.Reset();
-
-  if (_foregroundSwapChainHandle != nullptr) {
-    HANDLE foregroundProcess = OpenProcess(PROCESS_DUP_HANDLE, TRUE, _foregroundProcessId);
-    if ((foregroundProcess != nullptr) && (foregroundProcess != INVALID_HANDLE_VALUE))
-    {
-      if (!DuplicateHandle(foregroundProcess, _foregroundSwapChainHandle, nullptr,
-        nullptr, 0, TRUE, DUPLICATE_CLOSE_SOURCE))
-      {
-        OutputDebugString(L"Failed to close _foregroundSwapChainHandle\n");
-      }
-      _foregroundSwapChainHandle = nullptr;
-      CloseHandle(foregroundProcess);
-    }
-  }
+  _swapChainHandle.Close();
 
   _streamSource = nullptr;
 }
@@ -91,6 +85,39 @@ void Renderer::SetupRenderer(uint32 foregroundProcessId, Windows::Media::Core::I
     {
         throw ref new COMException(hr, ref new String(L"Failed load media from source"));
     }
+    concurrency::create_async([this]
+    {
+        HANDLE evt[2];
+        ComPtr<IMFMediaEngineEx> mediaEngine = _mediaEngineEx;
+        evt[0] = _shutdownEvent;
+        evt[1] = _recalculateScaleEvent;
+        for (;;)
+        {
+            DWORD res = WaitForMultipleObjects(2, evt, FALSE, INFINITE);
+            if (res == WAIT_OBJECT_0)
+            {
+                break;
+            }
+            if (res != WAIT_OBJECT_0 + 1)
+            {
+                std::exception("WaitForMultipleObjects failed");
+            }
+            RecalculateScale(mediaEngine.Get());
+        }
+    });
+}
+
+void Renderer::SetRenderControlSize(Windows::Foundation::Size size)
+{
+    EnterCriticalSection(&_lock);
+    _renderControlSize = size;
+    SetEvent(_recalculateScaleEvent);
+    LeaveCriticalSection(&_lock);
+}
+
+bool Renderer::GPUVideoBuffersSupported::get()
+{
+    return _gpuVideoBuffersSupported;
 }
 
 uint32 Renderer::GetProcessId()
@@ -106,16 +133,9 @@ void Renderer::OnMediaEngineEvent(uint32 meEvent, uintptr_t param1, uint32 param
     case MF_MEDIA_ENGINE_EVENT_ERROR:
         throw ref new COMException((HRESULT)param2, ref new String(L"Failed OnMediaEngineEvent"));
         break;
-    case MF_MEDIA_ENGINE_EVENT_PLAYING:
-    case MF_MEDIA_ENGINE_EVENT_FIRSTFRAMEREADY:
-        //_mediaEngineEx->GetVideoSwapchainHandle(&swapChainHandle);
-        //SendSwapChainHandle(swapChainHandle, false);
-        //CloseHandle(swapChainHandle);
-        break;
     case MF_MEDIA_ENGINE_EVENT_FORMATCHANGE:
         _mediaEngineEx->GetVideoSwapchainHandle(&swapChainHandle);
-        SendSwapChainHandle(swapChainHandle, false);
-        CloseHandle(swapChainHandle);
+        SendSwapChainHandle(swapChainHandle);
         break;
     case MF_MEDIA_ENGINE_EVENT_CANPLAY:
         _mediaEngine->Play();
@@ -235,14 +255,15 @@ void Renderer::CreateDXDevice()
         D3D_FEATURE_LEVEL_9_3
     };
 
-    D3D_FEATURE_LEVEL FeatureLevel;
+    D3D_FEATURE_LEVEL featureLevel;
     HRESULT hr = S_OK;
+    _gpuVideoBuffersSupported = false;
 
     if (_useHardware)
     {
         hr = D3D11CreateDevice(nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr,
             D3D11_CREATE_DEVICE_VIDEO_SUPPORT,
-            levels, ARRAYSIZE(levels), D3D11_SDK_VERSION, &_device, &FeatureLevel,
+            levels, ARRAYSIZE(levels), D3D11_SDK_VERSION, &_device, &featureLevel,
             &_dx11DeviceContext);
     }
 
@@ -255,7 +276,7 @@ void Renderer::CreateDXDevice()
     {
         hr = D3D11CreateDevice(nullptr, D3D_DRIVER_TYPE_WARP, nullptr,
             D3D11_CREATE_DEVICE_VIDEO_SUPPORT, levels, ARRAYSIZE(levels),
-            D3D11_SDK_VERSION, &_device, &FeatureLevel, &_dx11DeviceContext);
+            D3D11_SDK_VERSION, &_device, &featureLevel, &_dx11DeviceContext);
         if (FAILED(hr))
         {
             throw ref new COMException(hr, ref new String(L"Failed to create a DX device"));
@@ -264,6 +285,10 @@ void Renderer::CreateDXDevice()
 
     if (_useHardware)
     {
+        if ((unsigned int)featureLevel >= (unsigned int)D3D_FEATURE_LEVEL_11_1)
+        {
+            _gpuVideoBuffersSupported = true;
+        }
         ComPtr<ID3D10Multithread> multithread;
         hr = _device.Get()->QueryInterface(IID_PPV_ARGS(&multithread));
         if (FAILED(hr))
@@ -274,41 +299,61 @@ void Renderer::CreateDXDevice()
     }
 }
 
-void Renderer::SendSwapChainHandle(HANDLE swapChain, bool forceNewHandle)
+void Renderer::SendSwapChainHandle(HANDLE swapChain)
 {
     if (swapChain == nullptr)
     {
         return;
     }
-    HANDLE foregroundProcess = OpenProcess(PROCESS_DUP_HANDLE, TRUE, _foregroundProcessId);
-    if ((foregroundProcess == nullptr) || (foregroundProcess == INVALID_HANDLE_VALUE))
-    {
-        DWORD error = GetLastError();
-        throw ref new COMException(HRESULT_FROM_WIN32(error), ref new String(L"Failed to open foreground process"));
-    }
-    HANDLE dupHandle = nullptr;
-    if (!DuplicateHandle(GetCurrentProcess(), swapChain, foregroundProcess,
-        &dupHandle, 0, TRUE, DUPLICATE_SAME_ACCESS))
-    {
-        // TODO: deal with error
-        DWORD error = GetLastError();
-        CloseHandle(foregroundProcess);
-        throw ref new COMException(HRESULT_FROM_WIN32(error), ref new String(L"DuplicateHandle failed"));
-        return;
-    }
+    _swapChainHandle.AssignHandle(swapChain, _foregroundProcessId);
     DWORD width;
     DWORD height;
     _mediaEngine->GetNativeVideoSize(&width, &height);
 
     OutputDebugString(L"RenderFormatUpdate\n");
-    RenderFormatUpdate((int64)dupHandle, width, height);
-    if (_foregroundSwapChainHandle != nullptr) {
-      if (!DuplicateHandle(foregroundProcess, _foregroundSwapChainHandle, nullptr,
-        nullptr, 0, TRUE, DUPLICATE_CLOSE_SOURCE))
-      {
-        OutputDebugString(L"DuplicateHandle failed\n");
-      }
+    RenderFormatUpdate((int64)_swapChainHandle.GetRemoteHandle(), width, height);
+    Windows::Foundation::Size size;
+    size.Width = (float)width;
+    size.Height = (float)height;
+    EnterCriticalSection(&_lock);
+    _videoSize = size;
+    SetEvent(_recalculateScaleEvent);
+    LeaveCriticalSection(&_lock);
+}
+
+void Renderer::RecalculateScale(IMFMediaEngineEx* mediaEngine)
+{
+    EnterCriticalSection(&_lock);
+    Windows::Foundation::Size renderControlSize = _renderControlSize;
+    Windows::Foundation::Size videoSize = _videoSize;
+    LeaveCriticalSection(&_lock);
+    if ((renderControlSize.Width <= 0.0f) || (renderControlSize.Height <= 0.0f) ||
+        (videoSize.Width <= 0.0f) || (videoSize.Height <= 0.0f))
+    {
+        return;
     }
-    _foregroundSwapChainHandle = dupHandle;
-    CloseHandle(foregroundProcess);
+    if (mediaEngine == nullptr)
+    {
+        return;
+    }
+    MFVideoNormalizedRect rect = MFVideoNormalizedRect{ 0.0f, 0.0f, 0.0f, 0.0f };
+    double videoAspect = double(videoSize.Width) / double(videoSize.Height);
+    double renderControlAspect = double(renderControlSize.Width) / double(renderControlSize.Height);
+    double scalingFactor = (videoAspect > renderControlAspect) ?
+        (double(renderControlSize.Height) / double(videoSize.Height)) :
+        (double(renderControlSize.Width) / double(videoSize.Width));
+    if (scalingFactor == 0.0)
+    {
+        scalingFactor = 0.0001;
+    }
+    int scaledRenderControlWidth = int(double(renderControlSize.Width) / scalingFactor);
+    int scaledRenderControlHeight = int(double(renderControlSize.Height) / scalingFactor);
+    int cropX = max((int)videoSize.Width - scaledRenderControlWidth, 0);
+    int cropY = max((int)videoSize.Height - scaledRenderControlHeight, 0);
+    float cropFrX = float((double(cropX) / double(videoSize.Width)) / 2.0);
+    float cropFrY = float((double(cropY) / double(videoSize.Height)) / 2.0);
+    rect = MFVideoNormalizedRect{ cropFrX, cropFrY, 1.0f - cropFrX, 1.0f - cropFrY };
+    RECT r = { 0, 0, (LONG)renderControlSize.Width , (LONG)renderControlSize.Height };
+    MFARGB borderColour = { 0 };
+    mediaEngine->UpdateVideoStream(&rect, &r, &borderColour);
 }
