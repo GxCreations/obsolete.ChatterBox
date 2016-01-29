@@ -174,6 +174,11 @@ namespace ChatterBox.Client.Common.Communication.Voip
             await InitializeRTC();
         }
 
+        public async Task<bool> RequestAccessForMediaCaptureAsync()
+        {
+            return await WebRTC.RequestAccessForMediaCapture().AsTask();
+        }
+
         public void SyncWithNTP(long ntpTime)
         {
             WebRTC.SynNTPTime(ntpTime);

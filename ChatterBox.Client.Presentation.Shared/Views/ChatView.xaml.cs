@@ -31,10 +31,14 @@ namespace ChatterBox.Client.Presentation.Shared.Views
         private void InputPane_Showing(InputPane sender, InputPaneVisibilityEventArgs args)
         {
             Rect coveredArea = sender.OccludedRect;
+            var value = InstantMessagingHistory.ActualHeight - coveredArea.Height;
 
-            if (MainGrid.RowDefinitions != null && MainGrid.RowDefinitions.Count > 1)
+            if (MainGrid.RowDefinitions != null &&
+                MainGrid.RowDefinitions.Count > 1 &&
+                coveredArea.Height > 0 &&
+                value > 0)
             {
-                MainGrid.RowDefinitions[1].Height = new GridLength(InstantMessagingHistory.ActualHeight - coveredArea.Height);
+                MainGrid.RowDefinitions[1].Height = new GridLength(value);
                 MainGrid.InvalidateArrange();
             }
         }

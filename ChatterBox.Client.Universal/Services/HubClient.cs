@@ -149,6 +149,12 @@ namespace ChatterBox.Client.Universal.Services
             return Task.Run(() => InitializeMedia()).AsAsyncAction();
         }
 
+        public IAsyncOperation<bool> RequestAccessForMediaCaptureAsync()
+        {
+            // do not call for Windows 10
+            throw new System.NotSupportedException();
+        }
+
         public void SyncWithNTP(long ntpTime)
         {
             InvokeHubChannel<IMediaSettingsChannel>(ntpTime);

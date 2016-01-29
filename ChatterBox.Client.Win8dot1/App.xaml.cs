@@ -3,10 +3,10 @@ using ChatterBox.Client.Common.Background;
 using ChatterBox.Client.Common.Communication.Foreground;
 using ChatterBox.Client.Common.Communication.Signaling;
 using ChatterBox.Client.Common.Communication.Voip;
+using ChatterBox.Client.Common.Media;
 using ChatterBox.Client.Common.Notifications;
 using ChatterBox.Client.Common.Settings;
 using ChatterBox.Client.Common.Signaling;
-using ChatterBox.Client.Common.Media;
 using ChatterBox.Client.Presentation.Shared.Services;
 using ChatterBox.Client.Presentation.Shared.ViewModels;
 using ChatterBox.Client.Presentation.Shared.Views;
@@ -23,6 +23,7 @@ using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
 using Windows.ApplicationModel.Background;
 using Windows.ApplicationModel.Core;
+using Windows.UI.Core;
 using Windows.UI.Popups;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -44,7 +45,7 @@ namespace ChatterBox.Client.Win8dot1
         public App()
         {
             InitializeComponent();
-            Suspending += OnSuspending;            
+            Suspending += OnSuspending;
         }
 
         public UnityContainer Container { get; } = new UnityContainer();
@@ -63,13 +64,14 @@ namespace ChatterBox.Client.Win8dot1
                 launchArg = ToastNotificationLaunchArguments.FromXmlString(args.Arguments);
             }
 
-            if (args.PreviousExecutionState == ApplicationExecutionState.Running)
+            if (args.PreviousExecutionState == ApplicationExecutionState.Running ||
+                args.PreviousExecutionState == ApplicationExecutionState.Suspended)
             {
                 Resume();
                 ProcessLaunchArgument(launchArg);
 
                 return;
-            }
+            } 
 
             await AvatarLink.ExpandAvatarsToLocal();
 
@@ -91,7 +93,6 @@ namespace ChatterBox.Client.Win8dot1
                 .RegisterType<IForegroundChannel, ForegroundSignalingUpdateService>(new ContainerControlledLifetimeManager())
                 .RegisterType<IForegroundUpdateService, ForegroundSignalingUpdateService>(new ContainerControlledLifetimeManager())
                 .RegisterType<IClientChannel, ClientChannel>(new ContainerControlledLifetimeManager())
-                .RegisterType<ISocketConnection, SocketConnection>(new ContainerControlledLifetimeManager())
                 .RegisterType<IVoipCoordinator, VoipCoordinator>()
                 .RegisterType<IHub, Voip.Hub>(new ContainerControlledLifetimeManager())
                 .RegisterType<VoipContext>(new ContainerControlledLifetimeManager())
@@ -129,16 +130,28 @@ namespace ChatterBox.Client.Win8dot1
                 }
             }
 
+            // Avoid showing two dialogs in a short time or overlapping
+            // otherwise an Access Denied exception is thrown.
+            bool _isMessageForLockScreenShowed = false;
             var currentStatus = BackgroundExecutionManager.GetAccessStatus();
             if (currentStatus == BackgroundAccessStatus.Unspecified ||
                 currentStatus == BackgroundAccessStatus.Denied)
             {
+                _isMessageForLockScreenShowed = true;
                 ShowMessageForMissingLockScreen();
             }
             else
             {
                 await RegisterForPush();
             }
+
+            Container.Resolve<IMediaSettingsChannel>().RequestAccessForMediaCaptureAsync().AsTask().ContinueWith((d) =>
+            {
+                if (!d.Result && !_isMessageForLockScreenShowed)
+                {
+                    ShowMessageForMissingAccess();
+                }
+            });
 
             ProcessLaunchArgument(launchArg);
             // Ensure the current window is active
@@ -154,7 +167,18 @@ namespace ChatterBox.Client.Win8dot1
             msgDialog.CancelCommandIndex = 0;
             Debug.WriteLine("Message dialog for missing lock screen showed");
             await msgDialog.ShowAsync();
+        }
 
+        private void ShowMessageForMissingAccess()
+        {
+            CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () =>
+            {
+                var msgDialog = new MessageDialog("Chatterbox cannot run without access to webcam and microhpone!");
+                msgDialog.Commands.Add(new UICommand("OK", (cmd) => Current.Exit()) { Id = 0 });
+                msgDialog.DefaultCommandIndex = 0;
+                msgDialog.CancelCommandIndex = 0;
+                await msgDialog.ShowAsync();
+            });
         }
 
         private void QuitApp()
@@ -199,8 +223,9 @@ namespace ChatterBox.Client.Win8dot1
             Container.Resolve<IVoipChannel>().Hangup();
             webrtc_winrt_api.Media.OnAppSuspending();
 
+            Container.Resolve<ISocketConnection>().Disconnect();
             deferral.Complete();
-        }        
+        }
 
         protected override void OnWindowCreated(WindowCreatedEventArgs args)
         {

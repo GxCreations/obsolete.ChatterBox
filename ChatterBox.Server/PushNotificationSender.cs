@@ -1,11 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Diagnostics;
 using System.Net;
-using System.Threading.Tasks;
-using System.Text.RegularExpressions;
-using Common.Logging;
 
 namespace ChatterBox.Server
 {
@@ -60,7 +56,8 @@ namespace ChatterBox.Server
                     }
                     catch (WebException webException)
                     {
-                        HandleError(((HttpWebResponse)webException.Response).StatusCode, channelURI, payload);
+                        if (webException?.Response != null)
+                            HandleError(((HttpWebResponse)webException.Response).StatusCode, channelURI, payload);
                         Debug.WriteLine(String.Format("Failed WNS authentication. Error: {0}", webException.Message));
                     }
                     catch (Exception)

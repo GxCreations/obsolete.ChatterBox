@@ -177,6 +177,12 @@ namespace ChatterBox.Client.Common.Communication.Voip
             }).AsAsyncAction();
         }
 
+        public IAsyncOperation<bool> RequestAccessForMediaCaptureAsync()
+        {
+            // do not call for Windows 10
+            throw new System.NotSupportedException();
+        }
+
         public void SyncWithNTP(long ntpTime)
         {
             Task.Run(async () => {

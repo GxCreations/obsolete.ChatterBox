@@ -110,6 +110,11 @@ namespace ChatterBox.Client.Win8dot1.Channels
             return _voipContext.InitializeMediaAsync().AsAsyncAction();
         }
 
+        public IAsyncOperation<bool> RequestAccessForMediaCaptureAsync()
+        {
+            return _voipContext.RequestAccessForMediaCaptureAsync().AsAsyncOperation();
+        }
+
         public void SyncWithNTP(long ntpTime)
         {
             _voipContext.SyncWithNTP(ntpTime);

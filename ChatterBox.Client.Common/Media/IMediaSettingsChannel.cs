@@ -42,6 +42,8 @@ namespace ChatterBox.Client.Common.Media
         void InitializeMedia();
         IAsyncAction InitializeMediaAsync();
 
+        IAsyncOperation<bool> RequestAccessForMediaCaptureAsync();
+
         void SyncWithNTP(long ntpTime);
         void StartTrace();
         void StopTrace();
