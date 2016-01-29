@@ -18,10 +18,12 @@ using ChatterBox.Common.Communication.Contracts;
 using Microsoft.Practices.Unity;
 using System;
 using System.Diagnostics;
+using webrtc_winrt_api;
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
 using Windows.ApplicationModel.Background;
 using Windows.ApplicationModel.Core;
+using Windows.UI.Core;
 using Windows.UI.Popups;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -42,7 +44,7 @@ namespace ChatterBox.Client.Win8dot1
         public App()
         {
             InitializeComponent();
-            Suspending += OnSuspending;            
+            Suspending += OnSuspending;
         }
 
         public UnityContainer Container { get; } = new UnityContainer();
@@ -127,16 +129,28 @@ namespace ChatterBox.Client.Win8dot1
                 }
             }
 
+            // Avoid showing two dialogs in a short time or overlapping
+            // otherwise an Access Denied exception is thrown.
+            bool _isMessageForLockScreenShowed = false;
             var currentStatus = BackgroundExecutionManager.GetAccessStatus();
             if (currentStatus == BackgroundAccessStatus.Unspecified ||
                 currentStatus == BackgroundAccessStatus.Denied)
             {
+                _isMessageForLockScreenShowed = true;
                 ShowMessageForMissingLockScreen();
             }
             else
             {
                 await RegisterForPush();
             }
+
+            WebRTC.RequestAccessForMediaCapture().AsTask().ContinueWith((d) =>
+            {
+                if (!d.Result && !_isMessageForLockScreenShowed)
+                {
+                    ShowMessageForMissingAccess();
+                }
+            });
 
             ProcessLaunchArgument(launchArg);
             // Ensure the current window is active
@@ -152,7 +166,18 @@ namespace ChatterBox.Client.Win8dot1
             msgDialog.CancelCommandIndex = 0;
             Debug.WriteLine("Message dialog for missing lock screen showed");
             await msgDialog.ShowAsync();
+        }
 
+        private void ShowMessageForMissingAccess()
+        {
+            CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () =>
+            {
+                var msgDialog = new MessageDialog("Chatterbox cannot run without access to webcam and microhpone!");
+                msgDialog.Commands.Add(new UICommand("OK", (cmd) => Current.Exit()) { Id = 0 });
+                msgDialog.DefaultCommandIndex = 0;
+                msgDialog.CancelCommandIndex = 0;
+                await msgDialog.ShowAsync();
+            });
         }
 
         private void QuitApp()
@@ -198,7 +223,7 @@ namespace ChatterBox.Client.Win8dot1
             webrtc_winrt_api.Media.OnAppSuspending();
 
             deferral.Complete();
-        }        
+        }
 
         protected override void OnWindowCreated(WindowCreatedEventArgs args)
         {
