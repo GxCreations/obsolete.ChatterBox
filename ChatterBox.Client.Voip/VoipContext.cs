@@ -8,15 +8,15 @@ using ChatterBox.Client.Voip.States.Interfaces;
 using System;
 using System.Linq;
 using System.Diagnostics;
-using System.Threading.Tasks;
-using Windows.Graphics.Display;
-using webrtc_winrt_api;
 using System.Threading;
-using Windows.UI.Core;
+using System.Threading.Tasks;
 using System.Collections.Generic;
+using Windows.Graphics.Display;
+using Windows.UI.Core;
 using Windows.Networking.Connectivity;
 using Windows.Storage;
 using Windows.System.Threading;
+using webrtc_winrt_api;
 
 #pragma warning disable 4014
 
@@ -128,6 +128,18 @@ namespace ChatterBox.Client.Common.Communication.Voip
                                                       (int)_localSettings.Values[WebRTCSettingsIds.PreferredVideoCaptureHeight],
                                                       (int)_localSettings.Values[WebRTCSettingsIds.PreferredVideoCaptureFrameRate]);
             }
+
+            ResolutionHelper.ResolutionChanged += (id, width, height) =>
+            {
+                if (id == "LOCAL")
+                {
+                    LocalVideoRenderer.ResolutionChanged(width, height);
+                }
+                else if (id == "PEER")
+                {
+                    RemoteVideoRenderer.ResolutionChanged(width, height);
+                }
+            };
         }
 
         public void SyncWithNTP(long ntpTime)
@@ -165,7 +177,6 @@ namespace ChatterBox.Client.Common.Communication.Voip
             }
 
             _appPerfTimer = ThreadPoolTimer.CreatePeriodicTimer(t=> ReportAppPerf(), TimeSpan.FromSeconds(1));
-
         }
 
 
@@ -173,7 +184,6 @@ namespace ChatterBox.Client.Common.Communication.Voip
         {
             WebRTC.UpdateCPUUsage(CPUData.GetCPUUsage());
             WebRTC.UpdateMemUsage(MEMData.GetMEMUsage());
-
         }
 
 
@@ -539,6 +549,5 @@ namespace ChatterBox.Client.Common.Communication.Voip
             // stop call watch, so the duration will be calculated and tracked as request
             _hub.StopStatsManagerCallWatch();
         }
-
     }
 }

@@ -520,8 +520,10 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
                         IsCallConnected = false;
                         IsMicEnabled = true; //Start new calls with mic enabled
                         IsVideoEnabled = voipState.IsVideoEnabled;
-                        var task = PlaySound(isIncomingCall: true);
                         IsAudioOnlyCall = !voipState.IsVideoEnabled;
+                        LocalNativeVideoSize = new Windows.Foundation.Size(0, 0);
+                        RemoteNativeVideoSize = new Windows.Foundation.Size(0, 0);
+                        var task = PlaySound(isIncomingCall: true);
                     }
                     else
                     {
@@ -537,6 +539,8 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
                         IsCallConnected = false;
                         IsMicEnabled = true; //Start new calls with mic enabled
                         IsVideoEnabled = voipState.IsVideoEnabled;
+                        LocalNativeVideoSize = new Windows.Foundation.Size(0, 0);
+                        RemoteNativeVideoSize = new Windows.Foundation.Size(0, 0);
                         var task = PlaySound(isIncomingCall: false);
                     }
                     else
@@ -615,7 +619,9 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
 
             if(obj.IsLocal)
             {
+#if WIN10
                 LocalSwapChainPanelHandle = obj.SwapChainHandle;
+#endif
                 var s = new Windows.Foundation.Size();
                 if (ApplicationView.GetForCurrentView().Orientation == ApplicationViewOrientation.Landscape)
                 {
@@ -631,7 +637,9 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
             }
             else
             {
+#if WIN10
                 RemoteSwapChainPanelHandle = obj.SwapChainHandle;
+#endif
                 var s = new Windows.Foundation.Size();
                 s.Width = (float)obj.Width;
                 s.Height = (float)obj.Height;

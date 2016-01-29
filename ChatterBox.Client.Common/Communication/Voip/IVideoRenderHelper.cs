@@ -13,5 +13,6 @@ namespace ChatterBox.Client.Common.Communication.Voip
         void Teardown();
 
         void SetMediaElement(CoreDispatcher dispatcher, MediaElement mediaElement);
+        void ResolutionChanged(uint width, uint height);
     }
 }

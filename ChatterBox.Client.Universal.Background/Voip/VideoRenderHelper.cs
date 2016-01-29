@@ -30,6 +30,12 @@ namespace ChatterBox.Client.Universal.Background.Voip
         {
         }
 
+        public void ResolutionChanged(uint width, uint height)
+        {
+            //Do nothing
+            //For W10, the resolution is obtained from Renderer
+        }
+
         private Renderer _renderer = new Renderer();
     }
 }
