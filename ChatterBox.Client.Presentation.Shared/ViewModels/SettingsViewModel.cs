@@ -14,6 +14,7 @@ using Microsoft.Practices.Unity;
 using ChatterBox.Client.Presentation.Shared.Services;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using ChatterBox.Client.Common.Communication.Voip.Dto;
 
 namespace ChatterBox.Client.Presentation.Shared.ViewModels
 {
@@ -138,9 +139,9 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
 
             if (SelectedCapFPSItem != null)
             {
-                _mediaSettings.SetPreferredVideoCaptureFormat((int)SelectedCapFPSItem.Width,
+                _mediaSettings.SetPreferredVideoCaptureFormat(new VideoCaptureFormat((int)SelectedCapFPSItem.Width,
                                                               (int)SelectedCapFPSItem.Height,
-                                                              (int)SelectedCapFPSItem.FrameRate);
+                                                              (int)SelectedCapFPSItem.FrameRate));
                 _localSettings.Values[nameof(SelectedCapResItem)] = SelectedCapResItem;
                 _localSettings.Values[SelectedFrameRateId] = (SelectedCapFPSItem != null) ? SelectedCapFPSItem.FrameRate : 0;
             }
@@ -393,7 +394,11 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
                 else
                 {
                     _mediaSettings.StopTrace();
-                    _mediaSettings.SaveTrace(_rtcTraceServerIP, Int32.Parse(_rtcTraceServerPort));
+                    _mediaSettings.SaveTrace(new TraceServerConfig()
+                    {
+                        Ip = _rtcTraceServerIP,
+                        Port = Int32.Parse(_rtcTraceServerPort)
+                    });
                 }
             }
         }
@@ -715,9 +720,9 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
                             }
                         }
                         SelectedCapFPSItem = defaultFPS;
-                        _mediaSettings.SetPreferredVideoCaptureFormat((int)SelectedCapFPSItem.Width,
+                        _mediaSettings.SetPreferredVideoCaptureFormat(new VideoCaptureFormat((int)SelectedCapFPSItem.Width,
                                                                       (int)SelectedCapFPSItem.Height,
-                                                                      (int)SelectedCapFPSItem.FrameRate);
+                                                                      (int)SelectedCapFPSItem.FrameRate));
                     });
                 var uiTask = _dispatcher.RunAsync(CoreDispatcherPriority.Normal, new DispatchedHandler(() =>
                 {

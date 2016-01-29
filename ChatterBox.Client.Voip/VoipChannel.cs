@@ -210,7 +210,7 @@ namespace ChatterBox.Client.Common.Communication.Voip
 
         public void SaveTrace(TraceServerConfig traceServer)
         {
-            Context.SaveTrace(traceServer.Ip, traceServer.Port);
+            Context.SaveTrace(traceServer);
         }
 
         public void SuspendVoipVideo()

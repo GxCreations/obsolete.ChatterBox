@@ -96,11 +96,6 @@ namespace ChatterBox.Client.Win8dot1.Channels
             return _voipContext.GetVideoCaptureCapabilitiesAsync(device).AsAsyncOperation();
         }
 
-        public void SetPreferredVideoCaptureFormat(int width, int height, int frameRate)
-        {
-            _voipContext.SetPreferredVideoCaptureFormat(width, height, frameRate);
-        }
-
         public void SetPreferredVideoCaptureFormat(VideoCaptureFormat format)
         {
             _voipContext.SetPreferredVideoCaptureFormat(format);
@@ -129,11 +124,6 @@ namespace ChatterBox.Client.Win8dot1.Channels
         {
             _voipContext.StopTrace();
         }
-        public void SaveTrace(string ip, int port)
-        {
-            _voipContext.SaveTrace(ip, port);
-        }
-
         public void SaveTrace(TraceServerConfig traceServer)
         {
             _voipContext.SaveTrace(traceServer);
