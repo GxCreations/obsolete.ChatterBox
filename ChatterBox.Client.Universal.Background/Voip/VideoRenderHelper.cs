@@ -19,11 +19,17 @@ namespace ChatterBox.Client.Universal.Background.Voip
         public void SetupRenderer(uint foregroundProcessId, IMediaSource source)
         {
             _renderer.SetupRenderer(foregroundProcessId, source);
+            _isSetup = true;
         }
 
         public void Teardown()
         {
             _renderer.Teardown();
+        }
+
+        public bool IsRendererAlreadySetup()
+        {
+            return _isSetup;
         }
 
         public void SetMediaElement(CoreDispatcher dispatcher, MediaElement mediaElement)
@@ -35,5 +41,6 @@ namespace ChatterBox.Client.Universal.Background.Voip
         }
 
         private Renderer _renderer = new Renderer();
+        bool _isSetup = false;
     }
 }

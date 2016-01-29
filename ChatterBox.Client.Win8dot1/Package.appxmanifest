@@ -16,18 +16,6 @@
   <Applications>
     <Application EntryPoint="ChatterBox.Client.Win8dot1.App" Executable="$targetnametoken$.exe" Id="ChatterBoxClientAppId">
       <Extensions>
-        <Extension Category="windows.backgroundTasks" EntryPoint="ChatterBox.Client.Tasks.Signaling.Win8dot1.SignalingTask" Executable="$targetnametoken$.exe">
-          <BackgroundTasks>
-            <Task Type="controlChannel" />
-            <Task Type="systemEvent" />
-          </BackgroundTasks>
-        </Extension>
-        <Extension Category="windows.backgroundTasks" EntryPoint="ChatterBox.Client.Tasks.Signaling.Win8dot1.KeepAliveTask" Executable="$targetnametoken$.exe">
-          <BackgroundTasks>
-            <Task Type="controlChannel" />
-            <Task Type="systemEvent" />
-          </BackgroundTasks>
-        </Extension>
         <Extension Category="windows.backgroundTasks" EntryPoint="ChatterBox.Client.Common.Background.PushNotificationTask">
           <BackgroundTasks>
             <Task Type="pushNotification" />

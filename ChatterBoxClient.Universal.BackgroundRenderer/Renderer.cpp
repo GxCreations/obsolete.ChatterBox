@@ -109,8 +109,9 @@ void Renderer::OnMediaEngineEvent(uint32 meEvent, uintptr_t param1, uint32 param
         throw ref new COMException((HRESULT)param2, ref new String(L"Failed OnMediaEngineEvent"));
         break;
     case MF_MEDIA_ENGINE_EVENT_FORMATCHANGE:
-        _mediaEngineEx->GetVideoSwapchainHandle(&swapChainHandle);
-        SendSwapChainHandle(swapChainHandle);
+        if (SUCCEEDED(_mediaEngineEx->GetVideoSwapchainHandle(&swapChainHandle))) {
+          SendSwapChainHandle(swapChainHandle);
+        }
         break;
     case MF_MEDIA_ENGINE_EVENT_CANPLAY:
         _mediaEngine->Play();
