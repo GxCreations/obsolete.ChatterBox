@@ -447,7 +447,6 @@ namespace ChatterBox.Client.Common.Communication.Voip
             }
         }
 
-
         public IVideoRenderHelper LocalVideoRenderer { get; private set; }
         public IVideoRenderHelper RemoteVideoRenderer { get; private set; }
 

@@ -18,6 +18,7 @@ namespace ChatterBox.Client.Win8dot1.Voip
 
         private CoreDispatcher _dispatcher;
         private MediaElement _mediaElement;
+        bool _isSetup = false;
 
         public void SetMediaElement(CoreDispatcher dispatcher, MediaElement mediaElement)
         {
@@ -34,11 +35,17 @@ namespace ChatterBox.Client.Win8dot1.Voip
                     _mediaElement.SetMediaStreamSource(source);
                 });
                 var asyncOp = _dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, new DispatchedHandler(fn));
+                _isSetup = true;
             }
         }
 
         public void Teardown()
         {
+        }
+
+        public bool IsRendererAlreadySetup()
+        {
+            return _isSetup;
         }
     }
 }
