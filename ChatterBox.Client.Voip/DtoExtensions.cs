@@ -86,6 +86,7 @@ namespace ChatterBox.Client.Voip
             {
                 Id = obj.Id,
                 Name = obj.Name,
+                Clockrate = obj.Clockrate,
             };
         }
 

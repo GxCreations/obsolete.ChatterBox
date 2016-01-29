@@ -61,7 +61,7 @@ namespace ChatterBox.Client.Common.Communication.Voip
 
         public DtoMediaDevices GetVideoCaptureDevices()
         {
-            return DtoExtensions.ToDto(Media.GetVideoCaptureDevices().ToArray());
+            return Media.GetVideoCaptureDevices().ToArray().ToDto();
         }
 
         public DtoMediaDevices GetAudioCaptureDevices()
@@ -161,30 +161,17 @@ namespace ChatterBox.Client.Common.Communication.Voip
             return DtoExtensions.ToDto(capabilities.ToArray());
         }
 
-        public void SetPreferredVideoCaptureFormat(int width, int height, int frameRate)
-        {
-            _localSettings.Values[MediaSettingsIds.PreferredVideoCaptureWidth] = width;
-            _localSettings.Values[MediaSettingsIds.PreferredVideoCaptureHeight] = height;
-            _localSettings.Values[MediaSettingsIds.PreferredVideoCaptureFrameRate] = frameRate;
-        }
-
         public void SetPreferredVideoCaptureFormat(DtoVideoCaptureFormat format)
         {
-            SetPreferredVideoCaptureFormat(format.Width, format.Height, format.FrameRate);
+            _localSettings.Values[MediaSettingsIds.PreferredVideoCaptureWidth] = format.Width;
+            _localSettings.Values[MediaSettingsIds.PreferredVideoCaptureHeight] = format.Height;
+            _localSettings.Values[MediaSettingsIds.PreferredVideoCaptureFrameRate] = format.FrameRate;
         }
 
         public async Task InitializeMediaAsync()
         {
-            if (Media == null)
-            {
-                WebRTC.Initialize(_dispatcher);
-                Media = await WebRTCMedia.CreateMediaAsync();
-                if (DisplayOrientations.None != _displayOrientation)
-                {
-                    WebRTCMedia.SetDisplayOrientation(_displayOrientation);
-                }
-                await Media.EnumerateAudioVideoCaptureDevices();
-            }
+            // TODO: Let's remove this.
+            await InitializeRTC();
         }
 
         public void SyncWithNTP(long ntpTime)
@@ -207,13 +194,9 @@ namespace ChatterBox.Client.Common.Communication.Voip
             }
         }
 
-        public void SaveTrace(string ip, int port)
-        {
-            WebRTC.SaveTrace(ip, port);
-        }
         public void SaveTrace(TraceServerConfig traceServer)
         {
-            SaveTrace(traceServer.Ip, traceServer.Port);
+            WebRTC.SaveTrace(traceServer.Ip, traceServer.Port);
         }
 
         public void ReleaseDevices()

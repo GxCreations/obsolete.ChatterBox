@@ -8,30 +8,28 @@ namespace ChatterBox.Client.Voip.Utils
     internal class AutoLock : IDisposable
     {
         private readonly SemaphoreSlim _sem;
-        private SemaphoreSlim _dispose;
+        private bool _isLocked;
 
         public AutoLock(SemaphoreSlim sem)
         {
             _sem = sem;
-            _sem.WaitAsync();
         }
 
         public Task WaitAsync()
         {
-            if (null != _dispose) return Task.Run(() => { });
-            _dispose = _sem;
-            var result = _dispose.WaitAsync();
+            if (_isLocked) return Task.Run(() => { });
+            _isLocked = true;
+            var result = _sem.WaitAsync();
             Debug.WriteLine("Lock - Semaphore - Got");
             return result;
         }
 
         public void Dispose()
         {
-            if (null != _dispose)
+            if (_isLocked)
             {
                 Debug.WriteLine("Lock - Semaphore - Release");
-                _dispose.Release();
-                _dispose = null;
+                _sem.Release();
             }
         }
     }

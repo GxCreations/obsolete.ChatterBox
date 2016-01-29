@@ -155,10 +155,6 @@ namespace ChatterBox.Client.Common.Communication.Voip
             }).AsAsyncOperation();
         }
 
-        public void SetPreferredVideoCaptureFormat(int width, int height, int frameRate)
-        {
-            Context.SetPreferredVideoCaptureFormat(new VideoCaptureFormat(width, height, frameRate));
-        }
         public void SetPreferredVideoCaptureFormat(VideoCaptureFormat format)
         {
             Task.Run(async () => {
@@ -169,10 +165,7 @@ namespace ChatterBox.Client.Common.Communication.Voip
         public void InitializeMedia()
         {
             // TODO please remove this method and auto-init WebRTC as needed (Fred LaBel)
-            Task.Run(async () =>
-            {
-                await Context.WithContextAction(async ctx => { await ctx.InitializeMediaAsync(); });
-            });
+            Context.WithContextAction(async ctx => { await ctx.InitializeMediaAsync(); }).Wait();
         }
 
         public IAsyncAction InitializeMediaAsync()
@@ -202,16 +195,6 @@ namespace ChatterBox.Client.Common.Communication.Voip
             Task.Run(async () => {
                 await Context.WithContextAction(ctx => { ctx.StopTrace(); });
             }).Wait();
-        }
-
-        public void SaveTrace(string ip, int port)
-        {
-            TraceServerConfig traceServer = new TraceServerConfig
-            {
-                Ip = ip,
-                Port = port
-            };
-            SaveTrace(traceServer);
         }
 
         public void SaveTrace(TraceServerConfig traceServer)

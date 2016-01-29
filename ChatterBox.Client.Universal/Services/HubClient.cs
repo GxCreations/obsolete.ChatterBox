@@ -135,11 +135,6 @@ namespace ChatterBox.Client.Universal.Services
             return Task.Run(() => { return GetVideoCaptureCapabilities(device); }).AsAsyncOperation();
         }
 
-        public void SetPreferredVideoCaptureFormat(int width, int height, int frameRate)
-        {
-            SetPreferredVideoCaptureFormat(new VideoCaptureFormat(width, height, frameRate));
-        }
-
         public void SetPreferredVideoCaptureFormat(VideoCaptureFormat format)
         {
             InvokeHubChannel<IMediaSettingsChannel>(format);
@@ -171,16 +166,6 @@ namespace ChatterBox.Client.Universal.Services
         public void SaveTrace(TraceServerConfig traceServer)
         {
           InvokeHubChannel<IMediaSettingsChannel>(traceServer);
-        }
-
-        public void SaveTrace(string ip, int port)
-        {
-            TraceServerConfig traceServer = new TraceServerConfig
-            {
-                Ip = ip,
-                Port = port
-            };
-            SaveTrace(traceServer);
         }
 
         public void ReleaseDevices()
