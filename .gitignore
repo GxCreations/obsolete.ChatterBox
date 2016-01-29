@@ -6,5 +6,5 @@ packages/
 Debug/
 Release/
 bin/
-obj.
+obj/
 .vs/config/applicationhost.config
