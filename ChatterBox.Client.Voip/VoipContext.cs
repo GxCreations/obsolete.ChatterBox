@@ -550,7 +550,8 @@ namespace ChatterBox.Client.Common.Communication.Voip
                 }
             }
         }
-        public async Task WithContextAction<T>(Action<VoipContext, T> fn, T value)
+
+        public async Task WithContextActionAsync(Func<VoipContext, Task> fn)
         {
             using (var @lock = new AutoLock(_sem))
             {
@@ -558,7 +559,7 @@ namespace ChatterBox.Client.Common.Communication.Voip
 
                 try
                 {
-                    fn(this, value);
+                    await fn(this);
                 }
                 catch (Exception ex)
                 {
@@ -566,6 +567,7 @@ namespace ChatterBox.Client.Common.Communication.Voip
                 }
             }
         }
+
         public async Task<TResult> WithContextFunc<TResult>(Func<VoipContext, TResult> fn)
         {
             using (var @lock = new AutoLock(_sem))
@@ -583,7 +585,7 @@ namespace ChatterBox.Client.Common.Communication.Voip
             }
             return default(TResult);
         }
-        public async Task<TResult> WithContextFunc<T, TResult>(Func<VoipContext, T, TResult> fn, T value)
+        public async Task<TResult> WithContextFuncAsync<TResult>(Func<VoipContext, Task<TResult>> fn)
         {
             using (var @lock = new AutoLock(_sem))
             {
@@ -591,7 +593,7 @@ namespace ChatterBox.Client.Common.Communication.Voip
 
                 try
                 {
-                    return fn(this, value);
+                    return await fn(this);
                 }
                 catch (Exception ex)
                 {
