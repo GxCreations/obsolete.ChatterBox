@@ -76,6 +76,11 @@ namespace ChatterBox.Client.Common.Media.Dto
 
     public sealed class VideoCaptureFormat
     {
+        public VideoCaptureFormat()
+        {
+            Width = Height = FrameRate = 0;
+        }
+
         public VideoCaptureFormat(int width, int height, int frameRate)
         {
             Width = width;
