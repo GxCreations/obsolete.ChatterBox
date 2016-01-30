@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using ChatterBox.Client.Common.Media.Dto;
 using Windows.Foundation;
+using ChatterBox.Client.Common.Communication.Voip.Dto;
 
 namespace ChatterBox.Client.Common.Media
 {
@@ -35,16 +36,18 @@ namespace ChatterBox.Client.Common.Media
         CaptureCapabilities GetVideoCaptureCapabilities(MediaDevice device);
         IAsyncOperation<CaptureCapabilities> GetVideoCaptureCapabilitiesAsync(MediaDevice device);
 
-        void SetPreferredVideoCaptureFormat(int width, int height, int frameRate);
+        void SetPreferredVideoCaptureFormat(VideoCaptureFormat format);
 
         // TODO: Remove this and auto-intialize RTC
         void InitializeMedia();
         IAsyncAction InitializeMediaAsync();
 
+        IAsyncOperation<bool> RequestAccessForMediaCaptureAsync();
+
         void SyncWithNTP(long ntpTime);
         void StartTrace();
         void StopTrace();
-        void SaveTrace(string ip, int port);
+        void SaveTrace(TraceServerConfig config);
 
         void ReleaseDevices();
     }

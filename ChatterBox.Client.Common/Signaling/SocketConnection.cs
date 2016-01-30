@@ -43,13 +43,13 @@ namespace ChatterBox.Client.Common.Signaling
                     if (!IsConnected)
                     {
                          return ret;
-                     }
+                    }
 
                     //Todo: de-register with the current server?
                     _signalingSocketChannel.DisconnectSignalingServer();
 
                     Monitor.Exit(_connectingLock);
-                 }
+                }
                 return ret;
               }).AsAsyncOperation();
         }

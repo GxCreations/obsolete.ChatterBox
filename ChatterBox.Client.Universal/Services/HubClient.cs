@@ -18,6 +18,7 @@ using ChatterBox.Common.Communication.Messages.Registration;
 using ChatterBox.Common.Communication.Messages.Relay;
 using ChatterBox.Common.Communication.Messages.Standard;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -26,6 +27,8 @@ using Windows.ApplicationModel;
 using Windows.ApplicationModel.AppService;
 using Windows.Foundation;
 using Windows.Graphics.Display;
+using Windows.Media.Capture;
+using Windows.Media.MediaProperties;
 using Windows.Storage;
 using Windows.UI.Core;
 using Windows.UI.Xaml.Controls;
@@ -132,12 +135,52 @@ namespace ChatterBox.Client.Universal.Services
         }
         public IAsyncOperation<CaptureCapabilities> GetVideoCaptureCapabilitiesAsync(MediaDevice device)
         {
-            return Task.Run(() => { return GetVideoCaptureCapabilities(device); }).AsAsyncOperation();
-        }
+            return Task.Run(async () =>
+            {
+                var settings = new MediaCaptureInitializationSettings()
+                {
+                    VideoDeviceId = device.Id,
+                    MediaCategory = MediaCategory.Communications,
+                };
+                var capture = new MediaCapture();
+                await capture.InitializeAsync(settings);
+                var caps = capture.VideoDeviceController.GetAvailableMediaStreamProperties(MediaStreamType.VideoRecord);
 
-        public void SetPreferredVideoCaptureFormat(int width, int height, int frameRate)
-        {
-            SetPreferredVideoCaptureFormat(new VideoCaptureFormat(width, height, frameRate));
+                var arr = new List<CaptureCapability>();
+                foreach (var cap in caps)
+                {
+                    if (cap.Type != "Video")
+                    {
+                        continue;
+                    }
+
+                    var videoCap = (VideoEncodingProperties)cap;
+
+                    if (videoCap.FrameRate.Denominator == 0 ||
+                    videoCap.FrameRate.Numerator == 0 ||
+                    videoCap.Width == 0 ||
+                    videoCap.Height == 0)
+                    {
+                        continue;
+                    }
+                    var captureCap = new CaptureCapability()
+                    {
+                        Width = videoCap.Width,
+                        Height = videoCap.Height,
+                        FrameRate = videoCap.FrameRate.Numerator / videoCap.FrameRate.Denominator,
+                    };
+                    captureCap.FrameRateDescription = $"{captureCap.FrameRate} fps";
+                    captureCap.ResolutionDescription = $"{captureCap.Width} x {captureCap.Height}";
+                    captureCap.PixelAspectRatio = new Common.Media.Dto.MediaRatio()
+                    {
+                        Numerator = videoCap.PixelAspectRatio.Numerator,
+                        Denominator = videoCap.PixelAspectRatio.Denominator,
+                    };
+                    captureCap.FullDescription = $"{captureCap.ResolutionDescription} {captureCap.FrameRateDescription}";
+                    arr.Add(captureCap);
+                }
+                return new CaptureCapabilities() { Capabilities = arr.GroupBy(o => o.FullDescription).Select(o => o.First()).ToArray() };
+            }).AsAsyncOperation();
         }
 
         public void SetPreferredVideoCaptureFormat(VideoCaptureFormat format)
@@ -152,6 +195,12 @@ namespace ChatterBox.Client.Universal.Services
         public IAsyncAction InitializeMediaAsync()
         {
             return Task.Run(() => InitializeMedia()).AsAsyncAction();
+        }
+
+        public IAsyncOperation<bool> RequestAccessForMediaCaptureAsync()
+        {
+            // do not call for Windows 10
+            throw new System.NotSupportedException();
         }
 
         public void SyncWithNTP(long ntpTime)
@@ -171,16 +220,6 @@ namespace ChatterBox.Client.Universal.Services
         public void SaveTrace(TraceServerConfig traceServer)
         {
           InvokeHubChannel<IMediaSettingsChannel>(traceServer);
-        }
-
-        public void SaveTrace(string ip, int port)
-        {
-            TraceServerConfig traceServer = new TraceServerConfig
-            {
-                Ip = ip,
-                Port = port
-            };
-            SaveTrace(traceServer);
         }
 
         public void ReleaseDevices()
