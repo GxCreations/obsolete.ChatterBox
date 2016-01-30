@@ -43,6 +43,10 @@ namespace ChatterBox.Client.Win8dot1.Voip
         {
         }
 
+        public void SetDisplaySize(Windows.Foundation.Size size)
+        {
+        }
+
         public bool IsRendererAlreadySetup()
         {
             return _isSetup;

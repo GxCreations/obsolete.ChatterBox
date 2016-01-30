@@ -14,5 +14,6 @@ namespace ChatterBox.Client.Common.Communication.Voip
         bool IsRendererAlreadySetup();
 
         void SetMediaElement(CoreDispatcher dispatcher, MediaElement mediaElement);
+        void SetDisplaySize(Windows.Foundation.Size size);
     }
 }

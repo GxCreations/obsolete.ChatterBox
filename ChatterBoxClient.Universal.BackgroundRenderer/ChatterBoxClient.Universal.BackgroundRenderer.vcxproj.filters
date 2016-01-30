@@ -10,11 +10,13 @@
     <ClCompile Include="Renderer.cpp" />
     <ClCompile Include="MediaEngineNotify.cpp" />
     <ClCompile Include="SchemeHandler.cpp" />
+    <ClCompile Include="RemoteHandle.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Renderer.h" />
     <ClInclude Include="MediaEngineNotifyCallback.h" />
     <ClInclude Include="MediaEngineNotify.h" />
     <ClInclude Include="SchemeHandler.h" />
+    <ClInclude Include="RemoteHandle.h" />
   </ItemGroup>
 </Project>
