@@ -35,6 +35,10 @@ namespace ChatterBox.Client.Universal.Background.Voip
         public void SetMediaElement(CoreDispatcher dispatcher, MediaElement mediaElement)
         {
         }
+        public void SetDisplaySize(Windows.Foundation.Size size)
+        {
+            _renderer.SetRenderControlSize(size);
+        }
 
         private Renderer _renderer = new Renderer();
         bool _isSetup = false;

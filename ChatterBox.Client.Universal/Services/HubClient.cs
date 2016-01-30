@@ -422,6 +422,15 @@ namespace ChatterBox.Client.Universal.Services
         {
             InvokeHubChannel<IVoipChannel>(config);
         }
+
+        public void OnRemoteControlSize(Windows.Foundation.Size size)
+        {
+            InvokeHubChannel<IVoipChannel>(size);
+        }
+        public void OnLocalControlSize(Windows.Foundation.Size size)
+        {
+            InvokeHubChannel<IVoipChannel>(size);
+        }
         #endregion
 
         public async Task<bool> Connect()

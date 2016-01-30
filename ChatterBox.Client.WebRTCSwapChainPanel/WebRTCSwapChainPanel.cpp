@@ -102,31 +102,12 @@ uint32 WebRTCSwapChainPanel::CurrentProcessId::get()
 void WebRTCSwapChainPanel::NativeVideoSize::set(Size s)
 {
     _nativeVideoSize = s;
-    OnScaleChange();
     SetValue(SizeProperty, s);
 }
 
 Size WebRTCSwapChainPanel::NativeVideoSize::get()
 {
     return (Size)GetValue(SizeProperty);
-}
-
-void WebRTCSwapChainPanel::OnScaleChange()
-{
-    if ((_nativeVideoSize.Width <= 0.0f) || (_nativeVideoSize.Height <= 0.0f)
-        || (_controlSize.Width <= 0.0f) || (_controlSize.Height <= 0.0f))
-    {
-        return;
-    }
-
-    float scaleX = _controlSize.Width / _nativeVideoSize.Width;
-    float scaleY = _controlSize.Height / _nativeVideoSize.Height;
-
-    auto scaleTrans = ref new Windows::UI::Xaml::Media::ScaleTransform();
-    scaleTrans->ScaleX = std::min(scaleX, scaleY);
-    scaleTrans->ScaleY = std::min(scaleX, scaleY);
-
-    RenderTransform = scaleTrans;
 }
 
 void WebRTCSwapChainPanel::OnSwapChainPanelHandleChanged(Windows::UI::Xaml::DependencyObject^ d,
@@ -149,5 +130,4 @@ void WebRTCSwapChainPanel::OnSizeChanged(Platform::Object ^sender, Windows::UI::
 {
     _controlSize.Width = (float)e->NewSize.Width;
     _controlSize.Height = (float)e->NewSize.Height;
-    OnScaleChange();
 }
