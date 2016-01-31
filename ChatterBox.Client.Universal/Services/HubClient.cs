@@ -383,12 +383,12 @@ namespace ChatterBox.Client.Universal.Services
             InvokeHubChannel<IVoipChannel>(message);
         }
 
-        public void OnSdpAnswer(RelayMessage message)
+        public void OnAnswer(RelayMessage message)
         {
             InvokeHubChannel<IVoipChannel>(message);
         }
 
-        public void OnSdpOffer(RelayMessage message)
+        public void OnOffer(RelayMessage message)
         {
             InvokeHubChannel<IVoipChannel>(message);
         }

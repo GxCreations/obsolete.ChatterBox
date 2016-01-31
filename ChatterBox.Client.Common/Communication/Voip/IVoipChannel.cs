@@ -23,8 +23,8 @@ namespace ChatterBox.Client.Common.Communication.Voip
         void OnOutgoingCallRejected(RelayMessage message);
         void OnRemoteHangup(RelayMessage message);
         // WebRTC signaling
-        void OnSdpAnswer(RelayMessage message);
-        void OnSdpOffer(RelayMessage message);
+        void OnAnswer(RelayMessage message);
+        void OnOffer(RelayMessage message);
         void Reject(IncomingCallReject reason);
         void RegisterVideoElements(MediaElement self, MediaElement peer);
 

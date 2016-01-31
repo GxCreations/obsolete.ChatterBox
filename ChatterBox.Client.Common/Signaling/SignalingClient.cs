@@ -152,11 +152,11 @@ namespace ChatterBox.Client.Common.Signaling
             }
             else if (message.Tag == RelayMessageTags.SdpOffer)
             {
-                _voipChannel.OnSdpOffer(message);
+                _voipChannel.OnOffer(message);
             }
             else if (message.Tag == RelayMessageTags.SdpAnswer)
             {
-                _voipChannel.OnSdpAnswer(message);
+                _voipChannel.OnAnswer(message);
             }
             else if (message.Tag == RelayMessageTags.IceCandidate)
             {

@@ -112,7 +112,7 @@ namespace ChatterBox.Client.Common.Communication.Voip.States
             }
         }
 
-        public override async Task OnSdpAnswer(RelayMessage message)
+        public override async Task OnAnswer(RelayMessage message)
         {
             await
                 Context.PeerConnection.SetRemoteDescription(new RTCSessionDescription(RTCSdpType.Answer, message.Payload));
