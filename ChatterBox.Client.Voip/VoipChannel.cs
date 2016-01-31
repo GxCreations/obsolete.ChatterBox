@@ -134,21 +134,21 @@ namespace ChatterBox.Client.Common.Communication.Voip
         }
 
         // WebRTC signaling
-        public void OnSdpAnswer(RelayMessage message)
+        public void OnAnswer(RelayMessage message)
         {
             Task.Run(() =>
             {
-                Debug.WriteLine("VoipChannel.OnSdpAnswer");
-                Context.WithState(st => st.OnSdpAnswer(message)).Wait();
+                Debug.WriteLine("VoipChannel.OnAnswer");
+                Context.WithState(st => st.OnAnswer(message)).Wait();
             });
         }
 
-        public void OnSdpOffer(RelayMessage message)
+        public void OnOffer(RelayMessage message)
         {
             Task.Run(() =>
             {
-                Debug.WriteLine("VoipChannel.OnSdpOffer");
-                Context.WithState(st => st.OnSdpOffer(message)).Wait();
+                Debug.WriteLine("VoipChannel.OnOffer");
+                Context.WithState(st => st.OnOffer(message)).Wait();
             });
         }
 

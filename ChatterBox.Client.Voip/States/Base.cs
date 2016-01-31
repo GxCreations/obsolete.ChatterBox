@@ -65,11 +65,11 @@ namespace ChatterBox.Client.Common.Communication.Voip.States
         {
         }
 
-        public virtual async Task OnSdpAnswer(RelayMessage message)
+        public virtual async Task OnAnswer(RelayMessage message)
         {
         }
 
-        public virtual async Task OnSdpOffer(RelayMessage message)
+        public virtual async Task OnOffer(RelayMessage message)
         {
         }
 
