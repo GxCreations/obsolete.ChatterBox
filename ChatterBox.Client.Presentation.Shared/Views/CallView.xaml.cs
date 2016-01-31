@@ -83,14 +83,14 @@ namespace ChatterBox.Client.Presentation.Shared.Views
             {
                 RealTimePlayback = true
             };
-            peerSwapChainPanel.SizeChanged += PeerSwapChainPanel_SizeChanged;
+            _peerMediaElement.SizeChanged += PeerSwapChainPanel_SizeChanged;
             PeerVideoPresenter.Content = _peerMediaElement;
 
             _selfMediaElement = new MediaElement
             {
                 RealTimePlayback = true
             };
-            selfSwapChainPanel.SizeChanged += SelfSwapChainPanel_SizeChanged;
+            _selfMediaElement.SizeChanged += SelfSwapChainPanel_SizeChanged;
             SelfVideoPresenter.Content = _selfMediaElement;            
 #endif
         }
