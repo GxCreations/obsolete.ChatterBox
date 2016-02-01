@@ -142,44 +142,46 @@ namespace ChatterBox.Client.Universal.Services
                     VideoDeviceId = device.Id,
                     MediaCategory = MediaCategory.Communications,
                 };
-                var capture = new MediaCapture();
-                await capture.InitializeAsync(settings);
-                var caps = capture.VideoDeviceController.GetAvailableMediaStreamProperties(MediaStreamType.VideoRecord);
-
-                var arr = new List<CaptureCapability>();
-                foreach (var cap in caps)
+                using (var capture = new MediaCapture())
                 {
-                    if (cap.Type != "Video")
-                    {
-                        continue;
-                    }
+                    await capture.InitializeAsync(settings);
+                    var caps = capture.VideoDeviceController.GetAvailableMediaStreamProperties(MediaStreamType.VideoRecord);
 
-                    var videoCap = (VideoEncodingProperties)cap;
+                    var arr = new List<CaptureCapability>();
+                    foreach (var cap in caps)
+                    {
+                        if (cap.Type != "Video")
+                        {
+                            continue;
+                        }
 
-                    if (videoCap.FrameRate.Denominator == 0 ||
-                    videoCap.FrameRate.Numerator == 0 ||
-                    videoCap.Width == 0 ||
-                    videoCap.Height == 0)
-                    {
-                        continue;
+                        var videoCap = (VideoEncodingProperties)cap;
+
+                        if (videoCap.FrameRate.Denominator == 0 ||
+                        videoCap.FrameRate.Numerator == 0 ||
+                        videoCap.Width == 0 ||
+                        videoCap.Height == 0)
+                        {
+                            continue;
+                        }
+                        var captureCap = new CaptureCapability()
+                        {
+                            Width = videoCap.Width,
+                            Height = videoCap.Height,
+                            FrameRate = videoCap.FrameRate.Numerator / videoCap.FrameRate.Denominator,
+                        };
+                        captureCap.FrameRateDescription = $"{captureCap.FrameRate} fps";
+                        captureCap.ResolutionDescription = $"{captureCap.Width} x {captureCap.Height}";
+                        captureCap.PixelAspectRatio = new Common.Media.Dto.MediaRatio()
+                        {
+                            Numerator = videoCap.PixelAspectRatio.Numerator,
+                            Denominator = videoCap.PixelAspectRatio.Denominator,
+                        };
+                        captureCap.FullDescription = $"{captureCap.ResolutionDescription} {captureCap.FrameRateDescription}";
+                        arr.Add(captureCap);
                     }
-                    var captureCap = new CaptureCapability()
-                    {
-                        Width = videoCap.Width,
-                        Height = videoCap.Height,
-                        FrameRate = videoCap.FrameRate.Numerator / videoCap.FrameRate.Denominator,
-                    };
-                    captureCap.FrameRateDescription = $"{captureCap.FrameRate} fps";
-                    captureCap.ResolutionDescription = $"{captureCap.Width} x {captureCap.Height}";
-                    captureCap.PixelAspectRatio = new Common.Media.Dto.MediaRatio()
-                    {
-                        Numerator = videoCap.PixelAspectRatio.Numerator,
-                        Denominator = videoCap.PixelAspectRatio.Denominator,
-                    };
-                    captureCap.FullDescription = $"{captureCap.ResolutionDescription} {captureCap.FrameRateDescription}";
-                    arr.Add(captureCap);
+                    return new CaptureCapabilities() { Capabilities = arr.GroupBy(o => o.FullDescription).Select(o => o.First()).ToArray() };
                 }
-                return new CaptureCapabilities() { Capabilities = arr.GroupBy(o => o.FullDescription).Select(o => o.First()).ToArray() };
             }).AsAsyncOperation();
         }
 

@@ -5,6 +5,7 @@ packages/
 x64/
 ChatterBox.Client.WebRTCSwapChainPanel/Debug/
 Debug/
+Release/
 .vs/
 ChatterBox.sln.DotSettings
 ChatterBox.sdf
