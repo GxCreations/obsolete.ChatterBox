@@ -1,8 +1,12 @@
 ﻿using System;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Threading.Tasks;
+using Windows.UI.Core;
+using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media.Imaging;
 using ChatterBox.Client.Common.Avatars;
+using ChatterBox.Client.Common.Communication.Foreground.Dto;
 using ChatterBox.Client.Common.Signaling.PersistedData;
 using ChatterBox.Client.Presentation.Shared.MVVM;
 using ChatterBox.Client.Presentation.Shared.Services;
@@ -12,8 +16,6 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
     public sealed class ContactsViewModel : BindableBase
     {
         private readonly Func<ConversationViewModel> _contactFactory;
-        private bool _isConversationsListVisible;
-        private bool _isSeparatorVisible;
         private ConversationViewModel _selectedConversation;
 
         public ContactsViewModel(IForegroundUpdateService foregroundUpdateService,
@@ -22,11 +24,71 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
             _contactFactory = contactFactory;
             foregroundUpdateService.OnPeerDataUpdated += OnPeerDataUpdated;
             foregroundUpdateService.GetShownUser += ForegroundUpdateService_GetShownUser;
+            foregroundUpdateService.OnVoipStateUpdate += OnVoipStateUpdate;
             OnPeerDataUpdated();
 
             LayoutService.Instance.LayoutChanged += LayoutChanged;
             ShowSettings = new DelegateCommand(() => OnShowSettings?.Invoke());
         }
+
+        public MediaElement RingtoneElement { get; set; }
+
+        private void OnVoipStateUpdate(VoipState voipState)
+        {
+            Task.Run(async () =>
+            {
+                switch (voipState.State)
+                {
+                    case VoipStateEnum.LocalRinging:
+                        await PlaySound(true);
+                        break;
+                    case VoipStateEnum.RemoteRinging:
+                        await PlaySound(false);
+                        break;
+                    case VoipStateEnum.Idle:
+                    case VoipStateEnum.EstablishOutgoing:
+                    case VoipStateEnum.EstablishIncoming:
+                        await StopSound();
+                        break;
+                    case VoipStateEnum.HangingUp:
+                    case VoipStateEnum.ActiveCall:
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException();
+                }
+            });
+
+        }
+
+
+
+        public async Task PlaySound(bool isIncomingCall)
+        {
+            if (RingtoneElement == null) return;
+            var source = isIncomingCall
+                ? "ms-appx:///Assets/Ringtones/IncomingCall.mp3"
+                : "ms-appx:///Assets/Ringtones/OutgoingCall.mp3";
+
+            await RingtoneElement.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            {
+                RingtoneElement.Source = new Uri(source);
+                RingtoneElement.Stop();
+                RingtoneElement.Play();
+            });
+        }
+
+
+        public async Task StopSound()
+        {
+            if (RingtoneElement == null) return;
+
+            await RingtoneElement.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            {
+                RingtoneElement.Stop();
+                RingtoneElement.Source = null;
+            });
+        }
+
 
         private string ForegroundUpdateService_GetShownUser()
         {
@@ -40,17 +102,7 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
         public ObservableCollection<ConversationViewModel> Conversations { get; } =
             new ObservableCollection<ConversationViewModel>();
 
-        public bool IsConversationsListVisible
-        {
-            get { return _isConversationsListVisible; }
-            set { SetProperty(ref _isConversationsListVisible, value); }
-        }
 
-        public bool IsSeparatorVisible
-        {
-            get { return _isSeparatorVisible; }
-            set { SetProperty(ref _isSeparatorVisible, value); }
-        }
 
         public ConversationViewModel SelectedConversation
         {
@@ -81,7 +133,7 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
             ObservableCollection<ConversationViewModel> copyConversations = new ObservableCollection<ConversationViewModel>(Conversations);
             foreach (var contact in copyConversations)
             {
-                if(!peers.Any(p => p.UserId == contact.UserId))
+                if (peers.All(p => p.UserId != contact.UserId))
                 {
                     Conversations.Remove(contact);
                 }
@@ -118,8 +170,6 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
 
         private void UpdateSelection()
         {
-            IsConversationsListVisible = Conversations.Count > 0;
-            IsSeparatorVisible = LayoutService.Instance.LayoutType == LayoutType.Parallel;
             if (SelectedConversation == null && LayoutService.Instance.LayoutType == LayoutType.Parallel)
             {
                 SelectedConversation = Conversations.FirstOrDefault();

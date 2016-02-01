@@ -9,8 +9,15 @@
     <Import_RootNamespace>ChatterBox.Client.Presentation.Shared</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)AttachedProperties\ActualSize.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Behaviors\ReturnKeyCloseKeyboardBehavior.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Behaviors\ReturnKeyCommandBehavior.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Controls\CommunicationControl.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Controls\CallState.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Controls\IConversation.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Controls\IInstantMessage.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Converters\EqualityToBooleanConverter.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Converters\EqualityToVisibilityConverter.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Converters\BoolToFontWeightConverter.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Converters\FormatDateTimeConverter.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Converters\LayoutTypeToStyleConverter.cs" />
@@ -36,20 +43,11 @@
     <Compile Include="$(MSBuildThisFileDirectory)ViewModels\MainViewModel.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ViewModels\SettingsViewModel.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ViewModels\WelcomeViewModel.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Views\CallView.xaml.cs">
-      <DependentUpon>CallView.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="$(MSBuildThisFileDirectory)Views\ChatView.xaml.cs">
-      <DependentUpon>ChatView.xaml</DependentUpon>
-    </Compile>
     <Compile Include="$(MSBuildThisFileDirectory)Views\ConnectingView.xaml.cs">
       <DependentUpon>ConnectingView.xaml</DependentUpon>
     </Compile>
     <Compile Include="$(MSBuildThisFileDirectory)Views\ContactsView.xaml.cs">
       <DependentUpon>ContactsView.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="$(MSBuildThisFileDirectory)Views\ConversationView.xaml.cs">
-      <DependentUpon>ConversationView.xaml</DependentUpon>
     </Compile>
     <Compile Include="$(MSBuildThisFileDirectory)Views\MainView.xaml.cs">
       <DependentUpon>MainView.xaml</DependentUpon>
@@ -62,15 +60,7 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <Page Include="$(MSBuildThisFileDirectory)Resources\ButtonStyles.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="$(MSBuildThisFileDirectory)Views\CallView.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="$(MSBuildThisFileDirectory)Views\ChatView.xaml">
+    <Page Include="$(MSBuildThisFileDirectory)Themes\Generic.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -79,10 +69,6 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="$(MSBuildThisFileDirectory)Views\ContactsView.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="$(MSBuildThisFileDirectory)Views\ConversationView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
