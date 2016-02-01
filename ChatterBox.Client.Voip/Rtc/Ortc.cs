@@ -23,7 +23,7 @@ namespace ChatterBox.Client.Voip.Rtc
     using RtcLogger = ortc_winrt_api.Logger;
     using RtcMediaDevices = ortc_winrt_api.MediaDevices;
     using RtcMediaDeviceInfo = ortc_winrt_api.MediaDeviceInfo;
-    using RtcMediaDeviceKind = ortc_winrt_api.MediaDeviceKinds;
+    using RtcMediaDeviceKind = ortc_winrt_api.MediaDeviceKind;
 
     using RTCPeerConnectionHealthStatsDelegate = webrtc_winrt_api.RTCPeerConnectionHealthStatsDelegate;
     using System.Threading.Tasks;    //using RTCDataChannelEventDelegate = webrtc_winrt_api.RTCDataChannelEventDelegate;

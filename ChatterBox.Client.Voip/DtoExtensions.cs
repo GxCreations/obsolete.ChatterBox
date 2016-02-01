@@ -47,13 +47,13 @@ namespace ChatterBox.Client.Voip
                 CandidateType = ortc_winrt_api.RTCIceTypes.ToCandidateType(obj.CandidateType),
                 Foundation = obj.Foundation,
                 InterfaceType = obj.InterfaceType,
-                IP = obj.IP,
+                Ip = obj.Ip,
                 Port = obj.Port,
                 Priority = obj.Priority,
                 Protocol = ortc_winrt_api.RTCIceTypes.ToProtocol(obj.Protocol),
                 RelatedAddress = obj.RelatedAddress,
                 RelatedPort = obj.RelatedPort,
-                TCPType = ortc_winrt_api.RTCIceTypes.ToTcpCandidateType(obj.TCPType),
+                TcpType = ortc_winrt_api.RTCIceTypes.ToTcpCandidateType(obj.TcpType),
                 UnfreezePriority = obj.UnfreezePriority
 #endif //USE_WEBRTC_API
             };
@@ -71,13 +71,13 @@ namespace ChatterBox.Client.Voip
                 CandidateType = ortc_winrt_api.RTCIceTypes.ToString(obj.CandidateType),
                 Foundation = obj.Foundation,
                 InterfaceType = obj.InterfaceType,
-                IP = obj.IP,
+                Ip = obj.Ip,
                 Port = obj.Port,
                 Priority = obj.Priority,
                 Protocol = ortc_winrt_api.RTCIceTypes.ToString(obj.Protocol),
                 RelatedAddress = obj.RelatedAddress,
                 RelatedPort = obj.RelatedPort,
-                TCPType = ortc_winrt_api.RTCIceTypes.ToString(obj.TCPType),
+                TcpType = ortc_winrt_api.RTCIceTypes.ToString(obj.TcpType),
                 UnfreezePriority = obj.UnfreezePriority
 #endif //USE_WEBRTC_API
             };

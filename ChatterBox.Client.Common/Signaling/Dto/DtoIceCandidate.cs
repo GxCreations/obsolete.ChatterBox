@@ -21,7 +21,7 @@ namespace ChatterBox.Client.Common.Signaling.Dto
         [DataMember]
         public string InterfaceType { get; set; }
         [DataMember]
-        public string IP { get; set; }
+        public string Ip { get; set; }
         [DataMember]
         public ushort Port { get; set; }
         [DataMember]
@@ -33,7 +33,7 @@ namespace ChatterBox.Client.Common.Signaling.Dto
         [DataMember]
         public ushort RelatedPort { get; set; }
         [DataMember]
-        public string TCPType { get; set; }
+        public string TcpType { get; set; }
         [DataMember]
         public uint UnfreezePriority { get; set; }
 #endif //USE_ORTC_API
