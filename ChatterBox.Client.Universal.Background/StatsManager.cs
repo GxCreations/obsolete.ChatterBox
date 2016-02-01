@@ -15,11 +15,16 @@ using RtcStatsType = webrtc_winrt_api.RTCStatsType;
 using RtcStatsValueName = webrtc_winrt_api.RTCStatsValueName;
 using RtcStatsReportsReadyEvent = webrtc_winrt_api.RTCStatsReportsReadyEvent;
 #elif USE_ORTC_API
+using RtcPeerConnection = ChatterBox.Client.Voip.Rtc.RTCPeerConnection;
+using RtcStatsReport = ChatterBox.Client.Voip.Rtc.RTCStatsReport;
+using RtcStatsType = ChatterBox.Client.Voip.Rtc.RTCStatsType;
+using RtcStatsValueName = ChatterBox.Client.Voip.Rtc.RTCStatsValueName;
+using RtcStatsReportsReadyEvent = ChatterBox.Client.Voip.Rtc.RTCStatsReportsReadyEvent;
 #endif //USE_WEBRTC_API
 
 namespace ChatterBox.Client.Universal.Background
 {
-    public sealed class StatsManager
+    internal sealed class StatsManager
     {
         public StatsManager()
         {

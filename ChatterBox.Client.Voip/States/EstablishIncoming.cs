@@ -22,6 +22,13 @@ using RtcMediaStreamConstraints = webrtc_winrt_api.RTCMediaStreamConstraints;
 using RtcNegotiationType = webrtc_winrt_api.RTCSdpType;
 using RtcIceCandidate = webrtc_winrt_api.RTCIceCandidate;
 #elif USE_ORTC_API
+using RtcConfiguration = ChatterBox.Client.Voip.Rtc.RTCConfiguration;
+using RtcPeerConnection = ChatterBox.Client.Voip.Rtc.RTCPeerConnection;
+using RtcMediaStream = ChatterBox.Client.Voip.Rtc.MediaStream;
+using RtcSessionDescription = ChatterBox.Client.Voip.Rtc.RTCSessionDescription;
+using RtcMediaStreamConstraints = ChatterBox.Client.Voip.Rtc.RTCMediaStreamConstraints;
+using RtcNegotiationType = ChatterBox.Client.Voip.Rtc.RTCSdpType;
+using RtcIceCandidate = ChatterBox.Client.Voip.Rtc.RTCIceCandidate;
 #endif //USE_WEBRTC_API
 
 #pragma warning disable 1998

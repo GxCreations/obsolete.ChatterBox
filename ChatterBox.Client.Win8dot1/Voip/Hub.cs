@@ -11,6 +11,7 @@ using Microsoft.Practices.Unity;
 #if USE_WEBRTC_API
 using RtcPeerConnection = webrtc_winrt_api.RTCPeerConnection;
 #elif USE_ORTC_API
+using RtcPeerConnection = ChatterBox.Client.Voip.Rtc.RTCPeerConnection;
 #endif //USE_WEBRTC_API
 
 

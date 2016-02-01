@@ -6,6 +6,7 @@ using System.Text.RegularExpressions;
 #if USE_WEBRTC_API
 using RtcCodecInfo = webrtc_winrt_api.CodecInfo;
 #elif USE_ORTC_API
+using RtcCodecInfo = ChatterBox.Client.Voip.Rtc.CodecInfo;
 #endif //USE_WEBRTC_API
 
 namespace ChatterBox.Client.Voip.Utils

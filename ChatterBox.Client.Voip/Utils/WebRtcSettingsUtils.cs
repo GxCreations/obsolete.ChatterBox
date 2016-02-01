@@ -6,6 +6,7 @@ using System.Text;
 #if USE_WEBRTC_API
 using RtcIceServer = webrtc_winrt_api.RTCIceServer;
 #elif USE_ORTC_API
+using RtcIceServer = ChatterBox.Client.Voip.Rtc.RTCIceServer;
 #endif //USE_WEBRTC_API
 
 namespace ChatterBox.Client.Voip.Utils
