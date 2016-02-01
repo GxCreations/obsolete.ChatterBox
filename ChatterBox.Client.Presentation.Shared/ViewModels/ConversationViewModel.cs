@@ -40,6 +40,8 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
         private long _remoteSwapChainHandle;
         private Windows.Foundation.Size _localVideoControlSize;
         private Windows.Foundation.Size _remoteVideoControlSize;
+        private Windows.Foundation.Size _localNativeVideoSize;
+        private Windows.Foundation.Size _remoteNativeVideoSize;
         private bool _isMicEnabled;
         private bool _isVideoEnabled;
         private bool _isSelected;
@@ -115,7 +117,12 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
             set
             {
                 if (SetProperty(ref _isCallConnected, value))
+                {
                     UpdateCommandStates();
+
+                    OnPropertyChanged(nameof(ShowPeerVideoPlaceHolder));
+                    OnPropertyChanged(nameof(ShowSelfVideoPlaceHolder));
+                }
             }
         }
 
@@ -176,11 +183,27 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
             }
         }
 
+        public bool ShowPeerVideoPlaceHolder
+        {
+            get { return !(IsPeerVideoAvailable && IsCallConnected); }
+        }
+
+        public bool ShowSelfVideoPlaceHolder
+        {
+            get { return !(IsSelfVideoAvailable && IsCallConnected); }
+        }
+
         private bool _isPeerVideoAvailable;
         public bool IsPeerVideoAvailable
         {
             get { return _isPeerVideoAvailable; }
-            set { SetProperty(ref _isPeerVideoAvailable, value); }
+            set
+            {
+                if(SetProperty(ref _isPeerVideoAvailable, value))
+                {
+                    OnPropertyChanged(nameof(ShowPeerVideoPlaceHolder));
+                }
+            }
         }
 
         private bool _isSelfVideoAvailable;        
@@ -188,7 +211,13 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
         public bool IsSelfVideoAvailable
         {
             get { return _isSelfVideoAvailable; }
-            set { SetProperty(ref _isSelfVideoAvailable, value); }
+            set
+            {
+                if (SetProperty(ref _isSelfVideoAvailable, value))
+                {
+                    OnPropertyChanged(nameof(ShowSelfVideoPlaceHolder));
+                }
+            }
         }
 
         private bool _isAudioOnlyCall;
@@ -309,6 +338,33 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
                 {
                     RemoteNativeVideoSizeChanged?.Invoke();
                     _voipChannel.OnRemoteControlSize(value);
+                }
+            }
+        }
+
+        public Windows.Foundation.Size LocalNativeVideoSize
+        {
+            get
+            {
+                return _localNativeVideoSize;
+            }
+            set
+            {
+                SetProperty(ref _localNativeVideoSize, value);
+            }
+        }
+
+        public Windows.Foundation.Size RemoteNativeVideoSize
+        {
+            get
+            {
+                return _remoteNativeVideoSize;
+            }
+            set
+            {
+                if (SetProperty(ref _remoteNativeVideoSize, value))
+                {
+                    RemoteNativeVideoSizeChanged?.Invoke();
                 }
             }
         }
@@ -526,8 +582,10 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
                         IsCallConnected = false;
                         IsMicEnabled = true; //Start new calls with mic enabled
                         IsVideoEnabled = voipState.IsVideoEnabled;
-                        var task = PlaySound(isIncomingCall: true);
                         IsAudioOnlyCall = !voipState.IsVideoEnabled;
+                        LocalNativeVideoSize = new Windows.Foundation.Size(0, 0);
+                        RemoteNativeVideoSize = new Windows.Foundation.Size(0, 0);
+                        var task = PlaySound(isIncomingCall: true);
                     }
                     else
                     {
@@ -543,6 +601,8 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
                         IsCallConnected = false;
                         IsMicEnabled = true; //Start new calls with mic enabled
                         IsVideoEnabled = voipState.IsVideoEnabled;
+                        LocalNativeVideoSize = new Windows.Foundation.Size(0, 0);
+                        RemoteNativeVideoSize = new Windows.Foundation.Size(0, 0);
                         var task = PlaySound(isIncomingCall: false);
                     }
                     else
@@ -621,11 +681,17 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
 
             if(obj.IsLocal)
             {
+#if WIN10
                 LocalSwapChainPanelHandle = obj.SwapChainHandle;
+#endif
+                LocalNativeVideoSize = new Windows.Foundation.Size(obj.Width, obj.Height);
             }
             else
             {
+#if WIN10
                 RemoteSwapChainPanelHandle = obj.SwapChainHandle;
+#endif
+                RemoteNativeVideoSize = new Windows.Foundation.Size(obj.Width, obj.Height);
             }
         }
 

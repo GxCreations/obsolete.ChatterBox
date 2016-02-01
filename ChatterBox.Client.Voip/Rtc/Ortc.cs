@@ -25,6 +25,7 @@ namespace ChatterBox.Client.Voip.Rtc
     internal delegate void RTCPeerConnectionIceEventDelegate(RTCPeerConnectionIceEvent param);
     internal delegate void MediaStreamEventEventDelegate(MediaStreamEvent param0);
     internal delegate void RTCStatsReportsReadyEventDelegate(RTCStatsReportsReadyEvent param0);
+    internal delegate void ResolutionChangedEventHandler(string id, uint width, uint height);
 
 
     internal sealed class Engine
@@ -488,6 +489,13 @@ namespace ChatterBox.Client.Voip.Rtc
         StatsValueNameViewLimitedResolution = 101,
         StatsValueNameWritable = 102,
         StatsValueNameCurrentEndToEndDelayMs = 103
+    }
+
+    internal sealed class ResolutionHelper
+    {
+        public ResolutionHelper() { }
+
+        public static event ResolutionChangedEventHandler ResolutionChanged;
     }
 }
 
