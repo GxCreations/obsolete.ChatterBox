@@ -13,16 +13,25 @@ using Windows.Media.MediaProperties;
 
 namespace ChatterBox.Client.Voip.Rtc
 {
-    using LogLevel = webrtc_winrt_api.LogLevel;
+    //using LogLevel = webrtc_winrt_api.LogLevel;
     using RTCIceCandidate = ortc_winrt_api.RTCIceCandidate;
+    using RtcSender = ortc_winrt_api.RTCRtpSender;
+    using RtcCodecCapability = ortc_winrt_api.RTCRtpCodecCapability;
+    using RtcOrtc = ortc_winrt_api.Ortc;
+    using RtcOrtcWithDispatcher = ortc_winrt_api.OrtcWithDispatcher;
+    using RtcLog = ortc_winrt_api.Log;
+    using RtcLogger = ortc_winrt_api.Logger;
+    using RtcMediaDevices = ortc_winrt_api.MediaDevices;
+    using RtcMediaDeviceInfo = ortc_winrt_api.MediaDeviceInfo;
+    using RtcMediaDeviceKind = ortc_winrt_api.MediaDeviceKinds;
 
-    using OnMediaCaptureDeviceFoundDelegate = webrtc_winrt_api.OnMediaCaptureDeviceFoundDelegate;
     using RTCPeerConnectionHealthStatsDelegate = webrtc_winrt_api.RTCPeerConnectionHealthStatsDelegate;
-    //using RTCDataChannelEventDelegate = webrtc_winrt_api.RTCDataChannelEventDelegate;
+    using System.Threading.Tasks;    //using RTCDataChannelEventDelegate = webrtc_winrt_api.RTCDataChannelEventDelegate;
     //using RTCPeerConnectionIceStateChangeEventDelegate = webrtc_winrt_api.RTCPeerConnectionIceStateChangeEventDelegate;
     //using EventDelegate = webrtc_winrt_api.EventDelegate;
     //using RTCDataChannelMessageEventDelegate = webrtc_winrt_api.RTCDataChannelMessageEventDelegate;
 
+    internal delegate void OnMediaCaptureDeviceFoundDelegate(MediaDevice param);
     internal delegate void RTCPeerConnectionIceEventDelegate(RTCPeerConnectionIceEvent param);
     internal delegate void MediaStreamEventEventDelegate(MediaStreamEvent param0);
     internal delegate void RTCStatsReportsReadyEventDelegate(RTCStatsReportsReadyEvent param0);
@@ -31,22 +40,89 @@ namespace ChatterBox.Client.Voip.Rtc
 
     internal sealed class Engine
     {
+        private static Engine _singleton;
+
+        private string _tracingHost = null;
+        private UInt16 _tracingPort = 0;
+
+        private static Engine Singleton { get { if (null == _singleton) _singleton = new Engine(); return _singleton; } }
+
+        private static CodecInfo ToDto(RtcCodecCapability codec, int index)
+        {
+            return new CodecInfo(index, (int)codec.ClockRate, codec.Name);
+        }
+
+        private static IList<CodecInfo> GetCodecs(string kind)
+        {
+            var caps = RtcSender.GetCapabilities(kind);
+            var codecs = caps.Codecs;
+            var results = new List<CodecInfo>();
+
+            int index = 0;
+            foreach (var codec in codecs)
+            {
+                ++index;
+                results.Add(ToDto(codec, index));
+            }
+            return results;
+        }
+
         //public static void DisableLogging() { }
         //public static void EnableLogging(LogLevel level) { }
-        public static IList<CodecInfo> GetAudioCodecs() { return null; }
+        public static IList<CodecInfo> GetAudioCodecs() { return GetCodecs("audio"); }
+
         //public static double GetCPUUsage() { return 0.0; }
         //public static long GetMemUsage() { return 0; }
-        public static IList<CodecInfo> GetVideoCodecs() { return null; }
-        public static void Initialize(CoreDispatcher dispatcher) { }
+        public static IList<CodecInfo> GetVideoCodecs() { return GetCodecs("video"); }
+
+        public static void Initialize(CoreDispatcher dispatcher)
+        {
+            RtcOrtcWithDispatcher.Setup(dispatcher);
+        }
+
         //public static bool IsTracing() { return false; }
         //public static string LogFileName() { return null; }
         //public static StorageFolder LogFolder() { return null; }
         public static IAsyncOperation<bool> RequestAccessForMediaCapture() { return null; }
         //public static bool SaveTrace(string filename) { return false; }
-        public static bool SaveTrace(string host, int port) { return false; }
+        public static bool SaveTrace(string host, int port)
+        {
+            Singleton._tracingHost = host;
+            Singleton._tracingPort = (UInt16)port;
+            return true;
+        }
+
         public static void SetPreferredVideoCaptureFormat(int frame_width, int frame_height, int fps) { }
-        public static void StartTracing() { }
-        public static void StopTracing() { }
+        public static void StartTracing()
+        {
+            var port = Singleton._tracingPort;
+            if (0 == port) port = 59999;
+
+            string host = Singleton._tracingHost;
+
+            RtcLogger.SetLogLevel(RtcLog.Level.Trace);
+            RtcLogger.SetLogLevel(RtcLog.Component.ZsLib, RtcLog.Level.Trace);
+            RtcLogger.SetLogLevel(RtcLog.Component.Services, RtcLog.Level.Trace);
+            RtcLogger.SetLogLevel(RtcLog.Component.ServicesHttp, RtcLog.Level.Trace);
+            RtcLogger.SetLogLevel(RtcLog.Component.OrtcLib, RtcLog.Level.Trace);
+
+            if (String.IsNullOrEmpty(host))
+            {
+                RtcLogger.InstallOutgoingTelnetLogger(host + ":" + port.ToString(), true, null);
+            }
+            else {
+                RtcLogger.UninstallOutgoingTelnetLogger();
+            }
+
+            RtcLogger.InstallTelnetLogger(port, 60, true);
+        }
+
+        public static void StopTracing()
+        {
+            RtcLogger.UninstallOutgoingTelnetLogger();
+            RtcLogger.UninstallTelnetLogger();
+        }
+
         public static void SynNTPTime(long current_ntp_time) { }
         public static void UpdateCPUUsage(double cpu_usage) { }
         public static void UpdateMemUsage(long mem_usage) { }
@@ -54,28 +130,175 @@ namespace ChatterBox.Client.Voip.Rtc
 
     internal sealed class Media
     {
-#if WIN10
-        public event OnMediaCaptureDeviceFoundDelegate OnAudioCaptureDeviceFound { add { return default(EventRegistrationToken); } remove { } }
-        public event OnMediaCaptureDeviceFoundDelegate OnVideoCaptureDeviceFound { add { return default(EventRegistrationToken); } remove { } }
-#else
-        public event OnMediaCaptureDeviceFoundDelegate OnAudioCaptureDeviceFound { add { } remove { } }
-        public event OnMediaCaptureDeviceFoundDelegate OnVideoCaptureDeviceFound { add { } remove { } }
-#endif
+        private static Media _singleton;
 
-        public static Media CreateMedia() { return null; }
+        private RtcMediaDevices _media;
+
+        IList<RtcMediaDeviceInfo> _audioCaptureDevices = new List<RtcMediaDeviceInfo>();
+        IList<RtcMediaDeviceInfo> _audioPlaybackDevices = new List<RtcMediaDeviceInfo>();
+        IList<RtcMediaDeviceInfo> _videoDevices = new List<RtcMediaDeviceInfo>();
+
+        private MediaDevice _audioCaptureDevice;
+        private MediaDevice _audioPlaybackDevice;
+        private MediaDevice _videoDevice;
+
+        public event OnMediaCaptureDeviceFoundDelegate OnAudioCaptureDeviceFound;
+        public event OnMediaCaptureDeviceFoundDelegate OnVideoCaptureDeviceFound;
+
+        private static Media Singleton { get { if (null == _singleton) _singleton = new Media(); return _singleton; } }
+
+        public static Media CreateMedia()
+        {
+            var media = new Media();
+            media._media = new RtcMediaDevices();
+            media._media.OnDeviceChange += media.Media_OnDeviceChange;
+            return media;
+        }
+
+        private void Media_OnDeviceChange()
+        {
+            var asyncOp = RtcMediaDevices.EnumerateDevices();
+            asyncOp.Completed = (op, state) => {
+                var devices = op.GetResults();
+                List<RtcMediaDeviceInfo> audioCaptureEventList;
+                List<RtcMediaDeviceInfo> audioCaptureReplacementList;
+                calculateDeltas(RtcMediaDeviceKind.AudioInput, _audioCaptureDevices, devices, out audioCaptureEventList, out audioCaptureReplacementList);
+
+                List<RtcMediaDeviceInfo> audioPlaybackEventList;
+                List<RtcMediaDeviceInfo> audioPlaybackReplacementList;
+                calculateDeltas(RtcMediaDeviceKind.AudioInput, _audioCaptureDevices, devices, out audioPlaybackEventList, out audioPlaybackReplacementList);
+
+                List<RtcMediaDeviceInfo> videoEventList;
+                List<RtcMediaDeviceInfo> videoReplacementList;
+                calculateDeltas(RtcMediaDeviceKind.Video, _videoDevices, devices, out videoEventList, out videoReplacementList);
+
+                foreach (var info in audioCaptureEventList)
+                {
+                    OnAudioCaptureDeviceFound(new MediaDevice(info.DeviceID, info.Label));
+                }
+                foreach (var info in videoEventList)
+                {
+                    OnVideoCaptureDeviceFound(new MediaDevice(info.DeviceID, info.Label));
+                }
+
+                _audioCaptureDevices = audioCaptureReplacementList;
+                _audioPlaybackDevices = audioPlaybackReplacementList;
+                _videoDevices = videoReplacementList;
+            };
+            throw new NotImplementedException();
+        }
+
+        private static void calculateDeltas(
+            RtcMediaDeviceKind kind,
+            IList<RtcMediaDeviceInfo> previousList,
+            IList<RtcMediaDeviceInfo> newFoundList,
+            out List<RtcMediaDeviceInfo> addedOrChangedList,
+            out List<RtcMediaDeviceInfo> finalReplacementList
+            )
+        {
+            addedOrChangedList = new List<RtcMediaDeviceInfo>();
+            finalReplacementList = new List<RtcMediaDeviceInfo>();
+
+            foreach (var info in newFoundList)
+            {
+                if (info.Kind != kind) continue;
+
+                bool found = false;
+                foreach (var innerInfo in previousList)
+                {
+                    if (innerInfo.Kind != kind) continue;
+                    if (IsMatch(info, innerInfo))
+                    {
+                        found = true;
+                        break;
+                    }
+                }
+
+                finalReplacementList.Add(info);
+                if (!found) {addedOrChangedList.Add(info);}
+            }
+        }
+
+        private static List<RtcMediaDeviceInfo> filter(
+            RtcMediaDeviceKind kind,
+            IList<RtcMediaDeviceInfo> infos
+            )
+        {
+            var results = new List<RtcMediaDeviceInfo>();
+            foreach (var info in infos)
+            {
+                if (kind != info.Kind) continue;
+                results.Add(info);
+            }
+            return results;
+        }
+
+        private static bool IsMatch(RtcMediaDeviceInfo op1, RtcMediaDeviceInfo op2)
+        {
+            if (op1.Kind != op2.Kind) return false;
+            if (0 != String.Compare(op1.DeviceID, op2.DeviceID)) return false;
+            if (0 != String.Compare(op1.GroupID, op2.GroupID)) return false;
+            if (0 != String.Compare(op1.Label, op2.Label)) return false;
+            return true;
+        }
+
+
         //public static IAsyncOperation<Media> CreateMediaAsync() { return null; }
-        public static void OnAppSuspending() { }
-        public static void SetDisplayOrientation(DisplayOrientations display_orientation) { }
-        public IMediaSource CreateMediaSource(MediaVideoTrack track, string id) { return null; }
+        public static void OnAppSuspending()
+        {
+#warning TODO IMPLEMENT OnAppSuspending
+        }
+
+        public static void SetDisplayOrientation(DisplayOrientations display_orientation)
+        {
+#warning TODO IMPLEMENT SetDisplayOrientation
+        }
+
+        public IMediaSource CreateMediaSource(MediaVideoTrack track, string id)
+        {
+#warning TODO IMPLEMENT SetDisplayOrientation
+            return null;
+        }
+
         //public IMediaSource CreateMediaStreamSource(MediaVideoTrack track, uint framerate, string id) { return null; }
-        public IAsyncOperation<bool> EnumerateAudioVideoCaptureDevices() { return null; }
-        public IList<MediaDevice> GetAudioCaptureDevices() { return null; }
-        public IList<MediaDevice> GetAudioPlayoutDevices() { return null; }
+        public IAsyncOperation<bool> EnumerateAudioVideoCaptureDevices() {
+            return Task.Run<bool>(async () =>
+            {
+                var devices = await RtcMediaDevices.EnumerateDevices();
+
+                var audioCaptureList = filter(RtcMediaDeviceKind.AudioInput, devices);
+                var audioPlaybackList = filter(RtcMediaDeviceKind.AudioOutput, devices);
+                var videoList = filter(RtcMediaDeviceKind.Video, devices);
+
+                _audioCaptureDevices = audioCaptureList;
+                _audioPlaybackDevices = audioPlaybackList;
+                _videoDevices = videoList;
+
+                return devices.Count > 0;
+            }).AsAsyncOperation();
+        }
+
+        private static MediaDevice ToMediaDevice(RtcMediaDeviceInfo device)
+        {
+            return new MediaDevice(device.DeviceID, device.Label);
+        }
+        private static IList<MediaDevice> ToMediaDevices(IList<RtcMediaDeviceInfo> devices)
+        {
+            var results = new List<MediaDevice>();
+            foreach (var device in devices)
+            {
+                results.Add(ToMediaDevice(device));
+            }
+            return results;
+        }
+
+        public IList<MediaDevice> GetAudioCaptureDevices() { return ToMediaDevices(_audioCaptureDevices); }
+        public IList<MediaDevice> GetAudioPlayoutDevices() { return ToMediaDevices(_audioPlaybackDevices); }
         public IAsyncOperation<MediaStream> GetUserMedia(RTCMediaStreamConstraints mediaStreamConstraints) { return null; }
-        public IList<MediaDevice> GetVideoCaptureDevices() { return null; }
-        public bool SelectAudioDevice(MediaDevice device) { return false; }
-        public bool SelectAudioPlayoutDevice(MediaDevice device) { return false; }
-        public void SelectVideoDevice(MediaDevice device) { }
+        public IList<MediaDevice> GetVideoCaptureDevices() { return ToMediaDevices(_videoDevices); }
+        public bool SelectAudioDevice(MediaDevice device) { _audioCaptureDevice = device; return true; }
+        public bool SelectAudioPlayoutDevice(MediaDevice device) { _audioCaptureDevice = device; return true; }
+        public void SelectVideoDevice(MediaDevice device) { _audioCaptureDevice = device; }
     }
 
 
@@ -119,7 +342,7 @@ namespace ChatterBox.Client.Voip.Rtc
 
     internal sealed class MediaDevice
     {
-        public MediaDevice(string id, string name) { }
+        public MediaDevice(string id, string name) { Id = id;  Name = name; }
 
         public string Id { get; set; }
         public string Name { get; set; }
