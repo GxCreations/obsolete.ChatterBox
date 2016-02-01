@@ -4,13 +4,18 @@ using ChatterBox.Client.Common.Signaling.Dto;
 using ChatterBox.Client.Voip;
 using ChatterBox.Common.Communication.Messages.Relay;
 using ChatterBox.Common.Communication.Serialization;
-using webrtc_winrt_api;
 using ChatterBox.Client.Voip.States.Interfaces;
 using Microsoft.Practices.Unity;
 using System.Threading.Tasks;
 using ChatterBox.Client.Common.Communication.Foreground.Dto;
 using System.Linq;
 using System.Collections.Generic;
+
+#if USE_WEBRTC_API
+using RtcMediaStream = webrtc_winrt_api.MediaStream;
+using RtcIceCandidate = webrtc_winrt_api.RTCIceCandidate;
+#elif USE_ORTC_API
+#endif //USE_WEBRTC_API
 
 #pragma warning disable 1998
 
@@ -28,7 +33,7 @@ namespace ChatterBox.Client.Common.Communication.Voip.States
         {
             Context.TrackCallStarted();
         }
-        internal override async Task OnAddStream(MediaStream stream)
+        internal override async Task OnAddStream(RtcMediaStream stream)
         {
             Context.RemoteStream = stream;
             var tracks = stream.GetVideoTracks();
@@ -73,7 +78,7 @@ namespace ChatterBox.Client.Common.Communication.Voip.States
             await Context.SwitchState(hangingUpState);
         }
 
-        public override async Task SendLocalIceCandidates(RTCIceCandidate[] candidates)
+        public override async Task SendLocalIceCandidates(RtcIceCandidate[] candidates)
         {
             Context.SendToPeer(RelayMessageTags.IceCandidate, JsonConvert.Serialize(candidates.ToDto()));
         }

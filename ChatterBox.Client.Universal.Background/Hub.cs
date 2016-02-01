@@ -16,6 +16,11 @@ using System.Linq;
 using Windows.ApplicationModel.AppService;
 using Windows.ApplicationModel.Background;
 
+#if USE_WEBRTC_API
+using RtcPeerConnection = webrtc_winrt_api.RTCPeerConnection;
+#elif USE_ORTC_API
+#endif //USE_WEBRTC_API
+
 namespace ChatterBox.Client.Universal.Background
 {
     internal sealed class Hub : IHub
@@ -177,7 +182,7 @@ namespace ChatterBox.Client.Universal.Background
             ForegroundClient.OnVoipState(voipState);
         }
 
-        public void InitialiazeStatsManager(webrtc_winrt_api.RTCPeerConnection pc)
+        public void InitialiazeStatsManager(RtcPeerConnection pc)
         {
             RTCStatsManager.Initialize(pc);
         }

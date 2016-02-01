@@ -2,20 +2,24 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using webrtc_winrt_api;
+
+#if USE_WEBRTC_API
+using RtcIceServer = webrtc_winrt_api.RTCIceServer;
+#elif USE_ORTC_API
+#endif //USE_WEBRTC_API
 
 namespace ChatterBox.Client.Voip.Utils
 {
     internal class WebRtcSettingsUtils
     {
-        public static List<RTCIceServer> ToRTCIceServer(IEnumerable<IceServer> iceServerList)
+        public static List<RtcIceServer> ToRTCIceServer(IEnumerable<IceServer> iceServerList)
         {
             if (iceServerList == null) throw new ArgumentNullException(nameof(iceServerList));
 
-            var rtcList = new List<RTCIceServer>();
+            var rtcList = new List<RtcIceServer>();
             foreach (var iceServer in iceServerList)
             {
-                rtcList.Add(new RTCIceServer
+                rtcList.Add(new RtcIceServer
                 {
                     Url = iceServer.Url,
                     Username = iceServer.Username ?? string.Empty,

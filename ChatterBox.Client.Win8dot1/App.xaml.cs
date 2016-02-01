@@ -29,6 +29,11 @@ using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using MediaSettingsChannel = ChatterBox.Client.Win8dot1.Channels.MediaSettingsChannel;
 
+#if USE_WEBRTC_API
+using RtcMedia = webrtc_winrt_api.Media;
+#elif USE_ORTC_API
+#endif //USE_WEBRTC_API
+
 #pragma warning disable 4014
 
 namespace ChatterBox.Client.Win8dot1
@@ -221,7 +226,7 @@ namespace ChatterBox.Client.Win8dot1
             var deferral = e.SuspendingOperation.GetDeferral();
 
             Container.Resolve<IVoipChannel>().Hangup();
-            webrtc_winrt_api.Media.OnAppSuspending();
+            RtcMedia.OnAppSuspending();
 
             Container.Resolve<ISocketConnection>().Disconnect();
             deferral.Complete();

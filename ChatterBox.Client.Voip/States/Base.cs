@@ -3,9 +3,14 @@ using Windows.Graphics.Display;
 using ChatterBox.Client.Common.Communication.Foreground.Dto;
 using ChatterBox.Client.Common.Communication.Voip.Dto;
 using ChatterBox.Common.Communication.Messages.Relay;
-using webrtc_winrt_api;
 using System.Threading.Tasks;
 using Windows.UI.Xaml.Controls;
+
+#if USE_WEBRTC_API
+using RtcMediaStream = webrtc_winrt_api.MediaStream;
+using RtcIceCandidate = webrtc_winrt_api.RTCIceCandidate;
+#elif USE_ORTC_API
+#endif //USE_WEBRTC_API
 
 #pragma warning disable 1998
 
@@ -99,11 +104,11 @@ namespace ChatterBox.Client.Common.Communication.Voip.States
         {
         }
 
-        public virtual async Task SendLocalIceCandidates(RTCIceCandidate[] candidates)
+        public virtual async Task SendLocalIceCandidates(RtcIceCandidate[] candidates)
         {
         }
 
-        internal virtual async Task OnAddStream(MediaStream stream)
+        internal virtual async Task OnAddStream(RtcMediaStream stream)
         {
         }
 

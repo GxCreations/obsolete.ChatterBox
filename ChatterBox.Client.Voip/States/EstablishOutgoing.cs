@@ -6,7 +6,6 @@ using ChatterBox.Client.Common.Signaling.Dto;
 using ChatterBox.Client.Voip;
 using ChatterBox.Common.Communication.Messages.Relay;
 using ChatterBox.Common.Communication.Serialization;
-using webrtc_winrt_api;
 using Microsoft.Practices.Unity;
 using ChatterBox.Client.Voip.States.Interfaces;
 using ChatterBox.Client.Common.Communication.Foreground.Dto;
@@ -16,6 +15,17 @@ using System.Linq;
 using Windows.UI.Core;
 using ChatterBox.Client.Voip.Utils;
 using ChatterBox.Client.Common.Settings;
+
+#if USE_WEBRTC_API
+using RtcConfiguration = webrtc_winrt_api.RTCConfiguration;
+using RtcPeerConnection = webrtc_winrt_api.RTCPeerConnection;
+using RtcMediaStream = webrtc_winrt_api.MediaStream;
+using RtcSessionDescription = webrtc_winrt_api.RTCSessionDescription;
+using RtcMediaStreamConstraints = webrtc_winrt_api.RTCMediaStreamConstraints;
+using RtcNegotiationType = webrtc_winrt_api.RTCSdpType;
+using RtcIceCandidate = webrtc_winrt_api.RTCIceCandidate;
+#elif USE_ORTC_API
+#endif //USE_WEBRTC_API
 
 #pragma warning disable 1998
 
@@ -56,13 +66,13 @@ namespace ChatterBox.Client.Common.Communication.Voip.States
 
             Context.VoipCoordinator.StartOutgoingCall(_callRequest);
 
-            var config = new RTCConfiguration
+            var config = new RtcConfiguration
             {
                 IceServers = WebRtcSettingsUtils.ToRTCIceServer(IceServerSettings.IceServers)
             };
-            Context.PeerConnection = new RTCPeerConnection(config);
+            Context.PeerConnection = new RtcPeerConnection(config);
 
-            Context.LocalStream = await Context.Media.GetUserMedia(new RTCMediaStreamConstraints
+            Context.LocalStream = await Context.Media.GetUserMedia(new RtcMediaStreamConstraints
             {
                 videoEnabled = _callRequest.VideoEnabled,
                 audioEnabled = true
@@ -88,7 +98,7 @@ namespace ChatterBox.Client.Common.Communication.Voip.States
             Context.SendToPeer(RelayMessageTags.SdpOffer, sdpOffer.Sdp);
         }
 
-        internal override async Task OnAddStream(MediaStream stream)
+        internal override async Task OnAddStream(RtcMediaStream stream)
         {
             Context.RemoteStream = stream;
             var tracks = stream.GetVideoTracks();
@@ -115,11 +125,11 @@ namespace ChatterBox.Client.Common.Communication.Voip.States
         public override async Task OnAnswer(RelayMessage message)
         {
             await
-                Context.PeerConnection.SetRemoteDescription(new RTCSessionDescription(RTCSdpType.Answer, message.Payload));
+                Context.PeerConnection.SetRemoteDescription(new RtcSessionDescription(RtcNegotiationType.Answer, message.Payload));
             await Context.SwitchState(new VoipState_ActiveCall(_callRequest));
         }
 
-        public override async Task SendLocalIceCandidates(RTCIceCandidate[] candidates)
+        public override async Task SendLocalIceCandidates(RtcIceCandidate[] candidates)
         {
             Context.SendToPeer(RelayMessageTags.IceCandidate, JsonConvert.Serialize(candidates.ToDto()));
         }

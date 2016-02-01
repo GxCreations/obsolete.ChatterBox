@@ -12,6 +12,8 @@
     <Compile Include="$(MSBuildThisFileDirectory)DtoExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)IHub.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)MediaSettingsChannel.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Rtc\Ortc.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Rtc\WebRTC.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)States\Active.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)States\Base.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)States\EstablishIncoming.cs" />

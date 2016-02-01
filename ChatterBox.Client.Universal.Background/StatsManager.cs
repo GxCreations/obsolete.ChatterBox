@@ -2,12 +2,20 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
-using webrtc_winrt_api;
 using Microsoft.ApplicationInsights;
 using Microsoft.ApplicationInsights.DataContracts;
 using System.Threading;
 using Microsoft.ApplicationInsights.Extensibility;
 using Windows.Networking.Connectivity;
+
+#if USE_WEBRTC_API
+using RtcPeerConnection = webrtc_winrt_api.RTCPeerConnection;
+using RtcStatsReport = webrtc_winrt_api.RTCStatsReport;
+using RtcStatsType = webrtc_winrt_api.RTCStatsType;
+using RtcStatsValueName = webrtc_winrt_api.RTCStatsValueName;
+using RtcStatsReportsReadyEvent = webrtc_winrt_api.RTCStatsReportsReadyEvent;
+#elif USE_ORTC_API
+#endif //USE_WEBRTC_API
 
 namespace ChatterBox.Client.Universal.Background
 {
@@ -23,12 +31,12 @@ namespace ChatterBox.Client.Universal.Background
             _telemetry.Flush();
         }
 
-        RTCPeerConnection _peerConnection;
+        RtcPeerConnection _peerConnection;
         TelemetryClient _telemetry;
         Timer _metricsTimer;
         Timer _networkTimer;
         AudioVideoMetricsCollector _metricsCollector;
-        public void Initialize(RTCPeerConnection pc)
+        public void Initialize(RtcPeerConnection pc)
         {
             if (pc != null)
             {
@@ -86,60 +94,60 @@ namespace ChatterBox.Client.Universal.Background
             TelemetryConfiguration.Active.DisableTelemetry = disable;
         }
 
-        private void ProcessReports(IList<RTCStatsReport> reports)
+        private void ProcessReports(IList<RtcStatsReport> reports)
         {
             foreach (var report in reports)
             {
-                if (report.StatsType == RTCStatsType.StatsReportTypeSsrc) {
-                    IDictionary<RTCStatsValueName, Object> statValues = report.Values;
-                    if (statValues.Keys.Contains(RTCStatsValueName.StatsValueNameTrackId))
+                if (report.StatsType == RtcStatsType.StatsReportTypeSsrc) {
+                    IDictionary<RtcStatsValueName, Object> statValues = report.Values;
+                    if (statValues.Keys.Contains(RtcStatsValueName.StatsValueNameTrackId))
                     {
-                        string trackId = statValues[RTCStatsValueName.StatsValueNameTrackId].ToString();
+                        string trackId = statValues[RtcStatsValueName.StatsValueNameTrackId].ToString();
                         if (trackId == "audio_label")
                         {
-                            if (statValues.Keys.Contains(RTCStatsValueName.StatsValueNamePacketsSent)) {
-                                _metricsCollector._audioPacketsSent += Convert.ToInt32(statValues[RTCStatsValueName.StatsValueNamePacketsSent]);
+                            if (statValues.Keys.Contains(RtcStatsValueName.StatsValueNamePacketsSent)) {
+                                _metricsCollector._audioPacketsSent += Convert.ToInt32(statValues[RtcStatsValueName.StatsValueNamePacketsSent]);
                             }
-                            if (statValues.Keys.Contains(RTCStatsValueName.StatsValueNamePacketsLost))
+                            if (statValues.Keys.Contains(RtcStatsValueName.StatsValueNamePacketsLost))
                             {
-                                _metricsCollector._audioPacketsLost += Convert.ToInt32(statValues[RTCStatsValueName.StatsValueNamePacketsLost]);
+                                _metricsCollector._audioPacketsLost += Convert.ToInt32(statValues[RtcStatsValueName.StatsValueNamePacketsLost]);
                             }
-                            if (statValues.Keys.Contains(RTCStatsValueName.StatsValueNameCurrentDelayMs))
+                            if (statValues.Keys.Contains(RtcStatsValueName.StatsValueNameCurrentDelayMs))
                             {
-                                _metricsCollector._audioCurrentDelayMs += Convert.ToDouble(statValues[RTCStatsValueName.StatsValueNameCurrentDelayMs]);
+                                _metricsCollector._audioCurrentDelayMs += Convert.ToDouble(statValues[RtcStatsValueName.StatsValueNameCurrentDelayMs]);
                                 _metricsCollector._audioDelayCount++;
                             }
-                            if (statValues.Keys.Contains(RTCStatsValueName.StatsValueNameCodecName))
+                            if (statValues.Keys.Contains(RtcStatsValueName.StatsValueNameCodecName))
                             {
-                                _metricsCollector.AudioCodec = statValues[RTCStatsValueName.StatsValueNameCodecName].ToString();
+                                _metricsCollector.AudioCodec = statValues[RtcStatsValueName.StatsValueNameCodecName].ToString();
                             }
                         }
                         else if (trackId == "video_label")
                         {
-                            if (statValues.Keys.Contains(RTCStatsValueName.StatsValueNamePacketsSent))
+                            if (statValues.Keys.Contains(RtcStatsValueName.StatsValueNamePacketsSent))
                             {
-                                _metricsCollector._videoPacketsSent += Convert.ToInt32(statValues[RTCStatsValueName.StatsValueNamePacketsSent]);
+                                _metricsCollector._videoPacketsSent += Convert.ToInt32(statValues[RtcStatsValueName.StatsValueNamePacketsSent]);
                             }
-                            if (statValues.Keys.Contains(RTCStatsValueName.StatsValueNamePacketsLost))
+                            if (statValues.Keys.Contains(RtcStatsValueName.StatsValueNamePacketsLost))
                             {
-                                _metricsCollector._videoPacketsLost += Convert.ToInt32(statValues[RTCStatsValueName.StatsValueNamePacketsLost]);
+                                _metricsCollector._videoPacketsLost += Convert.ToInt32(statValues[RtcStatsValueName.StatsValueNamePacketsLost]);
                             }
-                            if (statValues.Keys.Contains(RTCStatsValueName.StatsValueNameCurrentDelayMs))
+                            if (statValues.Keys.Contains(RtcStatsValueName.StatsValueNameCurrentDelayMs))
                             {
-                                _metricsCollector._videoCurrentDelayMs += Convert.ToDouble(statValues[RTCStatsValueName.StatsValueNameCurrentDelayMs]);
+                                _metricsCollector._videoCurrentDelayMs += Convert.ToDouble(statValues[RtcStatsValueName.StatsValueNameCurrentDelayMs]);
                                 _metricsCollector._videoDelayCount++;
                             }
-                            if (statValues.Keys.Contains(RTCStatsValueName.StatsValueNameFrameHeightSent))
+                            if (statValues.Keys.Contains(RtcStatsValueName.StatsValueNameFrameHeightSent))
                             {
-                                _metricsCollector.FrameHeight = Convert.ToInt32(statValues[RTCStatsValueName.StatsValueNameFrameHeightSent]);
+                                _metricsCollector.FrameHeight = Convert.ToInt32(statValues[RtcStatsValueName.StatsValueNameFrameHeightSent]);
                             }
-                            if (statValues.Keys.Contains(RTCStatsValueName.StatsValueNameFrameWidthSent))
+                            if (statValues.Keys.Contains(RtcStatsValueName.StatsValueNameFrameWidthSent))
                             {
-                                _metricsCollector.FrameWidth = Convert.ToInt32(statValues[RTCStatsValueName.StatsValueNameFrameWidthSent]);
+                                _metricsCollector.FrameWidth = Convert.ToInt32(statValues[RtcStatsValueName.StatsValueNameFrameWidthSent]);
                             }
-                            if (statValues.Keys.Contains(RTCStatsValueName.StatsValueNameCodecName))
+                            if (statValues.Keys.Contains(RtcStatsValueName.StatsValueNameCodecName))
                             {
-                                _metricsCollector.VideoCodec = statValues[RTCStatsValueName.StatsValueNameCodecName].ToString();
+                                _metricsCollector.VideoCodec = statValues[RtcStatsValueName.StatsValueNameCodecName].ToString();
                             }
                         }
                     }
@@ -147,227 +155,227 @@ namespace ChatterBox.Client.Universal.Background
             }
         }
 
-        private void PeerConnection_OnRTCStatsReportsReady(RTCStatsReportsReadyEvent evt)
+        private void PeerConnection_OnRTCStatsReportsReady(RtcStatsReportsReadyEvent evt)
         {
-            IList<RTCStatsReport> reports = evt.rtcStatsReports;
+            IList<RtcStatsReport> reports = evt.rtcStatsReports;
             Task.Run(() => ProcessReports(reports));
         }
 
-        private string ToMetricName(RTCStatsValueName name)
+        private string ToMetricName(RtcStatsValueName name)
         {
             switch (name)
             {
-                case RTCStatsValueName.StatsValueNameAudioOutputLevel:
+                case RtcStatsValueName.StatsValueNameAudioOutputLevel:
                     return "audioOutputLevel";
-                case RTCStatsValueName.StatsValueNameAudioInputLevel:
+                case RtcStatsValueName.StatsValueNameAudioInputLevel:
                     return "audioInputLevel";
-                case RTCStatsValueName.StatsValueNameBytesSent:
+                case RtcStatsValueName.StatsValueNameBytesSent:
                     return "bytesSent";
-                case RTCStatsValueName.StatsValueNamePacketsSent:
+                case RtcStatsValueName.StatsValueNamePacketsSent:
                     return "packetsSent";
-                case RTCStatsValueName.StatsValueNameBytesReceived:
+                case RtcStatsValueName.StatsValueNameBytesReceived:
                     return "bytesReceived";
-                case RTCStatsValueName.StatsValueNameLabel:
+                case RtcStatsValueName.StatsValueNameLabel:
                     return "label";
-                case RTCStatsValueName.StatsValueNamePacketsReceived:
+                case RtcStatsValueName.StatsValueNamePacketsReceived:
                     return "packetsReceived";
-                case RTCStatsValueName.StatsValueNamePacketsLost:
+                case RtcStatsValueName.StatsValueNamePacketsLost:
                     return "packetsLost";
-                case RTCStatsValueName.StatsValueNameProtocol:
+                case RtcStatsValueName.StatsValueNameProtocol:
                     return "protocol";
-                case RTCStatsValueName.StatsValueNameTransportId:
+                case RtcStatsValueName.StatsValueNameTransportId:
                     return "transportId";
-                case RTCStatsValueName.StatsValueNameSelectedCandidatePairId:
+                case RtcStatsValueName.StatsValueNameSelectedCandidatePairId:
                     return "selectedCandidatePairId";
-                case RTCStatsValueName.StatsValueNameSsrc:
+                case RtcStatsValueName.StatsValueNameSsrc:
                     return "ssrc";
-                case RTCStatsValueName.StatsValueNameState:
+                case RtcStatsValueName.StatsValueNameState:
                     return "state";
-                case RTCStatsValueName.StatsValueNameDataChannelId:
+                case RtcStatsValueName.StatsValueNameDataChannelId:
                     return "datachannelid";
 
                 // 'goog' prefixed constants.
-                case RTCStatsValueName.StatsValueNameAccelerateRate:
+                case RtcStatsValueName.StatsValueNameAccelerateRate:
                     return "googAccelerateRate";
-                case RTCStatsValueName.StatsValueNameActiveConnection:
+                case RtcStatsValueName.StatsValueNameActiveConnection:
                     return "googActiveConnection";
-                case RTCStatsValueName.StatsValueNameActualEncBitrate:
+                case RtcStatsValueName.StatsValueNameActualEncBitrate:
                     return "googActualEncBitrate";
-                case RTCStatsValueName.StatsValueNameAvailableReceiveBandwidth:
+                case RtcStatsValueName.StatsValueNameAvailableReceiveBandwidth:
                     return "googAvailableReceiveBandwidth";
-                case RTCStatsValueName.StatsValueNameAvailableSendBandwidth:
+                case RtcStatsValueName.StatsValueNameAvailableSendBandwidth:
                     return "googAvailableSendBandwidth";
-                case RTCStatsValueName.StatsValueNameAvgEncodeMs:
+                case RtcStatsValueName.StatsValueNameAvgEncodeMs:
                     return "googAvgEncodeMs";
-                case RTCStatsValueName.StatsValueNameBucketDelay:
+                case RtcStatsValueName.StatsValueNameBucketDelay:
                     return "googBucketDelay";
-                case RTCStatsValueName.StatsValueNameBandwidthLimitedResolution:
+                case RtcStatsValueName.StatsValueNameBandwidthLimitedResolution:
                     return "googBandwidthLimitedResolution";
 
                 // Candidate related attributes. Values are taken from
                 // http://w3c.github.io/webrtc-stats/#rtcstatstype-enum*.
-                case RTCStatsValueName.StatsValueNameCandidateIPAddress:
+                case RtcStatsValueName.StatsValueNameCandidateIPAddress:
                     return "ipAddress";
-                case RTCStatsValueName.StatsValueNameCandidateNetworkType:
+                case RtcStatsValueName.StatsValueNameCandidateNetworkType:
                     return "networkType";
-                case RTCStatsValueName.StatsValueNameCandidatePortNumber:
+                case RtcStatsValueName.StatsValueNameCandidatePortNumber:
                     return "portNumber";
-                case RTCStatsValueName.StatsValueNameCandidatePriority:
+                case RtcStatsValueName.StatsValueNameCandidatePriority:
                     return "priority";
-                case RTCStatsValueName.StatsValueNameCandidateTransportType:
+                case RtcStatsValueName.StatsValueNameCandidateTransportType:
                     return "transport";
-                case RTCStatsValueName.StatsValueNameCandidateType:
+                case RtcStatsValueName.StatsValueNameCandidateType:
                     return "candidateType";
 
-                case RTCStatsValueName.StatsValueNameChannelId:
+                case RtcStatsValueName.StatsValueNameChannelId:
                     return "googChannelId";
-                case RTCStatsValueName.StatsValueNameCodecName:
+                case RtcStatsValueName.StatsValueNameCodecName:
                     return "googCodecName";
-                case RTCStatsValueName.StatsValueNameComponent:
+                case RtcStatsValueName.StatsValueNameComponent:
                     return "googComponent";
-                case RTCStatsValueName.StatsValueNameContentName:
+                case RtcStatsValueName.StatsValueNameContentName:
                     return "googContentName";
-                case RTCStatsValueName.StatsValueNameCpuLimitedResolution:
+                case RtcStatsValueName.StatsValueNameCpuLimitedResolution:
                     return "googCpuLimitedResolution";
-                case RTCStatsValueName.StatsValueNameDecodingCTSG:
+                case RtcStatsValueName.StatsValueNameDecodingCTSG:
                     return "googDecodingCTSG";
-                case RTCStatsValueName.StatsValueNameDecodingCTN:
+                case RtcStatsValueName.StatsValueNameDecodingCTN:
                     return "googDecodingCTN";
-                case RTCStatsValueName.StatsValueNameDecodingNormal:
+                case RtcStatsValueName.StatsValueNameDecodingNormal:
                     return "googDecodingNormal";
-                case RTCStatsValueName.StatsValueNameDecodingPLC:
+                case RtcStatsValueName.StatsValueNameDecodingPLC:
                     return "googDecodingPLC";
-                case RTCStatsValueName.StatsValueNameDecodingCNG:
+                case RtcStatsValueName.StatsValueNameDecodingCNG:
                     return "googDecodingCNG";
-                case RTCStatsValueName.StatsValueNameDecodingPLCCNG:
+                case RtcStatsValueName.StatsValueNameDecodingPLCCNG:
                     return "googDecodingPLCCNG";
-                case RTCStatsValueName.StatsValueNameDer:
+                case RtcStatsValueName.StatsValueNameDer:
                     return "googDerBase64";
-                case RTCStatsValueName.StatsValueNameDtlsCipher:
+                case RtcStatsValueName.StatsValueNameDtlsCipher:
                     return "dtlsCipher";
-                case RTCStatsValueName.StatsValueNameEchoCancellationQualityMin:
+                case RtcStatsValueName.StatsValueNameEchoCancellationQualityMin:
                     return "googEchoCancellationQualityMin";
-                case RTCStatsValueName.StatsValueNameEchoDelayMedian:
+                case RtcStatsValueName.StatsValueNameEchoDelayMedian:
                     return "googEchoCancellationEchoDelayMedian";
-                case RTCStatsValueName.StatsValueNameEchoDelayStdDev:
+                case RtcStatsValueName.StatsValueNameEchoDelayStdDev:
                     return "googEchoCancellationEchoDelayStdDev";
-                case RTCStatsValueName.StatsValueNameEchoReturnLoss:
+                case RtcStatsValueName.StatsValueNameEchoReturnLoss:
                     return "googEchoCancellationReturnLoss";
-                case RTCStatsValueName.StatsValueNameEchoReturnLossEnhancement:
+                case RtcStatsValueName.StatsValueNameEchoReturnLossEnhancement:
                     return "googEchoCancellationReturnLossEnhancement";
-                case RTCStatsValueName.StatsValueNameEncodeUsagePercent:
+                case RtcStatsValueName.StatsValueNameEncodeUsagePercent:
                     return "googEncodeUsagePercent";
-                case RTCStatsValueName.StatsValueNameExpandRate:
+                case RtcStatsValueName.StatsValueNameExpandRate:
                     return "googExpandRate";
-                case RTCStatsValueName.StatsValueNameFingerprint:
+                case RtcStatsValueName.StatsValueNameFingerprint:
                     return "googFingerprint";
-                case RTCStatsValueName.StatsValueNameFingerprintAlgorithm:
+                case RtcStatsValueName.StatsValueNameFingerprintAlgorithm:
                     return "googFingerprintAlgorithm";
-                case RTCStatsValueName.StatsValueNameFirsReceived:
+                case RtcStatsValueName.StatsValueNameFirsReceived:
                     return "googFirsReceived";
-                case RTCStatsValueName.StatsValueNameFirsSent:
+                case RtcStatsValueName.StatsValueNameFirsSent:
                     return "googFirsSent";
-                case RTCStatsValueName.StatsValueNameFrameHeightInput:
+                case RtcStatsValueName.StatsValueNameFrameHeightInput:
                     return "googFrameHeightInput";
-                case RTCStatsValueName.StatsValueNameFrameHeightReceived:
+                case RtcStatsValueName.StatsValueNameFrameHeightReceived:
                     return "googFrameHeightReceived";
-                case RTCStatsValueName.StatsValueNameFrameHeightSent:
+                case RtcStatsValueName.StatsValueNameFrameHeightSent:
                     return "googFrameHeightSent";
-                case RTCStatsValueName.StatsValueNameFrameRateReceived:
+                case RtcStatsValueName.StatsValueNameFrameRateReceived:
                     return "googFrameRateReceived";
-                case RTCStatsValueName.StatsValueNameFrameRateDecoded:
+                case RtcStatsValueName.StatsValueNameFrameRateDecoded:
                     return "googFrameRateDecoded";
-                case RTCStatsValueName.StatsValueNameFrameRateOutput:
+                case RtcStatsValueName.StatsValueNameFrameRateOutput:
                     return "googFrameRateOutput";
-                case RTCStatsValueName.StatsValueNameDecodeMs:
+                case RtcStatsValueName.StatsValueNameDecodeMs:
                     return "googDecodeMs";
-                case RTCStatsValueName.StatsValueNameMaxDecodeMs:
+                case RtcStatsValueName.StatsValueNameMaxDecodeMs:
                     return "googMaxDecodeMs";
-                case RTCStatsValueName.StatsValueNameCurrentDelayMs:
+                case RtcStatsValueName.StatsValueNameCurrentDelayMs:
                     return "googCurrentDelayMs";
-                case RTCStatsValueName.StatsValueNameTargetDelayMs:
+                case RtcStatsValueName.StatsValueNameTargetDelayMs:
                     return "googTargetDelayMs";
-                case RTCStatsValueName.StatsValueNameJitterBufferMs:
+                case RtcStatsValueName.StatsValueNameJitterBufferMs:
                     return "googJitterBufferMs";
-                case RTCStatsValueName.StatsValueNameMinPlayoutDelayMs:
+                case RtcStatsValueName.StatsValueNameMinPlayoutDelayMs:
                     return "googMinPlayoutDelayMs";
-                case RTCStatsValueName.StatsValueNameRenderDelayMs:
+                case RtcStatsValueName.StatsValueNameRenderDelayMs:
                     return "googRenderDelayMs";
-                case RTCStatsValueName.StatsValueNameCaptureStartNtpTimeMs:
+                case RtcStatsValueName.StatsValueNameCaptureStartNtpTimeMs:
                     return "googCaptureStartNtpTimeMs";
-                case RTCStatsValueName.StatsValueNameFrameRateInput:
+                case RtcStatsValueName.StatsValueNameFrameRateInput:
                     return "googFrameRateInput";
-                case RTCStatsValueName.StatsValueNameFrameRateSent:
+                case RtcStatsValueName.StatsValueNameFrameRateSent:
                     return "googFrameRateSent";
-                case RTCStatsValueName.StatsValueNameFrameWidthInput:
+                case RtcStatsValueName.StatsValueNameFrameWidthInput:
                     return "googFrameWidthInput";
-                case RTCStatsValueName.StatsValueNameFrameWidthReceived:
+                case RtcStatsValueName.StatsValueNameFrameWidthReceived:
                     return "googFrameWidthReceived";
-                case RTCStatsValueName.StatsValueNameFrameWidthSent:
+                case RtcStatsValueName.StatsValueNameFrameWidthSent:
                     return "googFrameWidthSent";
-                case RTCStatsValueName.StatsValueNameInitiator:
+                case RtcStatsValueName.StatsValueNameInitiator:
                     return "googInitiator";
-                case RTCStatsValueName.StatsValueNameIssuerId:
+                case RtcStatsValueName.StatsValueNameIssuerId:
                     return "googIssuerId";
-                case RTCStatsValueName.StatsValueNameJitterReceived:
+                case RtcStatsValueName.StatsValueNameJitterReceived:
                     return "googJitterReceived";
-                case RTCStatsValueName.StatsValueNameLocalAddress:
+                case RtcStatsValueName.StatsValueNameLocalAddress:
                     return "googLocalAddress";
-                case RTCStatsValueName.StatsValueNameLocalCandidateId:
+                case RtcStatsValueName.StatsValueNameLocalCandidateId:
                     return "localCandidateId";
-                case RTCStatsValueName.StatsValueNameLocalCandidateType:
+                case RtcStatsValueName.StatsValueNameLocalCandidateType:
                     return "googLocalCandidateType";
-                case RTCStatsValueName.StatsValueNameLocalCertificateId:
+                case RtcStatsValueName.StatsValueNameLocalCertificateId:
                     return "localCertificateId";
-                case RTCStatsValueName.StatsValueNameAdaptationChanges:
+                case RtcStatsValueName.StatsValueNameAdaptationChanges:
                     return "googAdaptationChanges";
-                case RTCStatsValueName.StatsValueNameNacksReceived:
+                case RtcStatsValueName.StatsValueNameNacksReceived:
                     return "googNacksReceived";
-                case RTCStatsValueName.StatsValueNameNacksSent:
+                case RtcStatsValueName.StatsValueNameNacksSent:
                     return "googNacksSent";
-                case RTCStatsValueName.StatsValueNamePreemptiveExpandRate:
+                case RtcStatsValueName.StatsValueNamePreemptiveExpandRate:
                     return "googPreemptiveExpandRate";
-                case RTCStatsValueName.StatsValueNamePlisReceived:
+                case RtcStatsValueName.StatsValueNamePlisReceived:
                     return "googPlisReceived";
-                case RTCStatsValueName.StatsValueNamePlisSent:
+                case RtcStatsValueName.StatsValueNamePlisSent:
                     return "googPlisSent";
-                case RTCStatsValueName.StatsValueNamePreferredJitterBufferMs:
+                case RtcStatsValueName.StatsValueNamePreferredJitterBufferMs:
                     return "googPreferredJitterBufferMs";
-                case RTCStatsValueName.StatsValueNameRemoteAddress:
+                case RtcStatsValueName.StatsValueNameRemoteAddress:
                     return "googRemoteAddress";
-                case RTCStatsValueName.StatsValueNameRemoteCandidateId:
+                case RtcStatsValueName.StatsValueNameRemoteCandidateId:
                     return "remoteCandidateId";
-                case RTCStatsValueName.StatsValueNameRemoteCandidateType:
+                case RtcStatsValueName.StatsValueNameRemoteCandidateType:
                     return "googRemoteCandidateType";
-                case RTCStatsValueName.StatsValueNameRemoteCertificateId:
+                case RtcStatsValueName.StatsValueNameRemoteCertificateId:
                     return "remoteCertificateId";
-                case RTCStatsValueName.StatsValueNameRetransmitBitrate:
+                case RtcStatsValueName.StatsValueNameRetransmitBitrate:
                     return "googRetransmitBitrate";
-                case RTCStatsValueName.StatsValueNameRtt:
+                case RtcStatsValueName.StatsValueNameRtt:
                     return "googRtt";
-                case RTCStatsValueName.StatsValueNameSecondaryDecodedRate:
+                case RtcStatsValueName.StatsValueNameSecondaryDecodedRate:
                     return "googSecondaryDecodedRate";
-                case RTCStatsValueName.StatsValueNameSendPacketsDiscarded:
+                case RtcStatsValueName.StatsValueNameSendPacketsDiscarded:
                     return "packetsDiscardedOnSend";
-                case RTCStatsValueName.StatsValueNameSpeechExpandRate:
+                case RtcStatsValueName.StatsValueNameSpeechExpandRate:
                     return "googSpeechExpandRate";
-                case RTCStatsValueName.StatsValueNameSrtpCipher:
+                case RtcStatsValueName.StatsValueNameSrtpCipher:
                     return "srtpCipher";
-                case RTCStatsValueName.StatsValueNameTargetEncBitrate:
+                case RtcStatsValueName.StatsValueNameTargetEncBitrate:
                     return "googTargetEncBitrate";
-                case RTCStatsValueName.StatsValueNameTransmitBitrate:
+                case RtcStatsValueName.StatsValueNameTransmitBitrate:
                     return "googTransmitBitrate";
-                case RTCStatsValueName.StatsValueNameTransportType:
+                case RtcStatsValueName.StatsValueNameTransportType:
                     return "googTransportType";
-                case RTCStatsValueName.StatsValueNameTrackId:
+                case RtcStatsValueName.StatsValueNameTrackId:
                     return "googTrackId";
-                case RTCStatsValueName.StatsValueNameTypingNoiseState:
+                case RtcStatsValueName.StatsValueNameTypingNoiseState:
                     return "googTypingNoiseState";
-                case RTCStatsValueName.StatsValueNameViewLimitedResolution:
+                case RtcStatsValueName.StatsValueNameViewLimitedResolution:
                     return "googViewLimitedResolution";
-                case RTCStatsValueName.StatsValueNameWritable:
+                case RtcStatsValueName.StatsValueNameWritable:
                     return "googWritable";
-                case RTCStatsValueName.StatsValueNameCurrentEndToEndDelayMs:
+                case RtcStatsValueName.StatsValueNameCurrentEndToEndDelayMs:
                     return "currentEndToEndDelayMs";
                 default:
                     return String.Empty;
