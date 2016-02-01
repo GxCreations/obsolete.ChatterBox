@@ -77,13 +77,6 @@ namespace ChatterBox.Client.Win8dot1
 
             Container.RegisterInstance(CoreApplication.MainView.CoreWindow.Dispatcher);
 
-            if (args.PreviousExecutionState == ApplicationExecutionState.ClosedByUser ||
-                args.PreviousExecutionState == ApplicationExecutionState.NotRunning ||
-                args.PreviousExecutionState == ApplicationExecutionState.Terminated)
-            {
-                RegistrationSettings.Reset();
-            }
-
             Container
                 .RegisterType<ISignalingSocketChannel, SignalingSocketChannel>(new ContainerControlledLifetimeManager())
                 .RegisterType<ISignalingSocketOperation, SignalingSocketOperation>(new ContainerControlledLifetimeManager())
