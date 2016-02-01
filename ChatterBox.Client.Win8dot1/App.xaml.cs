@@ -102,6 +102,7 @@ namespace ChatterBox.Client.Win8dot1
                 .RegisterType<SettingsViewModel>(new ContainerControlledLifetimeManager())
                 .RegisterInstance<MainViewModel>(Container.Resolve<MainViewModel>(), new ContainerControlledLifetimeManager());
 
+            Container.Resolve<SettingsViewModel>().OnQuitApp -= QuitApp;
             Container.Resolve<SettingsViewModel>().OnQuitApp += QuitApp;
 
             var rootFrame = Window.Current.Content as Frame;

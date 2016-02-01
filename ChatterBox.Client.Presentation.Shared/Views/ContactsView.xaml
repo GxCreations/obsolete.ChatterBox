@@ -7,11 +7,11 @@
     xmlns:converters="using:ChatterBox.Client.Presentation.Shared.Converters"
     xmlns:services="using:ChatterBox.Client.Presentation.Shared.Services"
     xmlns:views="using:ChatterBox.Client.Presentation.Shared.Views"
+    xmlns:controls="using:ChatterBox.Client.Presentation.Shared.Controls"
     mc:Ignorable="d"
     d:DesignHeight="300"
-    d:DesignWidth="400">
+    d:DesignWidth="400" x:Name="ContactsViewControl">
     <UserControl.Resources>
-
         <services:ServicesBindingHelper x:Key="ServicesBindingHelper" />
         <Style x:Key="OverlayStyle" TargetType="ItemsControl">
             <Setter Property="ItemsPanel">
@@ -29,6 +29,7 @@
                         <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto" MinWidth="400" />
+                                <ColumnDefinition Width="Auto" />
                                 <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
                         </Grid>
@@ -36,95 +37,28 @@
                 </Setter.Value>
             </Setter>
         </Style>
-        <converters:LayoutTypeToStyleConverter x:Key="LayoutTypeToStyleConverter"
-                                               ParallelStyle="{StaticResource ParallelStyle}"
-                                               OverlayStyle="{StaticResource OverlayStyle}" />
-
-
-        <converters:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
-        <converters:BooleanToVisibilityConverter x:Key="BooleanToVisibilityInvertedConverter" Inverted="True" />
-        <converters:NullToVisibilityConverter x:Key="NullToVisibilityConverter" />
-        <converters:BoolToBrushConverter x:Key="BoolToBrushConverter" ColorForTrue="LightGreen"
-                                         ColorForFalse="LightGray" />
-        <converters:BoolToFontWeightConverter x:Key="BoolToFontWeightConverter" />
+        <DataTemplate x:Key="ContactListHeaderTemplate">
+            <Grid>
+                <TextBlock Text="Chatter Members" Margin="12,5" HorizontalAlignment="Left" VerticalAlignment="Center" />
+                <Button HorizontalAlignment="Right" FontFamily="Segoe UI Symbol" Content="&#xE115;" Margin="5" Command="{Binding ElementName=ContactsViewControl, Path=DataContext.ShowSettings}" />
+            </Grid>
+        </DataTemplate>
+        <converters:LayoutTypeToStyleConverter x:Key="LayoutTypeToStyleConverter" ParallelStyle="{StaticResource ParallelStyle}" OverlayStyle="{StaticResource OverlayStyle}" />
     </UserControl.Resources>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="0"/>
 
-    <ItemsControl Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
-                  Style="{Binding  Source={StaticResource ServicesBindingHelper}, Path=LayoutService.LayoutType, Converter={StaticResource LayoutTypeToStyleConverter}}">
-        <Grid x:Name="ContactsList">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="*" />
-            </Grid.RowDefinitions>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="Auto" />
-            </Grid.ColumnDefinitions>
-            <TextBlock Text="No contacts available" Margin="12,5" HorizontalAlignment="Left" VerticalAlignment="Center"
-                       Visibility="{Binding IsConversationsListVisible, Converter={StaticResource BooleanToVisibilityInvertedConverter}}" />
-            <TextBlock Text="Chatter members" Margin="12,5" HorizontalAlignment="Left" VerticalAlignment="Center"
-                       Visibility="{Binding IsConversationsListVisible, Converter={StaticResource BooleanToVisibilityConverter}}" />
-            <Button HorizontalAlignment="Right" FontFamily="Segoe UI Symbol" Content="&#xE115;"
-                    Margin="5" Command="{Binding ShowSettings}" />
-            <ListBox Grid.Row="1" BorderThickness="0"
-                     Margin="12,5"
-                     ItemsSource="{Binding Conversations}"
-                     SelectedItem="{Binding SelectedConversation, Mode=TwoWay}"
-                     Visibility="{Binding IsConversationsListVisible, Converter={StaticResource BooleanToVisibilityConverter}}"
-                     Background="{ThemeResource ListBoxBackgroundThemeBrush}">
-                <ListBox.ItemTemplate>
-                    <DataTemplate>
-                        <StackPanel Orientation="Horizontal">
-                            <Ellipse
-                                Fill="{Binding IsOnline, Mode=OneWay, Converter={StaticResource BoolToBrushConverter}}"
-                                Width="15"
-                                Height="15" />
-                            <Image Source="{Binding ProfileSource}"
-                                   Margin="5"
-                                   Width="45"
-                                   Height="45" />
-                            <TextBlock Text="{Binding Name}" MaxWidth="250" TextTrimming="CharacterEllipsis"
-                                       FontWeight="{Binding IsHighlighted, Mode=OneWay, Converter={StaticResource BoolToFontWeightConverter}}"
-                                       VerticalAlignment="Center"
-                                       Margin="5" />
-                        </StackPanel>
-                    </DataTemplate>
-                </ListBox.ItemTemplate>
-            </ListBox>
-            <Border Grid.Column="1" Grid.Row="0" Grid.RowSpan="2"
-                    Margin="3" BorderBrush="DarkGray"
-                    BorderThickness="1,0,0,0" Name="SeparatorBorder"
-                    Visibility="{Binding IsSeparatorVisible, Converter={StaticResource BooleanToVisibilityConverter}}" />
-        </Grid>
-        <Grid Grid.Column="1"
-              Visibility="{Binding SelectedConversation, Converter={StaticResource NullToVisibilityConverter}}">
-            <ListBox ItemsSource="{Binding Conversations}" ScrollViewer.VerticalScrollBarVisibility="Disabled"
-                     SelectedItem="{Binding SelectedConversation, Mode=OneWay}" BorderThickness="0"
-                     Background="{ThemeResource ListBoxBackgroundThemeBrush}">
-                <ListBox.ItemsPanel>
-                    <ItemsPanelTemplate>
-                        <Grid />
-                    </ItemsPanelTemplate>
-                </ListBox.ItemsPanel>
-                <ListBox.ItemContainerStyle>
-                    <Style TargetType="ListBoxItem">
-                        <Setter Property="Template">
-                            <Setter.Value>
-                                <ControlTemplate TargetType="ListBoxItem">
-                                    <views:ConversationView
-                                        Visibility="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=IsSelected, Converter = {StaticResource BooleanToVisibilityConverter}}" />
-                                </ControlTemplate>
-                            </Setter.Value>
-                        </Setter>
-                    </Style>
-                </ListBox.ItemContainerStyle>
-                <ListBox.ItemTemplate>
-                    <DataTemplate>
-                        <views:ConversationView DataContext="{Binding SelectedConversation}" />
-                    </DataTemplate>
-                </ListBox.ItemTemplate>
-            </ListBox>
-        </Grid>
+        </Grid.RowDefinitions>
+        <controls:CommunicationControl Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
+                                   Conversations="{Binding Conversations}"
+                                   SelectedConversation="{Binding SelectedConversation, Mode=TwoWay}"
+                                   LayoutRootStyle="{Binding  Source={StaticResource ServicesBindingHelper}, Path=LayoutService.LayoutType, Converter={StaticResource LayoutTypeToStyleConverter}}"
+                                   ContactListHeaderTemplate="{StaticResource ContactListHeaderTemplate}">
+        </controls:CommunicationControl>
+        <MediaElement x:Name="RingtoneElement" Grid.Row="1"/>
+    </Grid>
 
-    </ItemsControl>
+
 </UserControl>

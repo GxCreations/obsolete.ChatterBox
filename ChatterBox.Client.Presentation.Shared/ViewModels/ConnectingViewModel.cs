@@ -3,7 +3,6 @@ using ChatterBox.Client.Common.Signaling;
 using ChatterBox.Client.Common.Signaling.PersistedData;
 using ChatterBox.Client.Presentation.Shared.MVVM;
 using ChatterBox.Client.Presentation.Shared.Services;
-using System.Diagnostics;
 using Windows.UI.Core;
 
 namespace ChatterBox.Client.Presentation.Shared.ViewModels
