@@ -15,7 +15,7 @@ using RtcMediaStream = ChatterBox.Client.Voip.Rtc.MediaStream;
 using RtcEngine = ChatterBox.Client.Voip.Rtc.Engine;
 using RtcMedia = ChatterBox.Client.Voip.Rtc.Media;
 using RtcPeerConnection = ChatterBox.Client.Voip.Rtc.RTCPeerConnection;
-using RtcIceCandidate = ChatterBox.Client.Voip.Rtc.RTCIceCandidate;
+using RtcIceCandidate = ortc_winrt_api.RTCIceCandidate;
 using RtcMediaDevice = ChatterBox.Client.Voip.Rtc.MediaDevice;
 using RtcCodecInfo = ChatterBox.Client.Voip.Rtc.CodecInfo;
 using RtcCaptureCapability = ChatterBox.Client.Voip.Rtc.CaptureCapability;
@@ -39,9 +39,23 @@ namespace ChatterBox.Client.Voip
         {
             return new RtcIceCandidate
             {
+#if USE_WEBRTC_API
                 Candidate = obj.Candidate,
                 SdpMid = obj.SdpMid,
                 SdpMLineIndex = obj.SdpMLineIndex
+#elif USE_ORTC_API
+                CandidateType = ortc_winrt_api.RTCIceTypes.ToCandidateType(obj.CandidateType),
+                Foundation = obj.Foundation,
+                InterfaceType = obj.InterfaceType,
+                IP = obj.IP,
+                Port = obj.Port,
+                Priority = obj.Priority,
+                Protocol = ortc_winrt_api.RTCIceTypes.ToProtocol(obj.Protocol),
+                RelatedAddress = obj.RelatedAddress,
+                RelatedPort = obj.RelatedPort,
+                TCPType = ortc_winrt_api.RTCIceTypes.ToTcpCandidateType(obj.TCPType),
+                UnfreezePriority = obj.UnfreezePriority
+#endif //USE_WEBRTC_API
             };
         }
 
@@ -49,9 +63,23 @@ namespace ChatterBox.Client.Voip
         {
             return new DtoIceCandidate
             {
+#if USE_WEBRTC_API
                 Candidate = obj.Candidate,
                 SdpMid = obj.SdpMid,
                 SdpMLineIndex = obj.SdpMLineIndex
+#elif USE_ORTC_API
+                CandidateType = ortc_winrt_api.RTCIceTypes.ToString(obj.CandidateType),
+                Foundation = obj.Foundation,
+                InterfaceType = obj.InterfaceType,
+                IP = obj.IP,
+                Port = obj.Port,
+                Priority = obj.Priority,
+                Protocol = ortc_winrt_api.RTCIceTypes.ToString(obj.Protocol),
+                RelatedAddress = obj.RelatedAddress,
+                RelatedPort = obj.RelatedPort,
+                TCPType = ortc_winrt_api.RTCIceTypes.ToString(obj.TCPType),
+                UnfreezePriority = obj.UnfreezePriority
+#endif //USE_WEBRTC_API
             };
         }
 

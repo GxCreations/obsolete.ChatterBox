@@ -30,7 +30,7 @@ using RtcMediaStream = ChatterBox.Client.Voip.Rtc.MediaStream;
 using RtcEngine = ChatterBox.Client.Voip.Rtc.Engine;
 using RtcMedia = ChatterBox.Client.Voip.Rtc.Media;
 using RtcPeerConnection = ChatterBox.Client.Voip.Rtc.RTCPeerConnection;
-using RtcIceCandidate = ChatterBox.Client.Voip.Rtc.RTCIceCandidate;
+using RtcIceCandidate = ortc_winrt_api.RTCIceCandidate;
 using RtcResolutionHelper = ChatterBox.Client.Voip.Rtc.ResolutionHelper;
 #endif //USE_WEBRTC_API
 
