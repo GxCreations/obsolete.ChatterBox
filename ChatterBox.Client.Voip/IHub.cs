@@ -2,6 +2,11 @@
 using ChatterBox.Common.Communication.Messages.Relay;
 using System.Collections.Generic;
 
+#if USE_WEBRTC_API
+using RtcPeerConnection = webrtc_winrt_api.RTCPeerConnection;
+#elif USE_ORTC_API
+#endif //USE_WEBRTC_API
+
 namespace ChatterBox.Client.Voip
 {
     internal interface IHub
@@ -10,7 +15,7 @@ namespace ChatterBox.Client.Voip
 
         void OnVoipState(VoipState voipState);
 
-        void InitialiazeStatsManager(webrtc_winrt_api.RTCPeerConnection pc);
+        void InitialiazeStatsManager(RtcPeerConnection pc);
 
         void ToggleStatsManagerConnectionState(bool enable);
 
