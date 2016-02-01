@@ -37,7 +37,7 @@ namespace ChatterBox.Client.Common.Communication.Voip
         void SuspendVoipVideo();
         void ResumeVoipVideo();
         void ConfigureVideo(VideoConfig config);
-        void OnRemoteControlSize(Windows.Foundation.Size size);
-        void OnLocalControlSize(Windows.Foundation.Size size);
+        void OnRemoteControlSize(VideoControlSize size);
+        void OnLocalControlSize(VideoControlSize size);
     }
 }

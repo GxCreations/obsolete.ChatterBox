@@ -35,4 +35,10 @@ namespace ChatterBox.Client.Common.Communication.Voip.Dto
    {
         public bool On { get; set; }
    }
+
+    public sealed class VideoControlSize
+    {
+        [DataMember]
+        public Windows.Foundation.Size Size { get; set; }
+    }
 }
