@@ -1,5 +1,6 @@
 ﻿using ChatterBox.Client.Common.Communication.Foreground.Dto;
 using ChatterBox.Client.Common.Communication.Voip.States;
+using ChatterBox.Client.Common.Communication.Voip.Dto;
 using ChatterBox.Client.Common.Settings;
 using ChatterBox.Common.Communication.Messages.Relay;
 using ChatterBox.Client.Voip;
@@ -8,15 +9,26 @@ using ChatterBox.Client.Voip.States.Interfaces;
 using System;
 using System.Linq;
 using System.Diagnostics;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using Windows.Graphics.Display;
+using webrtc_winrt_api;
+using WebRTCMedia = webrtc_winrt_api.Media;
+using System.Threading;
 using Windows.UI.Core;
 using Windows.Networking.Connectivity;
 using Windows.Storage;
 using Windows.System.Threading;
 using webrtc_winrt_api;
+
+using DtoMediaDevice = ChatterBox.Client.Common.Media.Dto.MediaDevice;
+using DtoMediaDevices = ChatterBox.Client.Common.Media.Dto.MediaDevices;
+using DtoCodecInfo = ChatterBox.Client.Common.Media.Dto.CodecInfo;
+using DtoCodecInfos = ChatterBox.Client.Common.Media.Dto.CodecInfos;
+using DtoMediaRatio = ChatterBox.Client.Common.Media.Dto.MediaRatio;
+using DtoCaptureCapability = ChatterBox.Client.Common.Media.Dto.CaptureCapability;
+using DtoCaptureCapabilities = ChatterBox.Client.Common.Media.Dto.CaptureCapabilities;
+using DtoVideoCaptureFormat = ChatterBox.Client.Common.Media.Dto.VideoCaptureFormat;
 
 #pragma warning disable 4014
 
@@ -46,100 +58,126 @@ namespace ChatterBox.Client.Common.Communication.Voip
             ResetRenderers();
         }
 
-        /// <summary>
-        /// On Win10 in a background task, WebRTC initialization has to be done
-        /// when we have access to the resources.  That's inside an active
-        /// voip call.
-        /// This function must be called after VoipCoordinator.StartVoipTask()
-        /// </summary>
-        /// <returns></returns>
-        public async Task InitializeWebRTC()
+        #region IMediaSettingsChannel
+
+        public DtoMediaDevices GetVideoCaptureDevices()
         {
-            if (Media == null)
-            {
-                WebRTC.Initialize(_dispatcher);
-                Media = Media.CreateMedia();
-                Media.SetDisplayOrientation(_displayOrientation);
-                await Media.EnumerateAudioVideoCaptureDevices();
-            }
+            return Media.GetVideoCaptureDevices().ToArray().ToDto();
+        }
 
-            string videoDeviceId = string.Empty;
-            if (_localSettings.Values.ContainsKey(WebRTCSettingsIds.VideoDeviceSettings))
-            {
-                videoDeviceId = (string)_localSettings.Values[WebRTCSettingsIds.VideoDeviceSettings];
-            }
-            var videoDevices = Media.GetVideoCaptureDevices();
-            var selectedVideoDevice = videoDevices.FirstOrDefault(d => d.Id.Equals(videoDeviceId));
-            selectedVideoDevice = selectedVideoDevice ?? videoDevices.FirstOrDefault();
-            if (selectedVideoDevice != null)
-            {
-                Media.SelectVideoDevice(selectedVideoDevice);
-            }
+        public DtoMediaDevices GetAudioCaptureDevices()
+        {
+            return DtoExtensions.ToDto(Media.GetAudioCaptureDevices().ToArray());
+        }
 
-            string audioDeviceId = string.Empty;
-            if (_localSettings.Values.ContainsKey(WebRTCSettingsIds.AudioDeviceSettings))
-            {
-                audioDeviceId = (string)_localSettings.Values[WebRTCSettingsIds.AudioDeviceSettings];
-            }
-            var audioDevices = Media.GetAudioCaptureDevices();
-            var selectedAudioDevice = audioDevices.FirstOrDefault(d => d.Id.Equals(audioDeviceId));
-            selectedAudioDevice = selectedAudioDevice ?? audioDevices.FirstOrDefault();
-            if (selectedAudioDevice != null)
-            {
-                Media.SelectAudioDevice(selectedAudioDevice);
-            }
+        public DtoMediaDevices GetAudioPlayoutDevices()
+        {
+            return DtoExtensions.ToDto(Media.GetAudioPlayoutDevices().ToArray());
+        }
 
-            string audioPlayoutDeviceId = string.Empty;
-            if (_localSettings.Values.ContainsKey(WebRTCSettingsIds.AudioPlayoutDeviceSettings))
-            {
-                audioPlayoutDeviceId = (string)_localSettings.Values[WebRTCSettingsIds.AudioPlayoutDeviceSettings];
-            }
-            var audioPlayoutDevices = Media.GetAudioPlayoutDevices();
-            var selectedAudioPlayoutDevice = audioPlayoutDevices.FirstOrDefault(d => d.Id.Equals(audioPlayoutDeviceId));
-            selectedAudioPlayoutDevice = selectedAudioPlayoutDevice ?? audioPlayoutDevices.FirstOrDefault();
-            if (selectedAudioPlayoutDevice != null)
-            {
-                Media.SelectAudioPlayoutDevice(selectedAudioPlayoutDevice);
-            }
+        public DtoCodecInfos GetAudioCodecs()
+        {
+            return DtoExtensions.ToDto(WebRTC.GetAudioCodecs().ToArray());
+        }
 
-            int videoCodecId = int.MinValue;
-            if (_localSettings.Values.ContainsKey(WebRTCSettingsIds.VideoCodecSettings))
-            {
-                videoCodecId = (int)_localSettings.Values[WebRTCSettingsIds.VideoCodecSettings];
-            }
-            var videoCodecs = WebRTC.GetVideoCodecs();
-            var selectedVideoCodec = videoCodecs.FirstOrDefault(c => c.Id.Equals(videoCodecId));
-            VideoCodec = selectedVideoCodec ?? videoCodecs.FirstOrDefault();
+        public DtoCodecInfos GetVideoCodecs()
+        {
+            return DtoExtensions.ToDto(WebRTC.GetVideoCodecs().ToArray());
+        }
 
-            int audioCodecId = int.MinValue;
-            if (_localSettings.Values.ContainsKey(WebRTCSettingsIds.AudioCodecSettings))
-            {
-                audioCodecId = (int)_localSettings.Values[WebRTCSettingsIds.AudioCodecSettings];
-            }
-            var audioCodecs = WebRTC.GetAudioCodecs();
-            var selectedAudioCodec = audioCodecs.FirstOrDefault(c => c.Id.Equals(audioCodecId));
-            AudioCodec = selectedAudioCodec ?? audioCodecs.FirstOrDefault();
+        private DtoMediaDevice _videoDevice;
+        public DtoMediaDevice GetVideoDevice()
+        {
+            return _videoDevice;
+        }
+        public void SetVideoDevice(DtoMediaDevice device)
+        {
+            _videoDevice = device;
+            _localSettings.Values[MediaSettingsIds.VideoDeviceSettings] = device?.Id;
+        }
 
-            if (_localSettings.Values.ContainsKey(WebRTCSettingsIds.PreferredVideoCaptureWidth) &&
-                _localSettings.Values.ContainsKey(WebRTCSettingsIds.PreferredVideoCaptureHeight) &&
-                _localSettings.Values.ContainsKey(WebRTCSettingsIds.PreferredVideoCaptureFrameRate))
+        private DtoMediaDevice _audioDevice;
+        public DtoMediaDevice GetAudioDevice()
+        {
+            return _audioDevice;
+        }
+        public void SetAudioDevice(DtoMediaDevice device)
+        {
+            _audioDevice = device;
+            _localSettings.Values[MediaSettingsIds.AudioDeviceSettings] = device?.Id;
+            if ((null != device) &&
+                (null != Media))
             {
-                WebRTC.SetPreferredVideoCaptureFormat((int)_localSettings.Values[WebRTCSettingsIds.PreferredVideoCaptureWidth],
-                                                      (int)_localSettings.Values[WebRTCSettingsIds.PreferredVideoCaptureHeight],
-                                                      (int)_localSettings.Values[WebRTCSettingsIds.PreferredVideoCaptureFrameRate]);
+                Media.SelectAudioDevice(DtoExtensions.FromDto(device));
             }
+        }
 
-            ResolutionHelper.ResolutionChanged += (id, width, height) =>
+        private DtoCodecInfo _videoCodec;
+        public DtoCodecInfo GetVideoCodec()
+        {
+            return _videoCodec;
+        }
+        public void SetVideoCodec(DtoCodecInfo codec)
+        {
+            _videoCodec = codec;
+            _localSettings.Values[MediaSettingsIds.VideoCodecSettings] = codec?.Id;
+        }
+
+        private DtoCodecInfo _audioCodec;
+        public DtoCodecInfo GetAudioCodec()
+        {
+            return _audioCodec;
+        }
+        public void SetAudioCodec(DtoCodecInfo codec)
+        {
+            _audioCodec = codec;
+            _localSettings.Values[MediaSettingsIds.AudioCodecSettings] = codec?.Id;
+        }
+
+        private DtoMediaDevice _audioPlayoutDevice;
+        public DtoMediaDevice GetAudioPlayoutDevice()
+        {
+            return _audioPlayoutDevice;
+        }
+        public void SetAudioPlayoutDevice(DtoMediaDevice device)
+        {
+            _audioPlayoutDevice = device;
+            _localSettings.Values[MediaSettingsIds.AudioPlayoutDeviceSettings] = device?.Id;
+            if ((null != device) &&
+                (null != Media))
             {
-                if (id == "LOCAL")
-                {
-                    LocalVideoRenderer.ResolutionChanged(width, height);
-                }
-                else if (id == "PEER")
-                {
-                    RemoteVideoRenderer.ResolutionChanged(width, height);
-                }
-            };
+                Media.SelectAudioPlayoutDevice(DtoExtensions.FromDto(device));
+            }
+        }
+
+        public DtoCaptureCapabilities GetVideoCaptureCapabilities(DtoMediaDevice device)
+        {
+            return GetVideoCaptureCapabilitiesAsync(device).Result;
+        }
+
+        public async Task<DtoCaptureCapabilities> GetVideoCaptureCapabilitiesAsync(DtoMediaDevice device)
+        {
+            MediaDevice checkDevice = DtoExtensions.FromDto(device);
+            var capabilities = await checkDevice.GetVideoCaptureCapabilities();
+            return DtoExtensions.ToDto(capabilities.ToArray());
+        }
+
+        public void SetPreferredVideoCaptureFormat(DtoVideoCaptureFormat format)
+        {
+            _localSettings.Values[MediaSettingsIds.PreferredVideoCaptureWidth] = format.Width;
+            _localSettings.Values[MediaSettingsIds.PreferredVideoCaptureHeight] = format.Height;
+            _localSettings.Values[MediaSettingsIds.PreferredVideoCaptureFrameRate] = format.FrameRate;
+        }
+
+        public async Task InitializeMediaAsync()
+        {
+            // TODO: Let's remove this.
+            await InitializeRTC();
+        }
+
+        public async Task<bool> RequestAccessForMediaCaptureAsync()
+        {
+            return await WebRTC.RequestAccessForMediaCapture().AsTask();
         }
 
         public void SyncWithNTP(long ntpTime)
@@ -158,13 +196,124 @@ namespace ChatterBox.Client.Common.Communication.Voip
             WebRTC.StopTracing();
             if (_appPerfTimer != null)
             {
-              _appPerfTimer.Cancel();
+                _appPerfTimer.Cancel();
             }
         }
-        public void SaveTrace(string ip, int port)
+
+        public void SaveTrace(TraceServerConfig traceServer)
         {
-            WebRTC.SaveTrace(ip, port);
+            WebRTC.SaveTrace(traceServer.Ip, traceServer.Port);
         }
+
+        public void ReleaseDevices()
+        {
+            WebRTCMedia.OnAppSuspending();
+        }
+
+
+        #endregion
+
+        /// <summary>
+        /// On Win10 in a background task, WebRTC initialization has to be done
+        /// when we have access to the resources.  That's inside an active
+        /// voip call.
+        /// This function must be called after VoipCoordinator.StartVoipTask()
+        /// </summary>
+        /// <returns></returns>
+        public async Task InitializeRTC()
+        {
+            if (Media == null)
+            {
+                WebRTC.Initialize(_dispatcher);
+                Media = WebRTCMedia.CreateMedia();
+                WebRTCMedia.SetDisplayOrientation(_displayOrientation);
+                await Media.EnumerateAudioVideoCaptureDevices();
+            }
+
+            if (DisplayOrientations.None != _displayOrientation)
+            {
+                WebRTCMedia.SetDisplayOrientation(_displayOrientation);
+            }
+
+            string videoDeviceId = string.Empty;
+            if (_localSettings.Values.ContainsKey(MediaSettingsIds.VideoDeviceSettings))
+            {
+                videoDeviceId = (string)_localSettings.Values[MediaSettingsIds.VideoDeviceSettings];
+            }
+            var videoDevices = Media.GetVideoCaptureDevices();
+            var selectedVideoDevice = videoDevices.FirstOrDefault(d => d.Id.Equals(videoDeviceId));
+            selectedVideoDevice = selectedVideoDevice ?? videoDevices.FirstOrDefault();
+            if (selectedVideoDevice != null)
+            {
+                Media.SelectVideoDevice(selectedVideoDevice);
+            }
+
+            string audioDeviceId = string.Empty;
+            if (_localSettings.Values.ContainsKey(MediaSettingsIds.AudioDeviceSettings))
+            {
+                audioDeviceId = (string)_localSettings.Values[MediaSettingsIds.AudioDeviceSettings];
+            }
+            var audioDevices = Media.GetAudioCaptureDevices();
+            var selectedAudioDevice = audioDevices.FirstOrDefault(d => d.Id.Equals(audioDeviceId));
+            selectedAudioDevice = selectedAudioDevice ?? audioDevices.FirstOrDefault();
+            if (selectedAudioDevice != null)
+            {
+                Media.SelectAudioDevice(selectedAudioDevice);
+            }
+
+            string audioPlayoutDeviceId = string.Empty;
+            if (_localSettings.Values.ContainsKey(MediaSettingsIds.AudioPlayoutDeviceSettings))
+            {
+                audioPlayoutDeviceId = (string)_localSettings.Values[MediaSettingsIds.AudioPlayoutDeviceSettings];
+            }
+            var audioPlayoutDevices = Media.GetAudioPlayoutDevices();
+            var selectedAudioPlayoutDevice = audioPlayoutDevices.FirstOrDefault(d => d.Id.Equals(audioPlayoutDeviceId));
+            selectedAudioPlayoutDevice = selectedAudioPlayoutDevice ?? audioPlayoutDevices.FirstOrDefault();
+            if (selectedAudioPlayoutDevice != null)
+            {
+                Media.SelectAudioPlayoutDevice(selectedAudioPlayoutDevice);
+            }
+
+            int videoCodecId = int.MinValue;
+            if (_localSettings.Values.ContainsKey(MediaSettingsIds.VideoCodecSettings))
+            {
+                videoCodecId = (int)_localSettings.Values[MediaSettingsIds.VideoCodecSettings];
+            }
+            var videoCodecs = WebRTC.GetVideoCodecs();
+            var selectedVideoCodec = videoCodecs.FirstOrDefault(c => c.Id.Equals(videoCodecId));
+            SetVideoCodec(DtoExtensions.ToDto(selectedVideoCodec ?? videoCodecs.FirstOrDefault()));
+
+            int audioCodecId = int.MinValue;
+            if (_localSettings.Values.ContainsKey(MediaSettingsIds.AudioCodecSettings))
+            {
+                audioCodecId = (int)_localSettings.Values[MediaSettingsIds.AudioCodecSettings];
+            }
+            var audioCodecs = WebRTC.GetAudioCodecs();
+            var selectedAudioCodec = audioCodecs.FirstOrDefault(c => c.Id.Equals(audioCodecId));
+            SetAudioCodec(DtoExtensions.ToDto(selectedAudioCodec ?? audioCodecs.FirstOrDefault()));
+
+            if (_localSettings.Values.ContainsKey(MediaSettingsIds.PreferredVideoCaptureWidth) &&
+                _localSettings.Values.ContainsKey(MediaSettingsIds.PreferredVideoCaptureHeight) &&
+                _localSettings.Values.ContainsKey(MediaSettingsIds.PreferredVideoCaptureFrameRate))
+            {
+                WebRTC.SetPreferredVideoCaptureFormat((int)_localSettings.Values[MediaSettingsIds.PreferredVideoCaptureWidth],
+                                                      (int)_localSettings.Values[MediaSettingsIds.PreferredVideoCaptureHeight],
+                                                      (int)_localSettings.Values[MediaSettingsIds.PreferredVideoCaptureFrameRate]);
+            }
+
+            ResolutionHelper.ResolutionChanged += (id, width, height) =>
+            {
+                if (id == "LOCAL")
+                {
+                    LocalVideoRenderer.ResolutionChanged(width, height);
+                }
+                else if (id == "PEER")
+                {
+                    RemoteVideoRenderer.ResolutionChanged(width, height);
+                }
+            };
+        }
+
 
         private ThreadPoolTimer _appPerfTimer = null;
 
@@ -211,17 +360,18 @@ namespace ChatterBox.Client.Common.Communication.Voip
                 });
         }
 
-        public CodecInfo AudioCodec { get; set; }
-
-        public CodecInfo VideoCodec { get; set; }
-
-        public Media Media { get; private set; }
+        public WebRTCMedia Media { get; private set; }
 
         private bool _isVideoEnabled;
         public bool IsVideoEnabled
         {
             get
             {
+                // TODO: lock(this) in await/async model doesn't work properly. Replace this with safer version (semaphore?)
+                // NOTE: Possible issue with using semaphores is that the semaphore on the class is not re-entrent so
+                //       the VoipChannel may lock with the semaphore, call the context via WithState which calls the
+                //       state machine which then calls back to the Context but it's already locked. Since the semaphore
+                //       is not re-entrant this could cause a deadlock.
                 lock (this)
                 {
                     return _isVideoEnabled;
@@ -260,31 +410,34 @@ namespace ChatterBox.Client.Common.Communication.Voip
         private SemaphoreSlim _iceBufferSemaphore = new SemaphoreSlim(1, 1);
         private async Task QueueIceCandidate(RTCIceCandidate candidate)
         {
-            await _iceBufferSemaphore.WaitAsync();
-            _bufferedIceCandidates.Add(candidate);
-            if (_iceCandidateBufferTimer == null)
+            using (var @lock = new AutoLock(_iceBufferSemaphore))
             {
-                // Flush the ice candidates in 100ms.
-                _iceCandidateBufferTimer = new Timer(FlushBufferedIceCandidates, null, 100, Timeout.Infinite);
+                await @lock.WaitAsync();
+                _bufferedIceCandidates.Add(candidate);
+                if (_iceCandidateBufferTimer == null)
+                {
+                    // Flush the ice candidates in 100ms.
+                    _iceCandidateBufferTimer = new Timer(FlushBufferedIceCandidates, null, 100, Timeout.Infinite);
+                }
             }
-            _iceBufferSemaphore.Release();
         }
 
         private async void FlushBufferedIceCandidates(object state)
         {
-            await _iceBufferSemaphore.WaitAsync();
-            _iceCandidateBufferTimer = null;
-
-            // Chunk in groups of 10 to not blow the size limit
-            // on the storage used by the receiving side.
-            while (_bufferedIceCandidates.Count > 0)
+            using (var @lock = new AutoLock(_iceBufferSemaphore))
             {
-                var candidates = _bufferedIceCandidates.Take(10).ToArray();
-                _bufferedIceCandidates = _bufferedIceCandidates.Skip(10).ToList();
-                await WithState(async st => await st.SendLocalIceCandidates(candidates));
-            }
+                await @lock.WaitAsync();
+                _iceCandidateBufferTimer = null;
 
-            _iceBufferSemaphore.Release();
+                // Chunk in groups of 10 to not blow the size limit
+                // on the storage used by the receiving side.
+                while (_bufferedIceCandidates.Count > 0)
+                {
+                    var candidates = _bufferedIceCandidates.Take(10).ToArray();
+                    _bufferedIceCandidates = _bufferedIceCandidates.Skip(10).ToList();
+                    await WithState(async st => await st.SendLocalIceCandidates(candidates));
+                }
+            }
         }
 
         private RTCPeerConnection _peerConnection { get; set; }
@@ -371,28 +524,94 @@ namespace ChatterBox.Client.Common.Communication.Voip
             Task.Run(() => _hub.OnVoipState(GetVoipState()));
         }
 
+
         // Semaphore used to make sure only one call
         // is executed at any given time.
         private readonly SemaphoreSlim _sem = new SemaphoreSlim(1, 1);
 
         public async Task WithState(Func<BaseVoipState, Task> fn)
         {
-            await _sem.WaitAsync();
-            Debug.WriteLine("WithState - Semaphore - Got");
+            using (var @lock = new AutoLock(_sem))
+            {
+                await @lock.WaitAsync();
 
-            try
-            {
-                await fn(State);
+                try
+                {
+                    await fn(State);
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine(ex.Message);
+                }
             }
-            catch (Exception ex)
+        }
+        public async Task WithContextAction(Action<VoipContext> fn)
+        {
+            using (var @lock = new AutoLock(_sem))
             {
-                Debug.WriteLine(ex.Message);
+                await @lock.WaitAsync();
+
+                try
+                {
+                    fn(this);
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine(ex.Message);
+                }
             }
-            finally
+        }
+
+        public async Task WithContextActionAsync(Func<VoipContext, Task> fn)
+        {
+            using (var @lock = new AutoLock(_sem))
             {
-                Debug.WriteLine("WithState - Semaphore - Release");
-                _sem.Release();
+                await @lock.WaitAsync();
+
+                try
+                {
+                    await fn(this);
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine(ex.Message);
+                }
             }
+        }
+
+        public async Task<TResult> WithContextFunc<TResult>(Func<VoipContext, TResult> fn)
+        {
+            using (var @lock = new AutoLock(_sem))
+            {
+                await @lock.WaitAsync();
+
+                try
+                {
+                    return fn(this);
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine(ex.Message);
+                }
+            }
+            return default(TResult);
+        }
+        public async Task<TResult> WithContextFuncAsync<TResult>(Func<VoipContext, Task<TResult>> fn)
+        {
+            using (var @lock = new AutoLock(_sem))
+            {
+                await @lock.WaitAsync();
+
+                try
+                {
+                    return await fn(this);
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine(ex.Message);
+                }
+            }
+            return default(TResult);
         }
 
         private UInt32 _foregroundProcessId;
@@ -414,7 +633,7 @@ namespace ChatterBox.Client.Common.Communication.Voip
             }
         }
 
-        private DisplayOrientations _displayOrientation;
+        private DisplayOrientations _displayOrientation = DisplayOrientations.None;
         public DisplayOrientations DisplayOrientation
         {
             get
@@ -431,7 +650,7 @@ namespace ChatterBox.Client.Common.Communication.Voip
                     _displayOrientation = value;
                     if (Media != null)
                     {
-                        Media.SetDisplayOrientation(_displayOrientation);
+                        WebRTCMedia.SetDisplayOrientation(_displayOrientation);
                     }
                 }
             }
@@ -456,7 +675,6 @@ namespace ChatterBox.Client.Common.Communication.Voip
                 }
             }
         }
-
 
         public IVideoRenderHelper LocalVideoRenderer { get; private set; }
         public IVideoRenderHelper RemoteVideoRenderer { get; private set; }

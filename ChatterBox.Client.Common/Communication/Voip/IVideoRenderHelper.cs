@@ -11,8 +11,9 @@ namespace ChatterBox.Client.Common.Communication.Voip
         event RenderFormatUpdateHandler RenderFormatUpdate;
         void SetupRenderer(uint foregroundProcessId, IMediaSource source);
         void Teardown();
+        bool IsRendererAlreadySetup();
 
         void SetMediaElement(CoreDispatcher dispatcher, MediaElement mediaElement);
-        void ResolutionChanged(uint width, uint height);
-    }
+        void SetDisplaySize(Windows.Foundation.Size size);
+        void ResolutionChanged(uint width, uint height);    }
 }

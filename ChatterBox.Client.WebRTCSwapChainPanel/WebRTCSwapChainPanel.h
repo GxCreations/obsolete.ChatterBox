@@ -41,7 +41,6 @@ namespace WebRTCSwapChainPanel {
 		}
 
     private:
-        void OnScaleChange();
         void UpdateHandle(int64 handle);
 
         static void OnSwapChainPanelHandleChanged(Windows::UI::Xaml::DependencyObject^ d,

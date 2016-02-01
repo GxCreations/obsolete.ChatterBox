@@ -103,14 +103,14 @@
                     <ToggleSwitch Header="AppInsight Logging" Grid.Row="7" IsOn="{Binding AppInsightsEnabled, Mode=TwoWay}"
                                   Width="Auto" MinWidth="200" Margin="5,3"
                                   Visibility="{Binding IsWin10App, Converter={StaticResource BoolToVisConverter}}"/>
-                    <ToggleSwitch Header="WebRTC Trace" Grid.Row="8" IsOn="{Binding WebRTCTraceEnabled, Mode=TwoWay}"
+                    <ToggleSwitch Header="RTC Trace" Grid.Row="8" IsOn="{Binding RTCTraceEnabled, Mode=TwoWay}"
                                   Width="Auto" MinWidth="200" Margin="5,3"/>
-                    <TextBlock Text="WebRTC Trace server Ip" Margin="5,3" Grid.Row="9" HorizontalAlignment="Left" />
-                    <TextBox Text="{Binding WebRTCTraceServerIp, Mode=TwoWay}" HorizontalAlignment="Stretch" Grid.Row="10" Margin="5,3"
-                             behaviors:ReturnKeyCloseKeyboardBehavior.Enabled="True" IsEnabled="{Binding WebRTCTraceEnabled}"/>
-                    <TextBlock Text="WebRTC Trace server Port" Margin="5,3" Grid.Row="11" HorizontalAlignment="Left" />
-                    <TextBox Text="{Binding WebRTCTraceServerPort, Mode=TwoWay}" HorizontalAlignment="Stretch" Grid.Row="12" Margin="5,3"
-                             behaviors:ReturnKeyCloseKeyboardBehavior.Enabled="True" IsEnabled="{Binding WebRTCTraceEnabled}"/>
+                    <TextBlock Text="RTC Trace server Ip" Margin="5,3" Grid.Row="9" HorizontalAlignment="Left" />
+                    <TextBox Text="{Binding RTCTraceServerIp, Mode=TwoWay}" HorizontalAlignment="Stretch" Grid.Row="10" Margin="5,3"
+                             behaviors:ReturnKeyCloseKeyboardBehavior.Enabled="True" IsEnabled="{Binding RTCTraceEnabled}"/>
+                    <TextBlock Text="RTC Trace server Port" Margin="5,3" Grid.Row="11" HorizontalAlignment="Left" />
+                    <TextBox Text="{Binding RTCTraceServerPort, Mode=TwoWay}" HorizontalAlignment="Stretch" Grid.Row="12" Margin="5,3"
+                             behaviors:ReturnKeyCloseKeyboardBehavior.Enabled="True" IsEnabled="{Binding RTCTraceEnabled}"/>
                     <ToggleSwitch Header="NTP Sync" Grid.Row="13" IsOn="{Binding NtpSyncEnabled, Mode=TwoWay}"
                                   Width="Auto" MinWidth="200" Margin="5,3"/>
                     <TextBlock Name="NtpSyncInProgressLabel"
@@ -124,7 +124,7 @@
                                FontWeight="Bold" Grid.Row="16" />
                     <TextBlock Text="{Binding ApplicationVersion}" Margin="5,3" Grid.Row="17" HorizontalAlignment="Left" />
                 </Grid>
-                <Grid Name="WebRTCSettingsPanel" HorizontalAlignment="Stretch" Grid.Row="1" Grid.Column="1" 
+                <Grid HorizontalAlignment="Stretch" Grid.Row="1" Grid.Column="1"
                       MaxWidth="500" Margin="10">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
@@ -141,7 +141,7 @@
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
-                    <TextBlock Text="WebRTC Settings" Grid.Row="0" Margin="5" FontSize="18"
+                    <TextBlock Text="RTC Settings" Grid.Row="0" Margin="5" FontSize="18"
                                HorizontalAlignment="Center" FontWeight="Bold" />                    
                     <ComboBox Name="CameraListBox" ItemsSource="{Binding Cameras}" Grid.Row="1"
                               Header="Available cameras"

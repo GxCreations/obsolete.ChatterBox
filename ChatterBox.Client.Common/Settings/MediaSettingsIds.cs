@@ -1,6 +1,6 @@
 ﻿namespace ChatterBox.Client.Common.Settings
 {
-    public sealed class WebRTCSettingsIds
+    public sealed class MediaSettingsIds
     {
         public static string VideoDeviceSettings { get { return "VideoDeviceSettingsId"; } }
 

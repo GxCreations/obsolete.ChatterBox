@@ -19,6 +19,7 @@ namespace ChatterBox.Client.Universal.Background.Voip
         public void SetupRenderer(uint foregroundProcessId, IMediaSource source)
         {
             _renderer.SetupRenderer(foregroundProcessId, source);
+            _isSetup = true;
         }
 
         public void Teardown()
@@ -26,8 +27,17 @@ namespace ChatterBox.Client.Universal.Background.Voip
             _renderer.Teardown();
         }
 
+        public bool IsRendererAlreadySetup()
+        {
+            return _isSetup;
+        }
+
         public void SetMediaElement(CoreDispatcher dispatcher, MediaElement mediaElement)
         {
+        }
+        public void SetDisplaySize(Windows.Foundation.Size size)
+        {
+            _renderer.SetRenderControlSize(size);
         }
 
         public void ResolutionChanged(uint width, uint height)
@@ -37,5 +47,6 @@ namespace ChatterBox.Client.Universal.Background.Voip
         }
 
         private Renderer _renderer = new Renderer();
+        bool _isSetup = false;
     }
 }

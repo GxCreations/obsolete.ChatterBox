@@ -5,6 +5,7 @@ using ChatterBox.Client.Common.Communication.Signaling;
 using ChatterBox.Client.Common.Communication.Voip;
 using ChatterBox.Client.Common.Notifications;
 using ChatterBox.Client.Common.Signaling;
+using ChatterBox.Client.Common.Media;
 using ChatterBox.Client.Presentation.Shared.Services;
 using ChatterBox.Client.Presentation.Shared.ViewModels;
 using ChatterBox.Client.Presentation.Shared.Views;
@@ -108,7 +109,7 @@ namespace ChatterBox.Client.Universal
                 Container.RegisterInstance<ISignalingSocketChannel>(Container.Resolve<HubClient>(), new ContainerControlledLifetimeManager());
                 Container.RegisterInstance<IClientChannel>(Container.Resolve<HubClient>(), new ContainerControlledLifetimeManager());
                 Container.RegisterInstance<IVoipChannel>(Container.Resolve<HubClient>(), new ContainerControlledLifetimeManager());
-                Container.RegisterInstance<IWebRTCSettingsService>(Container.Resolve<HubClient>(), new ContainerControlledLifetimeManager());
+                Container.RegisterInstance<IMediaSettingsChannel>(Container.Resolve<HubClient>(), new ContainerControlledLifetimeManager());
                 Container.RegisterType<ISocketConnection, SocketConnection>(new ContainerControlledLifetimeManager());
                 Container.RegisterType<NtpService>(new ContainerControlledLifetimeManager());
                 Container.RegisterType<MainViewModel>(new ContainerControlledLifetimeManager());

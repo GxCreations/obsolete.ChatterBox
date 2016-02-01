@@ -70,14 +70,18 @@ namespace ChatterBox.Client.Common.Communication.Voip.States
             Context.PeerConnection.AddStream(Context.LocalStream);
             var sdpOffer = await Context.PeerConnection.CreateOffer();
             var sdpString = sdpOffer.Sdp;
-            SdpUtils.SelectCodecs(ref sdpString, Context.AudioCodec, Context.VideoCodec);
+            SdpUtils.SelectCodecs(ref sdpString, DtoExtensions.FromDto(Context.GetAudioCodec()), DtoExtensions.FromDto(Context.GetVideoCodec()));
             sdpOffer.Sdp = sdpString;
             await Context.PeerConnection.SetLocalDescription(sdpOffer);
 
             var tracks = Context.LocalStream.GetVideoTracks();
             if (tracks.Count > 0)
             {
+#if WIN10
+                var source = Context.Media.CreateMediaSource(tracks[0], "LOCAL");
+#else
                 var source = Context.Media.CreateMediaStreamSource(tracks[0], 30, "LOCAL");
+#endif
                 Context.LocalVideoRenderer.SetupRenderer(Context.ForegroundProcessId, source);
             }
 
@@ -90,7 +94,11 @@ namespace ChatterBox.Client.Common.Communication.Voip.States
             var tracks = stream.GetVideoTracks();
             if (tracks.Count > 0)
             {
+#if WIN10
+                var source = Context.Media.CreateMediaSource(tracks[0], "PEER");
+#else
                 var source = Context.Media.CreateMediaStreamSource(tracks[0], 30, "PEER");
+#endif
                 Context.RemoteVideoRenderer.SetupRenderer(Context.ForegroundProcessId, source);
             }
         }

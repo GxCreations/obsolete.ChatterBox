@@ -215,11 +215,13 @@
   <ItemGroup>
     <ClInclude Include="MediaEngineNotify.h" />
     <ClInclude Include="MediaEngineNotifyCallback.h" />
+    <ClInclude Include="RemoteHandle.h" />
     <ClInclude Include="Renderer.h" />
     <ClInclude Include="SchemeHandler.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="MediaEngineNotify.cpp" />
+    <ClCompile Include="RemoteHandle.cpp" />
     <ClCompile Include="Renderer.cpp" />
     <ClCompile Include="SchemeHandler.cpp" />
   </ItemGroup>

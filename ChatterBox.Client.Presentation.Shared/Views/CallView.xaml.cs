@@ -60,7 +60,7 @@ namespace ChatterBox.Client.Presentation.Shared.Views
             peerSwapChainPanel.SetBinding(
                 WebRTCSwapChainPanel.WebRTCSwapChainPanel.SwapChainPanelHandleProperty,
                 peerHandleBinding);
-
+            peerSwapChainPanel.SizeChanged += PeerSwapChainPanel_SizeChanged;
             PeerVideoPresenter.Content = peerSwapChainPanel;
 
             var selfSwapChainPanel = new WebRTCSwapChainPanel.WebRTCSwapChainPanel();
@@ -74,16 +74,7 @@ namespace ChatterBox.Client.Presentation.Shared.Views
             selfSwapChainPanel.SetBinding(
                 WebRTCSwapChainPanel.WebRTCSwapChainPanel.SwapChainPanelHandleProperty,
                 selfHandleBinding);
-
-            var selfSizeBinding = new Binding
-            {
-                Source = DataContext,
-                Path = new PropertyPath("LocalNativeVideoSize"),
-            };
-            selfSwapChainPanel.SetBinding(
-                WebRTCSwapChainPanel.WebRTCSwapChainPanel.SizeProperty,
-                selfSizeBinding);
-
+            selfSwapChainPanel.SizeChanged += SelfSwapChainPanel_SizeChanged;
             SelfVideoPresenter.Content = selfSwapChainPanel;
 #endif
 
@@ -92,14 +83,28 @@ namespace ChatterBox.Client.Presentation.Shared.Views
             {
                 RealTimePlayback = true
             };
+            _peerMediaElement.SizeChanged += PeerSwapChainPanel_SizeChanged;
             PeerVideoPresenter.Content = _peerMediaElement;
 
             _selfMediaElement = new MediaElement
             {
                 RealTimePlayback = true
             };
+            _selfMediaElement.SizeChanged += SelfSwapChainPanel_SizeChanged;
             SelfVideoPresenter.Content = _selfMediaElement;            
 #endif
+        }
+
+        private void SelfSwapChainPanel_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            var conversationViewModel = DataContext as ConversationViewModel;
+            conversationViewModel.LocalVideoControlSize = e.NewSize;
+        }
+
+        private void PeerSwapChainPanel_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            var conversationViewModel = DataContext as ConversationViewModel;
+            conversationViewModel.RemoteVideoControlSize = e.NewSize;
         }
 
         private void SetLayout()
@@ -107,24 +112,6 @@ namespace ChatterBox.Client.Presentation.Shared.Views
             // set the size for peer placeholder
             PeerPlaceholder.Width = VideoGrid.ActualWidth;
             PeerPlaceholder.Height = VideoGrid.ActualHeight;
-
-            var conversationViewModel = DataContext as ConversationViewModel;
-            var remoteVideoSize = conversationViewModel.RemoteNativeVideoSize;
-
-            // if remote size is bigger than current canvas size it will be centered
-            // otherwise it is set on top left
-            double leftMargin = 0;
-            if (remoteVideoSize.Width > VideoGrid.ActualWidth)
-            {
-                leftMargin = (VideoGrid.ActualWidth - remoteVideoSize.Width) / 2f;
-            }
-
-            double topMargin = 0;
-            if (remoteVideoSize.Height > VideoGrid.ActualHeight)
-            {
-                topMargin = (VideoGrid.ActualHeight - remoteVideoSize.Height) / 2f;
-            }
-            PeerVideoPresenter.Margin = new Thickness(leftMargin, topMargin, 0, 0);
 
             // set the size and position for self placeholder
             SelfBorder.Width = VideoGrid.ActualWidth * 0.25D;

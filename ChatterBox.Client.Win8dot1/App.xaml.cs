@@ -3,6 +3,7 @@ using ChatterBox.Client.Common.Background;
 using ChatterBox.Client.Common.Communication.Foreground;
 using ChatterBox.Client.Common.Communication.Signaling;
 using ChatterBox.Client.Common.Communication.Voip;
+using ChatterBox.Client.Common.Media;
 using ChatterBox.Client.Common.Notifications;
 using ChatterBox.Client.Common.Settings;
 using ChatterBox.Client.Common.Signaling;
@@ -18,7 +19,6 @@ using ChatterBox.Common.Communication.Contracts;
 using Microsoft.Practices.Unity;
 using System;
 using System.Diagnostics;
-using webrtc_winrt_api;
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
 using Windows.ApplicationModel.Background;
@@ -27,6 +27,7 @@ using Windows.UI.Core;
 using Windows.UI.Popups;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
+using MediaSettingsChannel = ChatterBox.Client.Win8dot1.Channels.MediaSettingsChannel;
 
 #pragma warning disable 4014
 
@@ -98,7 +99,7 @@ namespace ChatterBox.Client.Win8dot1
                 .RegisterType<IVoipChannel, VoipChannel>(new ContainerControlledLifetimeManager())
                 .RegisterType<ISocketConnection, SocketConnection>(new ContainerControlledLifetimeManager())
                 .RegisterType<NtpService>(new ContainerControlledLifetimeManager())
-                .RegisterType<IWebRTCSettingsService, WebRTCSettingsService>()
+                .RegisterType<IMediaSettingsChannel, MediaSettingsChannel>()
                 .RegisterType<SettingsViewModel>(new ContainerControlledLifetimeManager())
                 .RegisterInstance<MainViewModel>(Container.Resolve<MainViewModel>(), new ContainerControlledLifetimeManager());
 
@@ -144,7 +145,7 @@ namespace ChatterBox.Client.Win8dot1
                 await RegisterForPush();
             }
 
-            WebRTC.RequestAccessForMediaCapture().AsTask().ContinueWith((d) =>
+            Container.Resolve<IMediaSettingsChannel>().RequestAccessForMediaCaptureAsync().AsTask().ContinueWith((d) =>
             {
                 if (!d.Result && !_isMessageForLockScreenShowed)
                 {

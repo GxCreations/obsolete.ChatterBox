@@ -1,0 +1,10 @@
+ChatterBox.Client.Win8dot1/bin/x86/Debug/App.xbf
+*.sdf
+*.opendb
+project.lock.json
+packages/
+Debug/
+Release/
+bin/
+obj/
+.vs/config/applicationhost.config

@@ -9,6 +9,7 @@ using ChatterBox.Client.Universal.Background.Voip;
 using ChatterBox.Client.Voip;
 using ChatterBox.Common.Communication.Contracts;
 using ChatterBox.Common.Communication.Messages.Relay;
+using ChatterBox.Client.Common.Media;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -25,8 +26,6 @@ namespace ChatterBox.Client.Universal.Background
 
         private Hub()
         {
-           
-
         }
 
         public ForegroundClient ForegroundClient { get; } = new ForegroundClient();
@@ -86,20 +85,40 @@ namespace ChatterBox.Client.Universal.Background
         public SignalingSocketService SignalingSocketService { get; } = new SignalingSocketService();
 
         private IVoipChannel _voipChannel;
+        private IMediaSettingsChannel _mediaSettingsChannel;
+        private VoipContext _voipContext;
+
+        private void SetupVoipContext()
+        {
+            if (_voipChannel == null)
+            {
+                var renderResolver = new Func<IVideoRenderHelper>(() => new VideoRenderHelper());
+
+                var voipCoordinator = new VoipCoordinator();
+                _voipContext = new VoipContext(this, null, renderResolver, voipCoordinator);
+                _voipChannel = new VoipChannel(this, null, _voipContext);
+            }
+            if (_mediaSettingsChannel == null)
+            {
+                _mediaSettingsChannel = new MediaSettingsChannel(this, null, _voipContext);
+            }
+        }
 
         public IVoipChannel VoipChannel
         {
             get
             {
-                if (_voipChannel == null)
-                {
-                    var renderResolver = new Func<IVideoRenderHelper>(() => new VideoRenderHelper());
-
-                    var voipCoordinator = new VoipCoordinator();
-                    var voipContext = new VoipContext(this, null, renderResolver, voipCoordinator);
-                    _voipChannel = new VoipChannel(this, null, voipContext);
-                }
+                SetupVoipContext();
                 return _voipChannel;
+            }
+        }
+
+        public IMediaSettingsChannel MediaSettingsChannel
+        {
+            get
+            {
+                SetupVoipContext();
+                return _mediaSettingsChannel;
             }
         }
 
@@ -126,6 +145,10 @@ namespace ChatterBox.Client.Universal.Background
                 if (channel == nameof(IVoipChannel))
                 {
                     AppServiceChannelHelper.HandleRequest(args.Request, VoipChannel, message);
+                }
+                if (channel == nameof(IMediaSettingsChannel))
+                {
+                    AppServiceChannelHelper.HandleRequest(args.Request, MediaSettingsChannel, message);
                 }
             }
         }

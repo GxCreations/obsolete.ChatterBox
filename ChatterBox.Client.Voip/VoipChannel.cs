@@ -11,7 +11,8 @@ using System.Threading.Tasks;
 
 namespace ChatterBox.Client.Common.Communication.Voip
 {
-    internal class VoipChannel : IVoipChannel
+    internal class VoipChannel : 
+        IVoipChannel
     {
         private readonly IHub _hub;
 
@@ -71,7 +72,6 @@ namespace ChatterBox.Client.Common.Communication.Voip
         {
             Task.Run(() =>
             {
-
                 Debug.WriteLine("VoipChannel.Hangup ");
                 Context.WithState(st => st.Hangup()).Wait();
             });
@@ -183,14 +183,34 @@ namespace ChatterBox.Client.Common.Communication.Voip
             });
         }
 
+        public void OnRemoteControlSize(Windows.Foundation.Size size)
+        {
+            Task.Run(() =>
+            {
+                Context.WithState(st => {
+                    return Task.Run(() => { Context.RemoteVideoRenderer.SetDisplaySize(size); });
+                }).Wait();
+            });
+        }
+        public void OnLocalControlSize(Windows.Foundation.Size size)
+        {
+            Task.Run(() =>
+            {
+                Context.WithState(st => {
+                    return Task.Run(() => { Context.LocalVideoRenderer.SetDisplaySize(size); });
+                }).Wait();
+            });
+        }
         #endregion
 
+        // TODO these methods should probably be within the region above - why aren't they inside the interface?
         public void RegisterVideoElements(MediaElement self, MediaElement peer)
         {
             Context.LocalVideoRenderer.SetMediaElement(Dispatcher, self);
             Context.RemoteVideoRenderer.SetMediaElement(Dispatcher, peer);
         }
 
+        // TODO MediaSettingsChannel also implements this "SyncWithNTP" method (and tracing) - why do they both need this?
         public void SyncWithNTP(long ntpTime)
         {
             Context.SyncWithNTP(ntpTime);
@@ -208,7 +228,7 @@ namespace ChatterBox.Client.Common.Communication.Voip
 
         public void SaveTrace(TraceServerConfig traceServer)
         {
-            Context.SaveTrace(traceServer.Ip, traceServer.Port);
+            Context.SaveTrace(traceServer);
         }
 
         public void SuspendVoipVideo()
