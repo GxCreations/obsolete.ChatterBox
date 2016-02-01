@@ -8,14 +8,14 @@ namespace ChatterBox.Client.Presentation.Shared.Converters
         /// <summary>
         ///     Represented in percents - %. (e.g. 25)
         /// </summary>
-        public int DownscalingFactor { get; set; } = 25;
+        public double DownscalingFactor { get; set; } = 25;
 
         #region IValueConverter Members
 
         public object Convert(object value, Type targetType, object parameter, string language)
         {
             var refDimension = (double) value;
-            var scaledDimension = (DownscalingFactor/100)*refDimension;
+            var scaledDimension = DownscalingFactor/100*refDimension;
             return scaledDimension;
         }
 

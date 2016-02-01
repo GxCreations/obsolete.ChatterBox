@@ -27,6 +27,8 @@ using Windows.UI.Popups;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
+using ChatterBox.Client.Common.Avatars;
+using ChatterBox.Client.Presentation.Shared.Controls;
 
 namespace ChatterBox.Client.Universal
 {
@@ -118,6 +120,7 @@ namespace ChatterBox.Client.Universal
 
             Container.Resolve<HubClient>().OnDisconnectedFromHub -= App_OnDisconnectedFromHub;
             Container.Resolve<HubClient>().OnDisconnectedFromHub += App_OnDisconnectedFromHub;
+            Container.Resolve<SettingsViewModel>().OnQuitApp -= QuitApp;
             Container.Resolve<SettingsViewModel>().OnQuitApp += QuitApp;
 
             ConnectHubClient();
@@ -206,7 +209,7 @@ namespace ChatterBox.Client.Universal
             var contactView = Container.Resolve<MainViewModel>().ContactsViewModel;
             if (contactView.SelectedConversation != null)
             {
-                if (contactView.SelectedConversation.IsInCallMode)
+                if (contactView.SelectedConversation.CallState != CallState.Idle)
                 {
                     // By calling Initialize, we force to get the voip state from the background
                     contactView.SelectedConversation.Initialize();
