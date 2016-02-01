@@ -117,7 +117,12 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
             set
             {
                 if (SetProperty(ref _isCallConnected, value))
+                {
                     UpdateCommandStates();
+
+                    OnPropertyChanged(nameof(ShowPeerVideoPlaceHolder));
+                    OnPropertyChanged(nameof(ShowSelfVideoPlaceHolder));
+                }
             }
         }
 
@@ -178,11 +183,27 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
             }
         }
 
+        public bool ShowPeerVideoPlaceHolder
+        {
+            get { return !(IsPeerVideoAvailable && IsCallConnected); }
+        }
+
+        public bool ShowSelfVideoPlaceHolder
+        {
+            get { return !(IsSelfVideoAvailable && IsCallConnected); }
+        }
+
         private bool _isPeerVideoAvailable;
         public bool IsPeerVideoAvailable
         {
             get { return _isPeerVideoAvailable; }
-            set { SetProperty(ref _isPeerVideoAvailable, value); }
+            set
+            {
+                if(SetProperty(ref _isPeerVideoAvailable, value))
+                {
+                    OnPropertyChanged(nameof(ShowPeerVideoPlaceHolder));
+                }
+            }
         }
 
         private bool _isSelfVideoAvailable;        
@@ -190,7 +211,13 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
         public bool IsSelfVideoAvailable
         {
             get { return _isSelfVideoAvailable; }
-            set { SetProperty(ref _isSelfVideoAvailable, value); }
+            set
+            {
+                if (SetProperty(ref _isSelfVideoAvailable, value))
+                {
+                    OnPropertyChanged(nameof(ShowSelfVideoPlaceHolder));
+                }
+            }
         }
 
         private bool _isAudioOnlyCall;
