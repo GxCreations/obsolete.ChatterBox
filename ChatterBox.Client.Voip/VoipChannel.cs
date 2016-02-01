@@ -183,21 +183,21 @@ namespace ChatterBox.Client.Common.Communication.Voip
             });
         }
 
-        public void OnRemoteControlSize(Windows.Foundation.Size size)
+        public void OnRemoteControlSize(VideoControlSize size)
         {
             Task.Run(() =>
             {
                 Context.WithState(st => {
-                    return Task.Run(() => { Context.RemoteVideoRenderer.SetDisplaySize(size); });
+                    return Task.Run(() => { Context.RemoteVideoRenderer.SetDisplaySize(size.Size); });
                 }).Wait();
             });
         }
-        public void OnLocalControlSize(Windows.Foundation.Size size)
+        public void OnLocalControlSize(VideoControlSize size)
         {
             Task.Run(() =>
             {
                 Context.WithState(st => {
-                    return Task.Run(() => { Context.LocalVideoRenderer.SetDisplaySize(size); });
+                    return Task.Run(() => { Context.LocalVideoRenderer.SetDisplaySize(size.Size); });
                 }).Wait();
             });
         }

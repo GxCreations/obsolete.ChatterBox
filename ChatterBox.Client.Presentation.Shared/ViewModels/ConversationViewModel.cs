@@ -319,7 +319,8 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
             {
                 if (SetProperty(ref _localVideoControlSize, value))
                 {
-                    _voipChannel.OnLocalControlSize(value);
+                    VideoControlSize size = new VideoControlSize() { Size = value };
+                    _voipChannel.OnLocalControlSize(size);
                 }
             }
         }
@@ -337,7 +338,8 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
                 if (SetProperty(ref _remoteVideoControlSize, value))
                 {
                     RemoteNativeVideoSizeChanged?.Invoke();
-                    _voipChannel.OnRemoteControlSize(value);
+                    VideoControlSize size = new VideoControlSize() { Size = value };
+                    _voipChannel.OnRemoteControlSize(size);
                 }
             }
         }

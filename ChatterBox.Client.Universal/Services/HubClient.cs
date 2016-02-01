@@ -423,11 +423,11 @@ namespace ChatterBox.Client.Universal.Services
             InvokeHubChannel<IVoipChannel>(config);
         }
 
-        public void OnRemoteControlSize(Windows.Foundation.Size size)
+        public void OnRemoteControlSize(VideoControlSize size)
         {
             InvokeHubChannel<IVoipChannel>(size);
         }
-        public void OnLocalControlSize(Windows.Foundation.Size size)
+        public void OnLocalControlSize(VideoControlSize size)
         {
             InvokeHubChannel<IVoipChannel>(size);
         }
