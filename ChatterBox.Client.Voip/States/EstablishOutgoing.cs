@@ -31,7 +31,7 @@ using RtcMediaStream = ChatterBox.Client.Voip.Rtc.MediaStream;
 using RtcSessionDescription = ChatterBox.Client.Voip.Rtc.RTCSessionDescription;
 using RtcMediaStreamConstraints = ChatterBox.Client.Voip.Rtc.RTCMediaStreamConstraints;
 using RtcNegotiationType = ChatterBox.Client.Voip.Rtc.RTCSdpType;
-using RtcIceCandidate = ChatterBox.Client.Voip.Rtc.RTCIceCandidate;
+using RtcIceCandidate = ortc_winrt_api.RTCIceCandidate;
 #endif //USE_WEBRTC_API
 
 #pragma warning disable 1998
