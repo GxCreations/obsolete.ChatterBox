@@ -2,7 +2,11 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Text.RegularExpressions;
-using webrtc_winrt_api;
+
+#if USE_WEBRTC_API
+using RtcCodecInfo = webrtc_winrt_api.CodecInfo;
+#elif USE_ORTC_API
+#endif //USE_WEBRTC_API
 
 namespace ChatterBox.Client.Voip.Utils
 {
@@ -15,7 +19,7 @@ namespace ChatterBox.Client.Voip.Utils
         /// <param name="audioCodec">Audio codec.</param>
         /// <param name="videoCodec">Video codec.</param>
         /// <returns>True if succeeds to force to use the selected audio/video codecs.</returns>
-        public static bool SelectCodecs(ref string sdp, CodecInfo audioCodec, CodecInfo videoCodec)
+        public static bool SelectCodecs(ref string sdp, RtcCodecInfo audioCodec, RtcCodecInfo videoCodec)
         {
             Regex mfdRegex = new Regex("\r\nm=audio.*RTP.*?( .\\d*)+\r\n");
             Match mfdMatch = mfdRegex.Match(sdp);

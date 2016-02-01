@@ -5,8 +5,13 @@ using ChatterBox.Client.Voip.States.Interfaces;
 using ChatterBox.Common.Communication.Messages.Relay;
 using Microsoft.Practices.Unity;
 using System.Collections.Generic;
-using webrtc_winrt_api;
 using System.Threading.Tasks;
+
+#if USE_WEBRTC_API
+using IRtcMediaStreamTrack = webrtc_winrt_api.IMediaStreamTrack;
+#elif USE_ORTC_API
+#endif //USE_WEBRTC_API
+
 
 namespace ChatterBox.Client.Common.Communication.Voip.States
 {
@@ -44,7 +49,7 @@ namespace ChatterBox.Client.Common.Communication.Voip.States
             await Context.SwitchState(idleState);
         }
 
-        private void StopTracks(IList<IMediaStreamTrack> tracks)
+        private void StopTracks(IList<IRtcMediaStreamTrack> tracks)
         {
             if (tracks == null) return;
             foreach (var track in tracks)

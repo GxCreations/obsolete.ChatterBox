@@ -1,6 +1,18 @@
 ﻿using System.Linq;
 using ChatterBox.Client.Common.Signaling.Dto;
-using webrtc_winrt_api;
+
+#if USE_WEBRTC_API
+using RtcMediaStream = webrtc_winrt_api.MediaStream;
+using RtcEngine = webrtc_winrt_api.WebRTC;
+using RtcMedia = webrtc_winrt_api.Media;
+using RtcPeerConnection = webrtc_winrt_api.RTCPeerConnection;
+using RtcIceCandidate = webrtc_winrt_api.RTCIceCandidate;
+using RtcMediaDevice = webrtc_winrt_api.MediaDevice;
+using RtcCodecInfo = webrtc_winrt_api.CodecInfo;
+using RtcCaptureCapability = webrtc_winrt_api.CaptureCapability;
+#elif USE_ORTC_API
+#endif //USE_WEBRTC_API
+
 using DtoMediaDevice = ChatterBox.Client.Common.Media.Dto.MediaDevice;
 using DtoMediaDevices = ChatterBox.Client.Common.Media.Dto.MediaDevices;
 using DtoCodecInfo = ChatterBox.Client.Common.Media.Dto.CodecInfo;
@@ -15,9 +27,9 @@ namespace ChatterBox.Client.Voip
 {
     internal static class DtoExtensions
     {
-        public static RTCIceCandidate FromDto(this DtoIceCandidate obj)
+        public static RtcIceCandidate FromDto(this DtoIceCandidate obj)
         {
-            return new RTCIceCandidate
+            return new RtcIceCandidate
             {
                 Candidate = obj.Candidate,
                 SdpMid = obj.SdpMid,
@@ -25,7 +37,7 @@ namespace ChatterBox.Client.Voip
             };
         }
 
-        public static DtoIceCandidate ToDto(this RTCIceCandidate obj)
+        public static DtoIceCandidate ToDto(this RtcIceCandidate obj)
         {
             return new DtoIceCandidate
             {
@@ -35,12 +47,12 @@ namespace ChatterBox.Client.Voip
             };
         }
 
-        public static RTCIceCandidate[] FromDto(this DtoIceCandidates obj)
+        public static RtcIceCandidate[] FromDto(this DtoIceCandidates obj)
         {
             return obj.Candidates.Select(FromDto).ToArray();
         }
 
-        public static DtoIceCandidates ToDto(this RTCIceCandidate[] obj)
+        public static DtoIceCandidates ToDto(this RtcIceCandidate[] obj)
         {
             return new DtoIceCandidates
             {
@@ -48,12 +60,12 @@ namespace ChatterBox.Client.Voip
             };
         }
 
-        public static MediaDevice FromDto(this DtoMediaDevice obj)
+        public static RtcMediaDevice FromDto(this DtoMediaDevice obj)
         {
-            return new MediaDevice(obj.Id, obj.Name);
+            return new RtcMediaDevice(obj.Id, obj.Name);
         }
 
-        public static DtoMediaDevice ToDto(this MediaDevice obj)
+        public static DtoMediaDevice ToDto(this RtcMediaDevice obj)
         {
             return new DtoMediaDevice
             {
@@ -62,12 +74,12 @@ namespace ChatterBox.Client.Voip
             };
         }
 
-        public static MediaDevice[] FromDto(this DtoMediaDevices obj)
+        public static RtcMediaDevice[] FromDto(this DtoMediaDevices obj)
         {
             return obj.Devices.Select(FromDto).ToArray();
         }
 
-        public static DtoMediaDevices ToDto(this MediaDevice[] obj)
+        public static DtoMediaDevices ToDto(this RtcMediaDevice[] obj)
         {
             return new DtoMediaDevices
             {
@@ -75,12 +87,12 @@ namespace ChatterBox.Client.Voip
             };
         }
 
-        public static CodecInfo FromDto(this DtoCodecInfo obj)
+        public static RtcCodecInfo FromDto(this DtoCodecInfo obj)
         {
-            return new CodecInfo(obj.Id, obj.Clockrate, obj.Name);
+            return new RtcCodecInfo(obj.Id, obj.Clockrate, obj.Name);
         }
 
-        public static DtoCodecInfo ToDto(this CodecInfo obj)
+        public static DtoCodecInfo ToDto(this RtcCodecInfo obj)
         {
             return new DtoCodecInfo
             {
@@ -90,12 +102,12 @@ namespace ChatterBox.Client.Voip
             };
         }
 
-        public static CodecInfo[] FromDto(this DtoCodecInfos obj)
+        public static RtcCodecInfo[] FromDto(this DtoCodecInfos obj)
         {
             return obj.Codecs.Select(FromDto).ToArray();
         }
 
-        public static DtoCodecInfos ToDto(this CodecInfo[] obj)
+        public static DtoCodecInfos ToDto(this RtcCodecInfo[] obj)
         {
             return new DtoCodecInfos
             {
@@ -122,7 +134,7 @@ namespace ChatterBox.Client.Voip
             };
         }
 
-        public static DtoCaptureCapability ToDto(this CaptureCapability obj)
+        public static DtoCaptureCapability ToDto(this RtcCaptureCapability obj)
         {
             return new DtoCaptureCapability
             {
@@ -136,7 +148,7 @@ namespace ChatterBox.Client.Voip
             };
         }
 
-        public static DtoCaptureCapabilities ToDto(this CaptureCapability[] obj)
+        public static DtoCaptureCapabilities ToDto(this RtcCaptureCapability[] obj)
         {
             return new DtoCaptureCapabilities
             {

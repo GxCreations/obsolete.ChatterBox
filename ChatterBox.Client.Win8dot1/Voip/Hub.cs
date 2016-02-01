@@ -8,6 +8,12 @@ using ChatterBox.Common.Communication.Messages.Relay;
 using System.Collections.Generic;
 using Microsoft.Practices.Unity;
 
+#if USE_WEBRTC_API
+using RtcPeerConnection = webrtc_winrt_api.RTCPeerConnection;
+#elif USE_ORTC_API
+#endif //USE_WEBRTC_API
+
+
 namespace ChatterBox.Client.Win8dot1.Voip
 {
     internal class Hub : IHub
@@ -39,7 +45,7 @@ namespace ChatterBox.Client.Win8dot1.Voip
             _signalingClient.Relay(message);
         }
 
-		public void InitialiazeStatsManager(webrtc_winrt_api.RTCPeerConnection pc)
+		public void InitialiazeStatsManager(RtcPeerConnection pc)
         {
             Debug.WriteLine("Stats Manager is not integrated to 8.1 yet");
         }
