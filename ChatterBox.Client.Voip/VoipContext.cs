@@ -10,10 +10,10 @@ using System;
 using System.Linq;
 using System.Diagnostics;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 using Windows.Graphics.Display;
 using System.Threading;
 using Windows.UI.Core;
-using System.Collections.Generic;
 using Windows.Networking.Connectivity;
 using Windows.Storage;
 using Windows.System.Threading;
@@ -24,12 +24,14 @@ using RtcEngine = webrtc_winrt_api.WebRTC;
 using RtcMedia = webrtc_winrt_api.Media;
 using RtcPeerConnection = webrtc_winrt_api.RTCPeerConnection;
 using RtcIceCandidate = webrtc_winrt_api.RTCIceCandidate;
+using RtcResolutionHelper = webrtc_winrt_api.ResolutionHelper;
 #elif USE_ORTC_API
 using RtcMediaStream = ChatterBox.Client.Voip.Rtc.MediaStream;
 using RtcEngine = ChatterBox.Client.Voip.Rtc.Engine;
 using RtcMedia = ChatterBox.Client.Voip.Rtc.Media;
 using RtcPeerConnection = ChatterBox.Client.Voip.Rtc.RTCPeerConnection;
 using RtcIceCandidate = ChatterBox.Client.Voip.Rtc.RTCIceCandidate;
+using RtcResolutionHelper = ChatterBox.Client.Voip.Rtc.ResolutionHelper;
 #endif //USE_WEBRTC_API
 
 using DtoMediaDevice = ChatterBox.Client.Common.Media.Dto.MediaDevice;
@@ -311,6 +313,18 @@ namespace ChatterBox.Client.Common.Communication.Voip
                                                          (int)_localSettings.Values[MediaSettingsIds.PreferredVideoCaptureHeight],
                                                         (int)_localSettings.Values[MediaSettingsIds.PreferredVideoCaptureFrameRate]);
             }
+
+            RtcResolutionHelper.ResolutionChanged += (id, width, height) =>
+            {
+                if (id == "LOCAL")
+                {
+                    LocalVideoRenderer.ResolutionChanged(width, height);
+                }
+                else if (id == "PEER")
+                {
+                    RemoteVideoRenderer.ResolutionChanged(width, height);
+                }
+            };
         }
 
 
@@ -325,9 +339,7 @@ namespace ChatterBox.Client.Common.Communication.Voip
             }
 
             _appPerfTimer = ThreadPoolTimer.CreatePeriodicTimer(t=> ReportAppPerf(), TimeSpan.FromSeconds(1));
-
         }
-
 
         private void ReportAppPerf()
         {
@@ -766,6 +778,5 @@ namespace ChatterBox.Client.Common.Communication.Voip
             // stop call watch, so the duration will be calculated and tracked as request
             _hub.StopStatsManagerCallWatch();
         }
-
     }
 }
