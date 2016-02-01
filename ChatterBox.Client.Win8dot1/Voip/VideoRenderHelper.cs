@@ -8,13 +8,7 @@ namespace ChatterBox.Client.Win8dot1.Voip
 {
     internal class VideoRenderHelper : IVideoRenderHelper
     {
-#pragma warning disable 67 // The event 'RenderFormatUpdate' is never used
-
-        // this event is not used in Win8.1 rendering part so
-        // its warning is disabled
         public event RenderFormatUpdateHandler RenderFormatUpdate;
-
-#pragma warning restore 67
 
         private CoreDispatcher _dispatcher;
         private MediaElement _mediaElement;
@@ -50,6 +44,11 @@ namespace ChatterBox.Client.Win8dot1.Voip
         public bool IsRendererAlreadySetup()
         {
             return _isSetup;
+        }
+
+        public void ResolutionChanged(uint width, uint height)
+        {
+            RenderFormatUpdate?.Invoke(0, width, height);
         }
     }
 }

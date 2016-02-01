@@ -10,12 +10,12 @@ using System;
 using System.Linq;
 using System.Diagnostics;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 using Windows.Graphics.Display;
 using webrtc_winrt_api;
 using WebRTCMedia = webrtc_winrt_api.Media;
 using System.Threading;
 using Windows.UI.Core;
-using System.Collections.Generic;
 using Windows.Networking.Connectivity;
 using Windows.Storage;
 using Windows.System.Threading;
@@ -299,6 +299,18 @@ namespace ChatterBox.Client.Common.Communication.Voip
                                                       (int)_localSettings.Values[MediaSettingsIds.PreferredVideoCaptureHeight],
                                                       (int)_localSettings.Values[MediaSettingsIds.PreferredVideoCaptureFrameRate]);
             }
+
+            ResolutionHelper.ResolutionChanged += (id, width, height) =>
+            {
+                if (id == "LOCAL")
+                {
+                    LocalVideoRenderer.ResolutionChanged(width, height);
+                }
+                else if (id == "PEER")
+                {
+                    RemoteVideoRenderer.ResolutionChanged(width, height);
+                }
+            };
         }
 
 
@@ -313,7 +325,6 @@ namespace ChatterBox.Client.Common.Communication.Voip
             }
 
             _appPerfTimer = ThreadPoolTimer.CreatePeriodicTimer(t=> ReportAppPerf(), TimeSpan.FromSeconds(1));
-
         }
 
 
@@ -321,7 +332,6 @@ namespace ChatterBox.Client.Common.Communication.Voip
         {
             WebRTC.UpdateCPUUsage(CPUData.GetCPUUsage());
             WebRTC.UpdateMemUsage(MEMData.GetMEMUsage());
-
         }
 
 
@@ -756,6 +766,5 @@ namespace ChatterBox.Client.Common.Communication.Voip
             // stop call watch, so the duration will be calculated and tracked as request
             _hub.StopStatsManagerCallWatch();
         }
-
     }
 }

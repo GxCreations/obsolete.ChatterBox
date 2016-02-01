@@ -31,6 +31,14 @@
                 VerticalAlignment="Stretch">
             <ContentPresenter Name="PeerVideoPresenter" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
                               Visibility="{Binding IsPeerVideoAvailable, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+            <StackPanel Background="White" VerticalAlignment="Top" HorizontalAlignment="Left"
+                        Visibility="{Binding IsPeerVideoAvailable, Converter={StaticResource BooleanToVisibilityConverter}}">
+                <TextBlock Foreground="Black">
+                    <Run Text="{Binding RemoteNativeVideoSize.Width}"/>
+                    <Run Text="x"/>
+                    <Run Text="{Binding RemoteNativeVideoSize.Height}"/>
+                </TextBlock>
+            </StackPanel>
             <Image Name="PeerPlaceholder" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
                    Visibility="{Binding IsPeerVideoAvailable, Converter={StaticResource InvertedBooleanToVisibilityConverter}}"
                    Source="{Binding ProfileSource}" />
@@ -38,6 +46,15 @@
                 <Grid>
                     <ContentPresenter Name="SelfVideoPresenter" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
                                       Visibility = "{Binding IsSelfVideoAvailable, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                    <StackPanel Background="White" VerticalAlignment="Top" HorizontalAlignment="Left"
+                                Visibility="{Binding IsSelfVideoAvailable, Converter={StaticResource BooleanToVisibilityConverter}}">
+                        <TextBlock Foreground="Black"
+                                   Visibility="{Binding IsSelfVideoAvailable, Converter={StaticResource BooleanToVisibilityConverter}}">
+                            <Run Text="{Binding LocalNativeVideoSize.Width}"/>
+                            <Run Text="x"/>
+                            <Run Text="{Binding LocalNativeVideoSize.Height}"/>
+                        </TextBlock>
+                    </StackPanel>
                     <Image Name="SelfPlaceholder" Source="{Binding OwnProfileSource}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
                            Visibility="{Binding IsSelfVideoAvailable, Converter={StaticResource InvertedBooleanToVisibilityConverter}}" />
                 </Grid>
