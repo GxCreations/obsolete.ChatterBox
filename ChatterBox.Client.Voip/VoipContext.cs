@@ -19,7 +19,6 @@ using Windows.UI.Core;
 using Windows.Networking.Connectivity;
 using Windows.Storage;
 using Windows.System.Threading;
-using webrtc_winrt_api;
 
 using DtoMediaDevice = ChatterBox.Client.Common.Media.Dto.MediaDevice;
 using DtoMediaDevices = ChatterBox.Client.Common.Media.Dto.MediaDevices;
