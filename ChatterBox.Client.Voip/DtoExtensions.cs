@@ -11,6 +11,14 @@ using RtcMediaDevice = webrtc_winrt_api.MediaDevice;
 using RtcCodecInfo = webrtc_winrt_api.CodecInfo;
 using RtcCaptureCapability = webrtc_winrt_api.CaptureCapability;
 #elif USE_ORTC_API
+using RtcMediaStream = ChatterBox.Client.Voip.Rtc.MediaStream;
+using RtcEngine = ChatterBox.Client.Voip.Rtc.Engine;
+using RtcMedia = ChatterBox.Client.Voip.Rtc.Media;
+using RtcPeerConnection = ChatterBox.Client.Voip.Rtc.RTCPeerConnection;
+using RtcIceCandidate = ChatterBox.Client.Voip.Rtc.RTCIceCandidate;
+using RtcMediaDevice = ChatterBox.Client.Voip.Rtc.MediaDevice;
+using RtcCodecInfo = ChatterBox.Client.Voip.Rtc.CodecInfo;
+using RtcCaptureCapability = ChatterBox.Client.Voip.Rtc.CaptureCapability;
 #endif //USE_WEBRTC_API
 
 using DtoMediaDevice = ChatterBox.Client.Common.Media.Dto.MediaDevice;

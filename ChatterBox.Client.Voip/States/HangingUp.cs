@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 #if USE_WEBRTC_API
 using IRtcMediaStreamTrack = webrtc_winrt_api.IMediaStreamTrack;
 #elif USE_ORTC_API
+using IRtcMediaStreamTrack = ChatterBox.Client.Voip.Rtc.IMediaStreamTrack;
 #endif //USE_WEBRTC_API
 
 

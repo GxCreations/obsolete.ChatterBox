@@ -32,6 +32,7 @@ using MediaSettingsChannel = ChatterBox.Client.Win8dot1.Channels.MediaSettingsCh
 #if USE_WEBRTC_API
 using RtcMedia = webrtc_winrt_api.Media;
 #elif USE_ORTC_API
+using RtcMedia = ChatterBox.Client.Voip.Rtc.Media;
 #endif //USE_WEBRTC_API
 
 #pragma warning disable 4014
