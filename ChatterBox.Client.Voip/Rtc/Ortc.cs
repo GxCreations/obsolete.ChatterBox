@@ -47,8 +47,6 @@ namespace ChatterBox.Client.Voip.Rtc
     using RtcIceGathererCandidateEvent = ortc_winrt_api.RTCIceGathererCandidateEvent;
     using RtcIceGathererCandidateCompleteEvent = ortc_winrt_api.RTCIceGathererCandidateCompleteEvent;
 
-    public delegate void RTCPeerConnectionHealthStatsDelegate(RTCPeerConnectionHealthStats param);
-
     //using EventDelegate = webrtc_winrt_api.EventDelegate;
     //using RTCDataChannelMessageEventDelegate = webrtc_winrt_api.RTCDataChannelMessageEventDelegate;
     //using RTCDataChannelEventDelegate = webrtc_winrt_api.RTCDataChannelEventDelegate;
@@ -58,6 +56,7 @@ namespace ChatterBox.Client.Voip.Rtc
     internal delegate void MediaStreamEventEventDelegate(MediaStreamEvent param0);
     internal delegate void RTCStatsReportsReadyEventDelegate(RTCStatsReportsReadyEvent param0);
     internal delegate void ResolutionChangedEventHandler(string id, uint width, uint height);
+    internal delegate void RTCPeerConnectionHealthStatsDelegate(RTCPeerConnectionHealthStats param);
     internal delegate void StepEventHandler();
 
     internal sealed class Engine
@@ -225,131 +224,34 @@ namespace ChatterBox.Client.Voip.Rtc
             }).AsAsyncOperation();
         }
 
-        private static MediaDevice ToMediaDevice(RtcMediaDeviceInfo device)
-        {
-            return new MediaDevice(device.DeviceID, device.Label);
-        }
-        private static IList<MediaDevice> ToMediaDevices(IList<RtcMediaDeviceInfo> devices)
-        {
-            var results = new List<MediaDevice>();
-            foreach (var device in devices)
-            {
-                results.Add(ToMediaDevice(device));
-            }
-            return results;
-        }
 
-        public IList<MediaDevice> GetAudioCaptureDevices() { return ToMediaDevices(_audioCaptureDevices); }
-        public IList<MediaDevice> GetAudioPlayoutDevices() { return ToMediaDevices(_audioPlaybackDevices); }
-
-        private static RtcConstraints MakeConstraints(
-            bool shouldDoThis,
-            RtcConstraints existingConstraints,
-            RtcMediaDeviceKind kind,
-            MediaDevice device
-            )
-        {
-            if (!shouldDoThis) return existingConstraints;
-            if (null == device) return existingConstraints;
-
-            if (null == existingConstraints) existingConstraints = new RtcConstraints();
-            RtcMediaTrackConstraints trackConstraints = null;
-
-            switch (kind)
-            {
-                case RtcMediaDeviceKind.AudioInput:  trackConstraints = existingConstraints.Audio; break;
-                case RtcMediaDeviceKind.AudioOutput: trackConstraints = existingConstraints.Audio; break;
-                case RtcMediaDeviceKind.Video:       trackConstraints = existingConstraints.Video; break;
-            }
-            if (null == trackConstraints) trackConstraints = new RtcMediaTrackConstraints();
-
-            if (null == trackConstraints.Advanced) trackConstraints.Advanced = new List<RtcMediaTrackConstraintSet>();
-
-            var constraintSet = new RtcMediaTrackConstraintSet();
-            constraintSet.DeviceId = new RtcConstrainString();
-            constraintSet.DeviceId.Parameters = new RtcConstrainStringParameters();
-            constraintSet.DeviceId.Parameters.Exact = new RtcStringOrStringList();
-            constraintSet.DeviceId.Parameters.Exact.Value = device.Id;
-            trackConstraints.Advanced.Add(constraintSet);
-
-            switch (kind)
-            {
-                case RtcMediaDeviceKind.AudioInput:     existingConstraints.Audio = trackConstraints; break;
-                case RtcMediaDeviceKind.AudioOutput:    existingConstraints.Audio = trackConstraints; break;
-                case RtcMediaDeviceKind.Video:          existingConstraints.Video = trackConstraints; break;
-            }
-            return existingConstraints;
-        }
-
-        private static RtcMediaStreamTrack findTrack(
-            IList<RtcMediaStreamTrack> tracks,
-            MediaDevice device
-            )
-        {
-            if (null == device) return null;
-            foreach (var track in tracks) {if (track.DeviceId != device.Id) return track;}
-            return null;
-        }
-
-        private List<MediaAudioTrack> InsertAudioIfValid(
-            bool shouldDoThis,
-            List<MediaAudioTrack> existingList,
-            IList<RtcMediaStreamTrack> tracks,
-            MediaDevice device
-            )
-        {
-            if (!shouldDoThis) return existingList;
-            if (null == device) return existingList;
-            if (null == tracks) return existingList;
-
-            var found = findTrack(tracks, device);
-            if (null == found) return existingList;
-            if (null == existingList) existingList = new List<MediaAudioTrack>();
-            existingList.Add(new MediaAudioTrack(found));
-            return existingList;
-        }
-        private List<MediaVideoTrack> InsertVideoIfValid(
-            bool shouldDoThis,
-            List<MediaVideoTrack> existingList,
-            IList<RtcMediaStreamTrack> tracks,
-            MediaDevice device
-            )
-        {
-            if (!shouldDoThis) return existingList;
-            if (null == device) return existingList;
-            if (null == tracks) return existingList;
-
-            var found = findTrack(tracks, device);
-            if (null == found) return existingList;
-            if (null == existingList) existingList = new List<MediaVideoTrack>();
-            existingList.Add(new MediaVideoTrack(found));
-            return existingList;
-        }
+        public IList<MediaDevice> GetAudioCaptureDevices() { return RtcHelper.ToMediaDevices(_audioCaptureDevices); }
+        public IList<MediaDevice> GetAudioPlayoutDevices() { return RtcHelper.ToMediaDevices(_audioPlaybackDevices); }
 
         public IAsyncOperation<MediaStream> GetUserMedia(RTCMediaStreamConstraints mediaStreamConstraints)
         {
             return Task.Run<MediaStream>(async () =>
             {
-                var constraints = MakeConstraints(mediaStreamConstraints.audioEnabled, null, RtcMediaDeviceKind.AudioInput, _audioCaptureDevice);
-                constraints = MakeConstraints(mediaStreamConstraints.audioEnabled, constraints, RtcMediaDeviceKind.AudioOutput, _audioPlaybackDevice);
-                constraints = MakeConstraints(mediaStreamConstraints.videoEnabled, constraints, RtcMediaDeviceKind.Video, _videoDevice);
+                var constraints = RtcHelper.MakeConstraints(mediaStreamConstraints.audioEnabled, null, RtcMediaDeviceKind.AudioInput, _audioCaptureDevice);
+                constraints = RtcHelper.MakeConstraints(mediaStreamConstraints.audioEnabled, constraints, RtcMediaDeviceKind.AudioOutput, _audioPlaybackDevice);
+                constraints = RtcHelper.MakeConstraints(mediaStreamConstraints.videoEnabled, constraints, RtcMediaDeviceKind.Video, _videoDevice);
 
                 if (null == constraints) { return new MediaStream(); }
 
                 var tracks = await RtcMediaDevices.GetUserMedia(constraints);
 
-                var audioTracks = InsertAudioIfValid(mediaStreamConstraints.audioEnabled, null, tracks, _audioCaptureDevice);
-                var videoTracks = InsertVideoIfValid(mediaStreamConstraints.videoEnabled, null, tracks, _videoDevice);
+                var audioTracks = RtcHelper.InsertAudioIfValid(mediaStreamConstraints.audioEnabled, null, tracks, _audioCaptureDevice);
+                var videoTracks = RtcHelper.InsertVideoIfValid(mediaStreamConstraints.videoEnabled, null, tracks, _videoDevice);
 
                 return new MediaStream(audioTracks, videoTracks);
             }).AsAsyncOperation();
         }
-        public IList<MediaDevice> GetVideoCaptureDevices() { return ToMediaDevices(_videoDevices); }
+        public IList<MediaDevice> GetVideoCaptureDevices() { return RtcHelper.ToMediaDevices(_videoDevices); }
         public bool SelectAudioDevice(MediaDevice device) { _audioCaptureDevice = device; return true; }
         public bool SelectAudioPlayoutDevice(MediaDevice device)
         {
 #warning TODO APPLY CONSTRAINTS TO THE OUTGOING TRACK
-            _audioCaptureDevice = device;
+            _audioPlaybackDevice = device;
             return true;
         }
         public void SelectVideoDevice(MediaDevice device) { _audioCaptureDevice = device; }
@@ -911,7 +813,7 @@ namespace ChatterBox.Client.Voip.Rtc
         StatsValueNameCurrentEndToEndDelayMs = 103
     }
 
-    public sealed class RTCPeerConnectionHealthStats
+    internal sealed class RTCPeerConnectionHealthStats
     {
         public RTCPeerConnectionHealthStats() { }
 
@@ -1019,6 +921,104 @@ namespace ChatterBox.Client.Voip.Rtc
                 options.IceServers.Add(gatherServer);
             }
             return options;
+        }
+
+
+        public static MediaDevice ToMediaDevice(RtcMediaDeviceInfo device)
+        {
+            return new MediaDevice(device.DeviceID, device.Label);
+        }
+        public static IList<MediaDevice> ToMediaDevices(IList<RtcMediaDeviceInfo> devices)
+        {
+            var results = new List<MediaDevice>();
+            foreach (var device in devices)
+            {
+                results.Add(ToMediaDevice(device));
+            }
+            return results;
+        }
+        public static RtcConstraints MakeConstraints(
+            bool shouldDoThis,
+            RtcConstraints existingConstraints,
+            RtcMediaDeviceKind kind,
+            MediaDevice device
+            )
+        {
+            if (!shouldDoThis) return existingConstraints;
+            if (null == device) return existingConstraints;
+
+            if (null == existingConstraints) existingConstraints = new RtcConstraints();
+            RtcMediaTrackConstraints trackConstraints = null;
+
+            switch (kind)
+            {
+                case RtcMediaDeviceKind.AudioInput: trackConstraints = existingConstraints.Audio; break;
+                case RtcMediaDeviceKind.AudioOutput: trackConstraints = existingConstraints.Audio; break;
+                case RtcMediaDeviceKind.Video: trackConstraints = existingConstraints.Video; break;
+            }
+            if (null == trackConstraints) trackConstraints = new RtcMediaTrackConstraints();
+
+            if (null == trackConstraints.Advanced) trackConstraints.Advanced = new List<RtcMediaTrackConstraintSet>();
+
+            var constraintSet = new RtcMediaTrackConstraintSet();
+            constraintSet.DeviceId = new RtcConstrainString();
+            constraintSet.DeviceId.Parameters = new RtcConstrainStringParameters();
+            constraintSet.DeviceId.Parameters.Exact = new RtcStringOrStringList();
+            constraintSet.DeviceId.Parameters.Exact.Value = device.Id;
+            trackConstraints.Advanced.Add(constraintSet);
+
+            switch (kind)
+            {
+                case RtcMediaDeviceKind.AudioInput: existingConstraints.Audio = trackConstraints; break;
+                case RtcMediaDeviceKind.AudioOutput: existingConstraints.Audio = trackConstraints; break;
+                case RtcMediaDeviceKind.Video: existingConstraints.Video = trackConstraints; break;
+            }
+            return existingConstraints;
+        }
+
+        public static RtcMediaStreamTrack findTrack(
+            IList<RtcMediaStreamTrack> tracks,
+            MediaDevice device
+            )
+        {
+            if (null == device) return null;
+            foreach (var track in tracks) { if (track.DeviceId != device.Id) return track; }
+            return null;
+        }
+
+        public static List<MediaAudioTrack> InsertAudioIfValid(
+            bool shouldDoThis,
+            List<MediaAudioTrack> existingList,
+            IList<RtcMediaStreamTrack> tracks,
+            MediaDevice device
+            )
+        {
+            if (!shouldDoThis) return existingList;
+            if (null == device) return existingList;
+            if (null == tracks) return existingList;
+
+            var found = findTrack(tracks, device);
+            if (null == found) return existingList;
+            if (null == existingList) existingList = new List<MediaAudioTrack>();
+            existingList.Add(new MediaAudioTrack(found));
+            return existingList;
+        }
+        public static List<MediaVideoTrack> InsertVideoIfValid(
+            bool shouldDoThis,
+            List<MediaVideoTrack> existingList,
+            IList<RtcMediaStreamTrack> tracks,
+            MediaDevice device
+            )
+        {
+            if (!shouldDoThis) return existingList;
+            if (null == device) return existingList;
+            if (null == tracks) return existingList;
+
+            var found = findTrack(tracks, device);
+            if (null == found) return existingList;
+            if (null == existingList) existingList = new List<MediaVideoTrack>();
+            existingList.Add(new MediaVideoTrack(found));
+            return existingList;
         }
     }
 }
