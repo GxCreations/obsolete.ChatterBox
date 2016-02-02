@@ -10,6 +10,7 @@ using System;
 using Windows.Graphics.Display;
 using Windows.Media.Core;
 using Windows.Media.MediaProperties;
+    using System.Threading.Tasks;
 
 namespace ChatterBox.Client.Voip.Rtc
 {
@@ -24,12 +25,18 @@ namespace ChatterBox.Client.Voip.Rtc
     using RtcMediaDevices = ortc_winrt_api.MediaDevices;
     using RtcMediaDeviceInfo = ortc_winrt_api.MediaDeviceInfo;
     using RtcMediaDeviceKind = ortc_winrt_api.MediaDeviceKind;
+    using RtcConstraints = ortc_winrt_api.Constraints;
+    using RtcMediaTrackConstraints = ortc_winrt_api.MediaTrackConstraints;
+    using RtcMediaTrackConstraintSet = ortc_winrt_api.MediaTrackConstraintSet;
+    using RtcConstrainString = ortc_winrt_api.ConstrainString;
+    using RtcConstrainStringParameters = ortc_winrt_api.ConstrainStringParameters;
+    using RtcStringOrStringList = ortc_winrt_api.StringOrStringList;
+    using RtcMediaStreamTrack = ortc_winrt_api.MediaStreamTrack;
 
     using RTCPeerConnectionHealthStatsDelegate = webrtc_winrt_api.RTCPeerConnectionHealthStatsDelegate;
-    using System.Threading.Tasks;    //using RTCDataChannelEventDelegate = webrtc_winrt_api.RTCDataChannelEventDelegate;
-    //using RTCPeerConnectionIceStateChangeEventDelegate = webrtc_winrt_api.RTCPeerConnectionIceStateChangeEventDelegate;
     //using EventDelegate = webrtc_winrt_api.EventDelegate;
     //using RTCDataChannelMessageEventDelegate = webrtc_winrt_api.RTCDataChannelMessageEventDelegate;
+    //using RTCDataChannelEventDelegate = webrtc_winrt_api.RTCDataChannelEventDelegate;
 
     internal delegate void OnMediaCaptureDeviceFoundDelegate(MediaDevice param);
     internal delegate void RTCPeerConnectionIceEventDelegate(RTCPeerConnectionIceEvent param);
@@ -294,7 +301,109 @@ namespace ChatterBox.Client.Voip.Rtc
 
         public IList<MediaDevice> GetAudioCaptureDevices() { return ToMediaDevices(_audioCaptureDevices); }
         public IList<MediaDevice> GetAudioPlayoutDevices() { return ToMediaDevices(_audioPlaybackDevices); }
-        public IAsyncOperation<MediaStream> GetUserMedia(RTCMediaStreamConstraints mediaStreamConstraints) { return null; }
+
+        private static RtcConstraints MakeConstraints(
+            bool shouldDoThis,
+            RtcConstraints existingConstraints,
+            RtcMediaDeviceKind kind,
+            MediaDevice device
+            )
+        {
+            if (!shouldDoThis) return existingConstraints;
+            if (null == device) return existingConstraints;
+
+            if (null == existingConstraints) existingConstraints = new RtcConstraints();
+            RtcMediaTrackConstraints trackConstraints = null;
+
+            switch (kind)
+            {
+                case RtcMediaDeviceKind.AudioInput:  trackConstraints = existingConstraints.Audio; break;
+                case RtcMediaDeviceKind.AudioOutput: trackConstraints = existingConstraints.Audio; break;
+                case RtcMediaDeviceKind.Video:       trackConstraints = existingConstraints.Video; break;
+            }
+            if (null == trackConstraints) trackConstraints = new RtcMediaTrackConstraints();
+
+            if (null == trackConstraints.Advanced) trackConstraints.Advanced = new List<RtcMediaTrackConstraintSet>();
+
+            var constraintSet = new RtcMediaTrackConstraintSet();
+            constraintSet.DeviceId = new RtcConstrainString();
+            constraintSet.DeviceId.Parameters = new RtcConstrainStringParameters();
+            constraintSet.DeviceId.Parameters.Exact = new RtcStringOrStringList();
+            constraintSet.DeviceId.Parameters.Exact.Value = device.Id;
+            trackConstraints.Advanced.Add(constraintSet);
+
+            switch (kind)
+            {
+                case RtcMediaDeviceKind.AudioInput:     existingConstraints.Audio = trackConstraints; break;
+                case RtcMediaDeviceKind.AudioOutput:    existingConstraints.Audio = trackConstraints; break;
+                case RtcMediaDeviceKind.Video:          existingConstraints.Video = trackConstraints; break;
+            }
+            return existingConstraints;
+        }
+
+        private static RtcMediaStreamTrack findTrack(
+            IList<RtcMediaStreamTrack> tracks,
+            MediaDevice device
+            )
+        {
+            if (null == device) return null;
+            foreach (var track in tracks) {if (track.DeviceId != device.Id) return track;}
+            return null;
+        }
+
+        private List<MediaAudioTrack> InsertAudioIfValid(
+            bool shouldDoThis,
+            List<MediaAudioTrack> existingList,
+            IList<RtcMediaStreamTrack> tracks,
+            MediaDevice device
+            )
+        {
+            if (!shouldDoThis) return existingList;
+            if (null == device) return existingList;
+            if (null == tracks) return existingList;
+
+            var found = findTrack(tracks, device);
+            if (null == found) return existingList;
+            if (null == existingList) existingList = new List<MediaAudioTrack>();
+            existingList.Add(new MediaAudioTrack(found));
+            return existingList;
+        }
+        private List<MediaVideoTrack> InsertVideoIfValid(
+            bool shouldDoThis,
+            List<MediaVideoTrack> existingList,
+            IList<RtcMediaStreamTrack> tracks,
+            MediaDevice device
+            )
+        {
+            if (!shouldDoThis) return existingList;
+            if (null == device) return existingList;
+            if (null == tracks) return existingList;
+
+            var found = findTrack(tracks, device);
+            if (null == found) return existingList;
+            if (null == existingList) existingList = new List<MediaVideoTrack>();
+            existingList.Add(new MediaVideoTrack(found));
+            return existingList;
+        }
+
+        public IAsyncOperation<MediaStream> GetUserMedia(RTCMediaStreamConstraints mediaStreamConstraints)
+        {
+            return Task.Run<MediaStream>(async () =>
+            {
+                var constraints = MakeConstraints(mediaStreamConstraints.audioEnabled, null, RtcMediaDeviceKind.AudioInput, _audioCaptureDevice);
+                constraints = MakeConstraints(mediaStreamConstraints.audioEnabled, constraints, RtcMediaDeviceKind.AudioOutput, _audioPlaybackDevice);
+                constraints = MakeConstraints(mediaStreamConstraints.videoEnabled, constraints, RtcMediaDeviceKind.Video, _videoDevice);
+
+                if (null == constraints) { return new MediaStream(); }
+
+                var tracks = await RtcMediaDevices.GetUserMedia(constraints);
+
+                var audioTracks = InsertAudioIfValid(mediaStreamConstraints.audioEnabled, null, tracks, _audioCaptureDevice);
+                var videoTracks = InsertVideoIfValid(mediaStreamConstraints.videoEnabled, null, tracks, _videoDevice);
+
+                return new MediaStream(audioTracks, videoTracks);
+            }).AsAsyncOperation();
+        }
         public IList<MediaDevice> GetVideoCaptureDevices() { return ToMediaDevices(_videoDevices); }
         public bool SelectAudioDevice(MediaDevice device) { _audioCaptureDevice = device; return true; }
         public bool SelectAudioPlayoutDevice(MediaDevice device) { _audioCaptureDevice = device; return true; }
@@ -373,27 +482,65 @@ namespace ChatterBox.Client.Voip.Rtc
         public uint Width { get; }
     }
 
-    internal sealed class MediaVideoTrack : IDisposable
+    internal sealed class MediaAudioTrack : IMediaStreamTrack, IDisposable
     {
-        public bool Enabled { get; set; }
-        //public string Id { get; }
-        //public string Kind { get; }
-        public bool Suspended { get; set; }
+        private RtcMediaStreamTrack _track;
 
-        public void Dispose() { }
-        //public void Stop() { }
+        public MediaAudioTrack(RtcMediaStreamTrack track) { _track = track; }
+
+        public bool Enabled { get { return _track.Enabled; } set { _track.Enabled = value; } }
+        public string Id { get { return _track.Id; } }
+        public string Kind { get { return RtcMediaStreamTrack.toString(_track.Kind); } }
+
+        public void Stop() { _track.Stop(); }
+
+        public void Dispose() { _track.Stop(); }
+    }
+
+    internal sealed class MediaVideoTrack : IMediaStreamTrack, IDisposable
+    {
+        private RtcMediaStreamTrack _track;
+
+        public MediaVideoTrack(RtcMediaStreamTrack track) { _track = track; }
+
+        public bool Enabled { get { return _track.Enabled; } set { _track.Enabled = value; } }
+        public string Id { get { return _track.Id; } }
+        public string Kind { get { return RtcMediaStreamTrack.toString(_track.Kind); } }
+
+        public bool Suspended { get { return _track.Muted; } set { _track.Muted = value; } }
+
+        public void Stop() { _track.Stop(); }
+
+        public void Dispose() { _track.Stop(); }
     }
 
     internal sealed class MediaStream
     {
         //public bool Active { get; }
         //public string Id { get; }
+        private IList<MediaAudioTrack> _audioTracks;
+        private IList<MediaVideoTrack> _videoTracks;
+        private IList<IMediaStreamTrack> _mediaTracks;
+
+        public MediaStream()
+        {
+            _mediaTracks = new List<IMediaStreamTrack>();
+        }
+
+        public MediaStream(List<MediaAudioTrack> audioTracks, List<MediaVideoTrack> videoTracks)
+        {
+            _audioTracks = audioTracks;
+            _videoTracks = videoTracks;
+            _mediaTracks = new List<IMediaStreamTrack>();
+            if (null != audioTracks) { foreach (var track in audioTracks) { _mediaTracks.Add(track); } }
+            if (null != videoTracks) { foreach (var track in videoTracks) { _mediaTracks.Add(track); } }
+        }
 
         //public void AddTrack(IMediaStreamTrack track) { }
-        public IList<MediaAudioTrack> GetAudioTracks() { return null; }
+        public IList<MediaAudioTrack> GetAudioTracks() { if (null == _audioTracks) return null; return new List<MediaAudioTrack>(_audioTracks); }
         //public IMediaStreamTrack GetTrackById(string trackId) { return null; }
-        public IList<IMediaStreamTrack> GetTracks() { return null; }
-        public IList<MediaVideoTrack> GetVideoTracks() { return null; }
+        public IList<IMediaStreamTrack> GetTracks() { if (null == _mediaTracks) return null; return new List<IMediaStreamTrack>(_mediaTracks); }
+        public IList<MediaVideoTrack> GetVideoTracks() { if (null == _videoTracks) return null; return new List<MediaVideoTrack>(_videoTracks); }
         //public void RemoveTrack(IMediaStreamTrack track) { }
         public void Stop() { }
     }
@@ -413,15 +560,6 @@ namespace ChatterBox.Client.Voip.Rtc
         string Kind { get; }
 
         void Stop();
-    }
-
-    internal sealed class MediaAudioTrack : IMediaStreamTrack
-    {
-        public bool Enabled { get; set; }
-        public string Id { get; }
-        public string Kind { get; }
-
-        public void Stop() { }
     }
 
     internal sealed class RTCConfiguration
