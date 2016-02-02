@@ -10,12 +10,18 @@ using System;
 using Windows.Graphics.Display;
 using Windows.Media.Core;
 using Windows.Media.MediaProperties;
-    using System.Threading.Tasks;
+using System.Threading.Tasks;
+using Windows.Media.Capture;
+using System.Linq;
 
 namespace ChatterBox.Client.Voip.Rtc
 {
     //using LogLevel = webrtc_winrt_api.LogLevel;
-    using RTCIceCandidate = ortc_winrt_api.RTCIceCandidate;
+    using DtoCaptureCapability = Common.Media.Dto.CaptureCapability;
+    using DtoMediaRatio = Common.Media.Dto.MediaRatio;
+    using DtoCaptureCapabilities = Common.Media.Dto.CaptureCapabilities;
+    using RtcHelper = ChatterBox.Client.Voip.Rtc.Helper;
+    using RtcIceCandidate = ortc_winrt_api.RTCIceCandidate;
     using RtcSender = ortc_winrt_api.RTCRtpSender;
     using RtcCodecCapability = ortc_winrt_api.RTCRtpCodecCapability;
     using RtcOrtc = ortc_winrt_api.Ortc;
@@ -32,8 +38,17 @@ namespace ChatterBox.Client.Voip.Rtc
     using RtcConstrainStringParameters = ortc_winrt_api.ConstrainStringParameters;
     using RtcStringOrStringList = ortc_winrt_api.StringOrStringList;
     using RtcMediaStreamTrack = ortc_winrt_api.MediaStreamTrack;
+    using RtcIceGatherer = ortc_winrt_api.RTCIceGatherer;
+    using RtcIceTransport = ortc_winrt_api.RTCIceTransport;
+    using RtcDtlsTransport = ortc_winrt_api.RTCDtlsTransport;
+    using RtcIceGatherOptions = ortc_winrt_api.RTCIceGatherOptions;
+    using RtcIceServer = ortc_winrt_api.RTCIceServer;
+    using RtcCertificate = ortc_winrt_api.RTCCertificate;
+    using RtcIceGathererCandidateEvent = ortc_winrt_api.RTCIceGathererCandidateEvent;
+    using RtcIceGathererCandidateCompleteEvent = ortc_winrt_api.RTCIceGathererCandidateCompleteEvent;
 
-    using RTCPeerConnectionHealthStatsDelegate = webrtc_winrt_api.RTCPeerConnectionHealthStatsDelegate;
+    public delegate void RTCPeerConnectionHealthStatsDelegate(RTCPeerConnectionHealthStats param);
+
     //using EventDelegate = webrtc_winrt_api.EventDelegate;
     //using RTCDataChannelMessageEventDelegate = webrtc_winrt_api.RTCDataChannelMessageEventDelegate;
     //using RTCDataChannelEventDelegate = webrtc_winrt_api.RTCDataChannelEventDelegate;
@@ -43,7 +58,7 @@ namespace ChatterBox.Client.Voip.Rtc
     internal delegate void MediaStreamEventEventDelegate(MediaStreamEvent param0);
     internal delegate void RTCStatsReportsReadyEventDelegate(RTCStatsReportsReadyEvent param0);
     internal delegate void ResolutionChangedEventHandler(string id, uint width, uint height);
-
+    internal delegate void StepEventHandler();
 
     internal sealed class Engine
     {
@@ -54,33 +69,13 @@ namespace ChatterBox.Client.Voip.Rtc
 
         private static Engine Singleton { get { if (null == _singleton) _singleton = new Engine(); return _singleton; } }
 
-        private static CodecInfo ToDto(RtcCodecCapability codec, int index)
-        {
-            return new CodecInfo(index, (int)codec.ClockRate, codec.Name);
-        }
-
-        private static IList<CodecInfo> GetCodecs(string kind)
-        {
-            var caps = RtcSender.GetCapabilities(kind);
-            var codecs = caps.Codecs;
-            var results = new List<CodecInfo>();
-
-            int index = 0;
-            foreach (var codec in codecs)
-            {
-                ++index;
-                results.Add(ToDto(codec, index));
-            }
-            return results;
-        }
-
         //public static void DisableLogging() { }
         //public static void EnableLogging(LogLevel level) { }
-        public static IList<CodecInfo> GetAudioCodecs() { return GetCodecs("audio"); }
+        public static IList<CodecInfo> GetAudioCodecs() { return RtcHelper.GetCodecs("audio"); }
 
         //public static double GetCPUUsage() { return 0.0; }
         //public static long GetMemUsage() { return 0; }
-        public static IList<CodecInfo> GetVideoCodecs() { return GetCodecs("video"); }
+        public static IList<CodecInfo> GetVideoCodecs() { return RtcHelper.GetCodecs("video"); }
 
         public static void Initialize(CoreDispatcher dispatcher)
         {
@@ -169,15 +164,15 @@ namespace ChatterBox.Client.Voip.Rtc
                 var devices = op.GetResults();
                 List<RtcMediaDeviceInfo> audioCaptureEventList;
                 List<RtcMediaDeviceInfo> audioCaptureReplacementList;
-                calculateDeltas(RtcMediaDeviceKind.AudioInput, _audioCaptureDevices, devices, out audioCaptureEventList, out audioCaptureReplacementList);
+                RtcHelper.CalculateDeltas(RtcMediaDeviceKind.AudioInput, _audioCaptureDevices, devices, out audioCaptureEventList, out audioCaptureReplacementList);
 
                 List<RtcMediaDeviceInfo> audioPlaybackEventList;
                 List<RtcMediaDeviceInfo> audioPlaybackReplacementList;
-                calculateDeltas(RtcMediaDeviceKind.AudioInput, _audioCaptureDevices, devices, out audioPlaybackEventList, out audioPlaybackReplacementList);
+                RtcHelper.CalculateDeltas(RtcMediaDeviceKind.AudioInput, _audioCaptureDevices, devices, out audioPlaybackEventList, out audioPlaybackReplacementList);
 
                 List<RtcMediaDeviceInfo> videoEventList;
                 List<RtcMediaDeviceInfo> videoReplacementList;
-                calculateDeltas(RtcMediaDeviceKind.Video, _videoDevices, devices, out videoEventList, out videoReplacementList);
+                RtcHelper.CalculateDeltas(RtcMediaDeviceKind.Video, _videoDevices, devices, out videoEventList, out videoReplacementList);
 
                 foreach (var info in audioCaptureEventList)
                 {
@@ -195,61 +190,6 @@ namespace ChatterBox.Client.Voip.Rtc
             throw new NotImplementedException();
         }
 
-        private static void calculateDeltas(
-            RtcMediaDeviceKind kind,
-            IList<RtcMediaDeviceInfo> previousList,
-            IList<RtcMediaDeviceInfo> newFoundList,
-            out List<RtcMediaDeviceInfo> addedOrChangedList,
-            out List<RtcMediaDeviceInfo> finalReplacementList
-            )
-        {
-            addedOrChangedList = new List<RtcMediaDeviceInfo>();
-            finalReplacementList = new List<RtcMediaDeviceInfo>();
-
-            foreach (var info in newFoundList)
-            {
-                if (info.Kind != kind) continue;
-
-                bool found = false;
-                foreach (var innerInfo in previousList)
-                {
-                    if (innerInfo.Kind != kind) continue;
-                    if (IsMatch(info, innerInfo))
-                    {
-                        found = true;
-                        break;
-                    }
-                }
-
-                finalReplacementList.Add(info);
-                if (!found) {addedOrChangedList.Add(info);}
-            }
-        }
-
-        private static List<RtcMediaDeviceInfo> filter(
-            RtcMediaDeviceKind kind,
-            IList<RtcMediaDeviceInfo> infos
-            )
-        {
-            var results = new List<RtcMediaDeviceInfo>();
-            foreach (var info in infos)
-            {
-                if (kind != info.Kind) continue;
-                results.Add(info);
-            }
-            return results;
-        }
-
-        private static bool IsMatch(RtcMediaDeviceInfo op1, RtcMediaDeviceInfo op2)
-        {
-            if (op1.Kind != op2.Kind) return false;
-            if (0 != String.Compare(op1.DeviceID, op2.DeviceID)) return false;
-            if (0 != String.Compare(op1.GroupID, op2.GroupID)) return false;
-            if (0 != String.Compare(op1.Label, op2.Label)) return false;
-            return true;
-        }
-
-
         //public static IAsyncOperation<Media> CreateMediaAsync() { return null; }
         public static void OnAppSuspending()
         {
@@ -263,7 +203,7 @@ namespace ChatterBox.Client.Voip.Rtc
 
         public IMediaSource CreateMediaSource(MediaVideoTrack track, string id)
         {
-#warning TODO IMPLEMENT SetDisplayOrientation
+#warning TODO IMPLEMENT CreateMediaSource
             return null;
         }
 
@@ -273,9 +213,9 @@ namespace ChatterBox.Client.Voip.Rtc
             {
                 var devices = await RtcMediaDevices.EnumerateDevices();
 
-                var audioCaptureList = filter(RtcMediaDeviceKind.AudioInput, devices);
-                var audioPlaybackList = filter(RtcMediaDeviceKind.AudioOutput, devices);
-                var videoList = filter(RtcMediaDeviceKind.Video, devices);
+                var audioCaptureList = RtcHelper.Filter(RtcMediaDeviceKind.AudioInput, devices);
+                var audioPlaybackList = RtcHelper.Filter(RtcMediaDeviceKind.AudioOutput, devices);
+                var videoList = RtcHelper.Filter(RtcMediaDeviceKind.Video, devices);
 
                 _audioCaptureDevices = audioCaptureList;
                 _audioPlaybackDevices = audioPlaybackList;
@@ -406,14 +346,54 @@ namespace ChatterBox.Client.Voip.Rtc
         }
         public IList<MediaDevice> GetVideoCaptureDevices() { return ToMediaDevices(_videoDevices); }
         public bool SelectAudioDevice(MediaDevice device) { _audioCaptureDevice = device; return true; }
-        public bool SelectAudioPlayoutDevice(MediaDevice device) { _audioCaptureDevice = device; return true; }
+        public bool SelectAudioPlayoutDevice(MediaDevice device)
+        {
+#warning TODO APPLY CONSTRAINTS TO THE OUTGOING TRACK
+            _audioCaptureDevice = device;
+            return true;
+        }
         public void SelectVideoDevice(MediaDevice device) { _audioCaptureDevice = device; }
     }
 
-
     internal sealed class RTCPeerConnection
     {
-        public RTCPeerConnection(RTCConfiguration configuration) { }
+        private RtcIceGatherer _iceGatherer;
+        private RtcIceTransport _iceTransport;
+        private RtcDtlsTransport _dtlsTransport;
+
+        private bool _installedIceEvents;
+
+        private EventRegistrationTokenTable<RTCPeerConnectionIceEventDelegate> _onIceCandidate = new EventRegistrationTokenTable<RTCPeerConnectionIceEventDelegate>();
+
+        private event StepEventHandler OnStep;
+
+        private void Wake()
+        {
+            Task.Run(() => { OnStep(); });
+        }
+
+        public RTCPeerConnection(RTCConfiguration configuration)
+        {
+            _installedIceEvents = false;
+
+            var options = RtcHelper.ToGatherOptions(configuration);
+            _iceGatherer = new RtcIceGatherer(options);
+            _iceTransport = new RtcIceTransport(_iceGatherer);
+
+            OnStep += RTCPeerConnection_OnStep;
+
+            RtcCertificate.GenerateCertificate("").AsTask<RtcCertificate>().ContinueWith((cert) =>
+            {
+                _dtlsTransport = new RtcDtlsTransport(_iceTransport, cert.Result);
+                Wake();
+            });
+        }
+
+        private void RTCPeerConnection_OnStep()
+        {
+            var dtlsTransport = _dtlsTransport;
+            if (null == dtlsTransport) return;
+        }
 
         //public RTCIceConnectionState IceConnectionState { get; }
         //public RTCIceGatheringState IceGatheringState { get; }
@@ -421,19 +401,67 @@ namespace ChatterBox.Client.Voip.Rtc
         //public RTCSessionDescription RemoteDescription { get; }
         //public RTCSignalingState SignalingState { get; }
 
+
         public event MediaStreamEventEventDelegate OnAddStream;
         public event RTCPeerConnectionHealthStatsDelegate OnConnectionHealthStats;
         //public event RTCDataChannelEventDelegate OnDataChannel;
-        public event RTCPeerConnectionIceEventDelegate OnIceCandidate;
+        public event RTCPeerConnectionIceEventDelegate OnIceCandidate
+        {
+            add
+            {
+                if (!_installedIceEvents)
+                {
+                    _iceGatherer.OnICEGathererLocalCandidate += IceGatherer_OnICEGathererLocalCandidate;
+                    _iceGatherer.OnICEGathererCandidateComplete += IceGatherer_OnICEGathererCandidateComplete;
+                    _iceGatherer.OnICEGathererLocalCandidateGone += IceGatherer_OnICEGathererLocalCandidateGone;
+                }
+                return _onIceCandidate.AddEventHandler(value);
+            }
+            remove
+            {
+                _onIceCandidate.RemoveEventHandler(value);
+            }
+        }
+
+        private void IceGatherer_OnICEGathererLocalCandidate(RtcIceGathererCandidateEvent evt)
+        {
+            RTCPeerConnectionIceEvent wrapperEvt = new RTCPeerConnectionIceEvent();
+            wrapperEvt.Candidate = evt.Candidate;
+            _onIceCandidate.InvocationList.Invoke(wrapperEvt);
+        }
+
+        private void IceGatherer_OnICEGathererCandidateComplete(RtcIceGathererCandidateCompleteEvent evt)
+        {
+#warning TODO IMPROVE ICE WIRING
+            //throw new NotImplementedException();
+        }
+
+        private void IceGatherer_OnICEGathererLocalCandidateGone(RtcIceGathererCandidateEvent evt)
+        {
+            //throw new NotImplementedException();
+#warning TODO IMPROVE ICE WIRING
+        }
+
+
         //public event RTCPeerConnectionIceStateChangeEventDelegate OnIceConnectionChange;
         //public event EventDelegate OnNegotiationNeeded;
         //public event MediaStreamEventEventDelegate OnRemoveStream;
         public event RTCStatsReportsReadyEventDelegate OnRTCStatsReportsReady;
         //public event EventDelegate OnSignalingStateChange;
 
-        public IAsyncAction AddIceCandidate(RTCIceCandidate candidate) { return null; }
+        public IAsyncAction AddIceCandidate(RtcIceCandidate candidate)
+        {
+            return Task.Run(() => { _iceTransport.AddRemoteCandidate(candidate); }).AsAsyncAction();
+        }
+
         public void AddStream(MediaStream stream) { }
-        public void Close() { }
+
+        public void Close()
+        {
+            _iceGatherer.Close();
+            _iceTransport.Stop();
+        }
+
         public IAsyncOperation<RTCSessionDescription> CreateAnswer() { return null; }
         //public RTCDataChannel CreateDataChannel(string label, RTCDataChannelInit init) { return null; }
         public IAsyncOperation<RTCSessionDescription> CreateOffer() { return null; }
@@ -456,7 +484,58 @@ namespace ChatterBox.Client.Voip.Rtc
         public string Id { get; set; }
         public string Name { get; set; }
 
-        public IAsyncOperation<IList<CaptureCapability>> GetVideoCaptureCapabilities() { return null; }
+        public IAsyncOperation<List<DtoCaptureCapability>> GetVideoCaptureCapabilities()
+        {
+            MediaDevice device = this;
+            return Task.Run(async () =>
+            {
+                var settings = new MediaCaptureInitializationSettings()
+                {
+                    VideoDeviceId = device.Id,
+                    MediaCategory = MediaCategory.Communications,
+                };
+                using (var capture = new MediaCapture())
+                {
+                    await capture.InitializeAsync(settings);
+                    var caps = capture.VideoDeviceController.GetAvailableMediaStreamProperties(MediaStreamType.VideoRecord);
+
+                    var arr = new List<DtoCaptureCapability>();
+                    foreach (var cap in caps)
+                    {
+                        if (cap.Type != "Video")
+                        {
+                            continue;
+                        }
+
+                        var videoCap = (VideoEncodingProperties)cap;
+
+                        if (videoCap.FrameRate.Denominator == 0 ||
+                        videoCap.FrameRate.Numerator == 0 ||
+                        videoCap.Width == 0 ||
+                        videoCap.Height == 0)
+                        {
+                            continue;
+                        }
+                        var captureCap = new DtoCaptureCapability()
+                        {
+                            Width = videoCap.Width,
+                            Height = videoCap.Height,
+                            FrameRate = videoCap.FrameRate.Numerator / videoCap.FrameRate.Denominator,
+                        };
+                        captureCap.FrameRateDescription = $"{captureCap.FrameRate} fps";
+                        captureCap.ResolutionDescription = $"{captureCap.Width} x {captureCap.Height}";
+                        captureCap.PixelAspectRatio = new DtoMediaRatio()
+                        {
+                            Numerator = videoCap.PixelAspectRatio.Numerator,
+                            Denominator = videoCap.PixelAspectRatio.Denominator,
+                        };
+                        captureCap.FullDescription = $"{captureCap.ResolutionDescription} {captureCap.FrameRateDescription}";
+                        arr.Add(captureCap);
+                    }
+                    return arr.GroupBy(o => o.FullDescription).Select(o => o.First()).ToList();
+                }
+            }).AsAsyncOperation();
+        }
     }
 
     internal sealed class CodecInfo
@@ -468,19 +547,6 @@ namespace ChatterBox.Client.Voip.Rtc
         public string Name { get; set; }
     }
 
-
-    internal sealed class CaptureCapability
-    {
-        //public CaptureCapability(uint width, uint height, uint fps, MediaRatio pixelAspect) { }
-
-        public uint FrameRate { get; }
-        public string FrameRateDescription { get; }
-        public string FullDescription { get; }
-        public uint Height { get; }
-        public MediaRatio PixelAspectRatio { get; }
-        public string ResolutionDescription { get; }
-        public uint Width { get; }
-    }
 
     internal sealed class MediaAudioTrack : IMediaStreamTrack, IDisposable
     {
@@ -595,16 +661,6 @@ namespace ChatterBox.Client.Voip.Rtc
     //    All = 3
     //}
 
-    //internal sealed class RTCIceCandidate
-    //{
-    //    public RTCIceCandidate() { }
-    //    //public RTCIceCandidate(string candidate, string sdpMid, ushort sdpMLineIndex) { }
-
-    //    public string Candidate { get; set; }
-    //    public string SdpMid { get; set; }
-    //    public ushort SdpMLineIndex { get; set; }
-    //}
-
     //internal enum RTCIceConnectionState
     //{
     //    New = 0,
@@ -705,7 +761,7 @@ namespace ChatterBox.Client.Voip.Rtc
     {
         //public RTCPeerConnectionIceEvent() { }
 
-        public RTCIceCandidate Candidate { get; set; }
+        public RtcIceCandidate Candidate { get; set; }
     }
 
     internal sealed class MediaStreamEvent
@@ -855,11 +911,115 @@ namespace ChatterBox.Client.Voip.Rtc
         StatsValueNameCurrentEndToEndDelayMs = 103
     }
 
+    public sealed class RTCPeerConnectionHealthStats
+    {
+        public RTCPeerConnectionHealthStats() { }
+
+        public string LocalCandidateType { get; set; }
+        public long ReceivedBytes { get; set; }
+        public long ReceivedKpbs { get; set; }
+        public string RemoteCandidateType { get; set; }
+        public long RTT { get; set; }
+        public long SentBytes { get; set; }
+        public long SentKbps { get; set; }
+    }
     internal sealed class ResolutionHelper
     {
         //public ResolutionHelper() { }
 
         public static event ResolutionChangedEventHandler ResolutionChanged;
+    }
+
+    internal sealed class Helper
+    {
+        public static CodecInfo ToDto(RtcCodecCapability codec, int index)
+        {
+            return new CodecInfo(index, (int)codec.ClockRate, codec.Name);
+        }
+
+        public static IList<CodecInfo> GetCodecs(string kind)
+        {
+            var caps = RtcSender.GetCapabilities(kind);
+            var codecs = caps.Codecs;
+            var results = new List<CodecInfo>();
+
+            int index = 0;
+            foreach (var codec in codecs)
+            {
+                ++index;
+                results.Add(ToDto(codec, index));
+            }
+            return results;
+        }
+
+        public static void CalculateDeltas(
+            RtcMediaDeviceKind kind,
+            IList<RtcMediaDeviceInfo> previousList,
+            IList<RtcMediaDeviceInfo> newFoundList,
+            out List<RtcMediaDeviceInfo> addedOrChangedList,
+            out List<RtcMediaDeviceInfo> finalReplacementList
+            )
+        {
+            addedOrChangedList = new List<RtcMediaDeviceInfo>();
+            finalReplacementList = new List<RtcMediaDeviceInfo>();
+
+            foreach (var info in newFoundList)
+            {
+                if (info.Kind != kind) continue;
+
+                bool found = false;
+                foreach (var innerInfo in previousList)
+                {
+                    if (innerInfo.Kind != kind) continue;
+                    if (IsMatch(info, innerInfo))
+                    {
+                        found = true;
+                        break;
+                    }
+                }
+
+                finalReplacementList.Add(info);
+                if (!found) { addedOrChangedList.Add(info); }
+            }
+        }
+
+        public static List<RtcMediaDeviceInfo> Filter(
+            RtcMediaDeviceKind kind,
+            IList<RtcMediaDeviceInfo> infos
+            )
+        {
+            var results = new List<RtcMediaDeviceInfo>();
+            foreach (var info in infos)
+            {
+                if (kind != info.Kind) continue;
+                results.Add(info);
+            }
+            return results;
+        }
+
+        public static bool IsMatch(RtcMediaDeviceInfo op1, RtcMediaDeviceInfo op2)
+        {
+            if (op1.Kind != op2.Kind) return false;
+            if (0 != String.Compare(op1.DeviceID, op2.DeviceID)) return false;
+            if (0 != String.Compare(op1.GroupID, op2.GroupID)) return false;
+            if (0 != String.Compare(op1.Label, op2.Label)) return false;
+            return true;
+        }
+
+        public static RtcIceGatherOptions ToGatherOptions(RTCConfiguration configuration)
+        {
+            var options = new RtcIceGatherOptions();
+            options.IceServers = new List<RtcIceServer>();
+            foreach (var server in configuration.IceServers)
+            {
+                var gatherServer = new RtcIceServer();
+                gatherServer.URLs = new List<String>();
+                gatherServer.URLs.Add(server.Url);
+                gatherServer.UserName = server.Username;
+                options.IceServers.Add(gatherServer);
+            }
+            return options;
+        }
     }
 }
 
