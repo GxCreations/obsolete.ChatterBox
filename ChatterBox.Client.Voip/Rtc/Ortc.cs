@@ -490,7 +490,7 @@ namespace ChatterBox.Client.Voip.Rtc
 
         public bool Enabled { get { return _track.Enabled; } set { _track.Enabled = value; } }
         public string Id { get { return _track.Id; } }
-        public string Kind { get { return RtcMediaStreamTrack.toString(_track.Kind); } }
+        public string Kind { get { return RtcMediaStreamTrack.ToString(_track.Kind); } }
 
         public void Stop() { _track.Stop(); }
 
@@ -505,7 +505,7 @@ namespace ChatterBox.Client.Voip.Rtc
 
         public bool Enabled { get { return _track.Enabled; } set { _track.Enabled = value; } }
         public string Id { get { return _track.Id; } }
-        public string Kind { get { return RtcMediaStreamTrack.toString(_track.Kind); } }
+        public string Kind { get { return RtcMediaStreamTrack.ToString(_track.Kind); } }
 
         public bool Suspended { get { return _track.Muted; } set { _track.Muted = value; } }
 
