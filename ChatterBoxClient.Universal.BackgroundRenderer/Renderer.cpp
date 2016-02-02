@@ -14,6 +14,7 @@ using ABI::Windows::Foundation::Collections::IPropertySet;
 Renderer::Renderer() :
     _useHardware(true),
     _foregroundProcessId(0),
+    _staleHandleTimestamp(0LL),
     _gpuVideoBuffersSupported(false)
 {
     InitializeCriticalSection(&_lock);
@@ -109,12 +110,18 @@ void Renderer::OnMediaEngineEvent(uint32 meEvent, uintptr_t param1, uint32 param
         throw ref new COMException((HRESULT)param2, ref new String(L"Failed OnMediaEngineEvent"));
         break;
     case MF_MEDIA_ENGINE_EVENT_FORMATCHANGE:
-        if (SUCCEEDED(_mediaEngineEx->GetVideoSwapchainHandle(&swapChainHandle))) {
-          SendSwapChainHandle(swapChainHandle);
+        ReleaseStaleSwapChainHandleWhenExpired();
+        if ((SUCCEEDED(_mediaEngineEx->GetVideoSwapchainHandle(&swapChainHandle))) &&
+            (swapChainHandle != nullptr) && (swapChainHandle != INVALID_HANDLE_VALUE))
+        {
+            SendSwapChainHandle(swapChainHandle);
         }
         break;
     case MF_MEDIA_ENGINE_EVENT_CANPLAY:
         _mediaEngine->Play();
+        break;
+    case MF_MEDIA_ENGINE_EVENT_TIMEUPDATE:
+        ReleaseStaleSwapChainHandleWhenExpired();
         break;
     }
 }
@@ -277,10 +284,8 @@ void Renderer::CreateDXDevice()
 
 void Renderer::SendSwapChainHandle(HANDLE swapChain)
 {
-    if (swapChain == nullptr)
-    {
-        return;
-    }
+    _swapChainHandle.DetachMove(_staleSwapChainHandle);
+    _staleHandleTimestamp = GetTickCount64();
     _swapChainHandle.AssignHandle(swapChain, _foregroundProcessId);
     DWORD width;
     DWORD height;
@@ -341,4 +346,23 @@ void Renderer::RecalculateScale(Windows::Foundation::Size renderControlSize,
     RECT r = { 0, 0, (LONG)renderControlSize.Width , (LONG)renderControlSize.Height };
     MFARGB borderColour = { 0 };
     _mediaEngineEx->UpdateVideoStream(&rect, &r, &borderColour);
+}
+
+void Renderer::ReleaseStaleSwapChainHandle()
+{
+    _staleSwapChainHandle.Close();
+    _staleHandleTimestamp = 0;
+}
+
+void Renderer::ReleaseStaleSwapChainHandleWhenExpired()
+{
+    if (!_staleSwapChainHandle.IsValid())
+    {
+        return;
+    }
+    ULONGLONG currentTime = GetTickCount64();
+    if ((currentTime - _staleHandleTimestamp) >= StaleHandleTimeoutMS)
+    {
+        ReleaseStaleSwapChainHandle();
+    }
 }
