@@ -66,7 +66,7 @@ namespace ChatterBox.Client.Voip.Rtc
     using RtcPriorityType = ortc_winrt_api.RTCPriorityType;
     using RtcRtpRtxParameters = ortc_winrt_api.RTCRtpRtxParameters;
     using RtcRtpCodecCapability = ortc_winrt_api.RTCRtpCodecCapability;
-    using RtcRtpHeaderExtensions = ortc_winrt_api.RTCRtpHeaderExtensions;
+    using RtcRtpHeaderExtension = ortc_winrt_api.RTCRtpHeaderExtension;
 
     internal delegate void OnMediaCaptureDeviceFoundDelegate(MediaDevice param);
     internal delegate void RTCPeerConnectionIceEventDelegate(RTCPeerConnectionIceEvent param);
@@ -1220,7 +1220,11 @@ namespace ChatterBox.Client.Voip.Rtc
 
     internal sealed class Helper
     {
-        public static void SelectCodecs(RTCSessionDescription description, CodecInfo codec)
+        public static void SelectCodecs(
+            RTCSessionDescription description,
+            CodecInfo audioCodec,
+            CodecInfo videoCodec
+            )
         {
 #warning TODO NEED IMPLEMENTATION SelectCodecs
             throw new NotImplementedException();
@@ -1289,7 +1293,7 @@ namespace ChatterBox.Client.Voip.Rtc
             return result;
         }
         public static RtcRtpHeaderExtensionParameters CapabilitiesToParameters(
-            RtcRtpHeaderExtensions caps
+            RtcRtpHeaderExtension caps
             )
         {
             var result = new RtcRtpHeaderExtensionParameters();
