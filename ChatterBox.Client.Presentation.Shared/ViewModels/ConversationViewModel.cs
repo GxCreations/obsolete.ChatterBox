@@ -49,6 +49,8 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
         private long _remoteSwapChainHandle;
         private Size _localVideoControlSize;
         private Size _remoteVideoControlSize;
+        private Size _localNativeVideoSize;
+        private Size _remoteNativeVideoSize;
         private bool _isMicEnabled;
         private bool _isVideoEnabled;
         private bool _canCloseConversation;
@@ -373,6 +375,18 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
             }
         }
 
+        public Size LocalNativeVideoSize
+        {
+            get { return _localNativeVideoSize; }
+            set { SetProperty(ref _localNativeVideoSize, value); }
+        }
+
+        public Size RemoteNativeVideoSize
+        {
+            get { return _remoteNativeVideoSize; }
+            set { SetProperty(ref _remoteNativeVideoSize, value); }
+        }
+
         public bool IsMicrophoneEnabled
         {
             get
@@ -578,6 +592,8 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
                         IsMicrophoneEnabled = true; //Start new calls with mic enabled
                         IsVideoEnabled = voipState.IsVideoEnabled;
                         IsAudioOnlyCall = !voipState.IsVideoEnabled;
+                        LocalNativeVideoSize = new Size(0, 0);
+                        RemoteNativeVideoSize = new Size(0, 0);
                     }
                     else
                     {
@@ -590,6 +606,8 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
                         CallState = CallState.RemoteRinging;
                         IsMicrophoneEnabled = true; //Start new calls with mic enabled
                         IsVideoEnabled = voipState.IsVideoEnabled;
+                        LocalNativeVideoSize = new Size(0, 0);
+                        RemoteNativeVideoSize = new Size(0, 0);
                     }
                     else
                     {
@@ -653,11 +671,19 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
 
             if (obj.IsLocal)
             {
+#if WIN10
+                // Only Windows 10 client uses SwapChainPanel for rendering the video
                 LocalSwapChainPanelHandle = obj.SwapChainHandle;
+#endif
+                LocalNativeVideoSize = new Size(obj.Width, obj.Height);
             }
             else
             {
+#if WIN10
+                // Only Windows 10 client uses SwapChainPanel for rendering the video
                 RemoteSwapChainPanelHandle = obj.SwapChainHandle;
+#endif
+                RemoteNativeVideoSize = new Size(obj.Width, obj.Height);
             }
         }
 
