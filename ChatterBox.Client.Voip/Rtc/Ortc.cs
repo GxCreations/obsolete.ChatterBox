@@ -24,6 +24,7 @@ namespace ChatterBox.Client.Voip.Rtc
     using DtoCaptureCapability = Common.Media.Dto.CaptureCapability;
     using DtoMediaRatio = Common.Media.Dto.MediaRatio;
     using DtoCaptureCapabilities = Common.Media.Dto.CaptureCapabilities;
+    using DtoCodecInfo = Common.Media.Dto.CodecInfo;
     using RtcHelper = ChatterBox.Client.Voip.Rtc.Helper;
     using RtcIceCandidate = ortc_winrt_api.RTCIceCandidate;
     using RtcRtpSender = ortc_winrt_api.RTCRtpSender;
@@ -1222,10 +1223,12 @@ namespace ChatterBox.Client.Voip.Rtc
     {
         public static void SelectCodecs(
             RTCSessionDescription description,
-            CodecInfo audioCodec,
-            CodecInfo videoCodec
+            DtoCodecInfo inAudioCodec,
+            DtoCodecInfo inVideoCodec
             )
         {
+            CodecInfo audioCodec = DtoExtensions.FromDto(inAudioCodec); // converted if you need them as one of these objects intead, contains same data
+            CodecInfo videoCodec = DtoExtensions.FromDto(inVideoCodec);
 #warning TODO NEED IMPLEMENTATION SelectCodecs
             throw new NotImplementedException();
 
