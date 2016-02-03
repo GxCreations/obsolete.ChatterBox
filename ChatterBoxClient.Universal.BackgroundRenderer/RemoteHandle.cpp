@@ -77,3 +77,31 @@ HANDLE RemoteHandle::GetRemoteHandle() const
 {
     return _remoteHandle;
 }
+
+RemoteHandle& RemoteHandle::DetachMove(RemoteHandle& destRemoteHandle)
+{
+    if (&destRemoteHandle == this)
+    {
+        return *this;
+    }
+    destRemoteHandle.Close();
+    if (destRemoteHandle._processHandle != INVALID_HANDLE_VALUE)
+    {
+        CloseHandle(destRemoteHandle._processHandle);
+    }
+    destRemoteHandle._localHandle = _localHandle;
+    destRemoteHandle._remoteHandle = _remoteHandle;
+    destRemoteHandle._processId = _processId;
+    destRemoteHandle._processHandle = _processHandle;
+    _localHandle = INVALID_HANDLE_VALUE;
+    _remoteHandle = INVALID_HANDLE_VALUE;
+    _processId = 0;
+    _processHandle = INVALID_HANDLE_VALUE;
+    return *this;
+}
+
+bool RemoteHandle::IsValid() const
+{
+    return ((_localHandle != INVALID_HANDLE_VALUE) && 
+        (_remoteHandle != INVALID_HANDLE_VALUE));
+}

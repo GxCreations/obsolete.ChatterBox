@@ -282,7 +282,7 @@
                                                                            Visibility="{Binding IsPeerVideoAvailable, Converter={StaticResource InvertedBooleanToVisibilityConverter}}"
                                                                            VerticalAlignment="Stretch" HorizontalAlignment="Stretch" />
                                                                     <ContentControl Visibility="{Binding IsPeerVideoAvailable, Converter={StaticResource BooleanToVisibilityConverter}}"
-                                                                                    Content="{Binding RemoteVideoRenderer}" />
+                                                                                    Content="{Binding RemoteVideoRenderer}" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch"/>
                                                                     <Image HorizontalAlignment="Right" VerticalAlignment="Bottom" 
                                                                            Source="{Binding OwnProfileSource}"
                                                                            Visibility="{Binding IsSelfVideoAvailable, Converter={StaticResource InvertedBooleanToVisibilityConverter}}"
@@ -291,6 +291,7 @@
 
                                                                     <ContentControl  HorizontalAlignment="Right" VerticalAlignment="Bottom"
                                                                                      Content="{Binding LocalVideoRenderer}"  Visibility = "{Binding IsSelfVideoAvailable, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                                                                     HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch"
                                                                                      Width="{Binding ElementName=CallGrid, Path=(attachedProperties:ActualSize.ActualWidth), Mode=OneWay, Converter={StaticResource ProportionalConverter}}"
                                                                                      Height="{Binding ElementName=CallGrid, Path=(attachedProperties:ActualSize.ActualHeight), Mode=OneWay, Converter={StaticResource ProportionalConverter}}"/>
 

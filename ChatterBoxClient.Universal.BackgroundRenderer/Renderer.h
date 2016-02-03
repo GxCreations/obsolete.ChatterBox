@@ -47,6 +47,8 @@ private:
     void AsyncRecalculateScale();
     void RecalculateScale(Windows::Foundation::Size renderControlSize,
         Windows::Foundation::Size videoSize);
+    void ReleaseStaleSwapChainHandle();
+    void ReleaseStaleSwapChainHandleWhenExpired();
 
     bool _useHardware;
     Microsoft::WRL::ComPtr<ABI::Windows::Media::IMediaExtensionManager> _mediaExtensionManager;
@@ -58,11 +60,15 @@ private:
     Microsoft::WRL::ComPtr<IMFMediaEngineEx> _mediaEngineEx;
     DWORD _foregroundProcessId;
     RemoteHandle _swapChainHandle;
+    RemoteHandle _staleSwapChainHandle;
+    ULONGLONG _staleHandleTimestamp;
     Windows::Media::Core::IMediaSource^ _streamSource;
     bool _gpuVideoBuffersSupported;
     Windows::Foundation::Size _renderControlSize;
     Windows::Foundation::Size _videoSize;
     CRITICAL_SECTION _lock;
+
+    static const ULONGLONG StaleHandleTimeoutMS = 2000LL;
 };
 
 }}}
