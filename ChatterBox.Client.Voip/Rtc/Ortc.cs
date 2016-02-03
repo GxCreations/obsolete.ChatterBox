@@ -24,6 +24,7 @@ namespace ChatterBox.Client.Voip.Rtc
     using DtoCaptureCapability = Common.Media.Dto.CaptureCapability;
     using DtoMediaRatio = Common.Media.Dto.MediaRatio;
     using DtoCaptureCapabilities = Common.Media.Dto.CaptureCapabilities;
+    using DtoCodecInfo = Common.Media.Dto.CodecInfo;
     using RtcHelper = ChatterBox.Client.Voip.Rtc.Helper;
     using RtcIceCandidate = ortc_winrt_api.RTCIceCandidate;
     using RtcRtpSender = ortc_winrt_api.RTCRtpSender;
@@ -254,7 +255,6 @@ namespace ChatterBox.Client.Voip.Rtc
             return Task.Run<MediaStream>(async () =>
             {
                 var constraints = RtcHelper.MakeConstraints(mediaStreamConstraints.audioEnabled, null, RtcMediaDeviceKind.AudioInput, _audioCaptureDevice);
-                constraints = RtcHelper.MakeConstraints(mediaStreamConstraints.audioEnabled, constraints, RtcMediaDeviceKind.AudioOutput, _audioPlaybackDevice);
                 constraints = RtcHelper.MakeConstraints(mediaStreamConstraints.videoEnabled, constraints, RtcMediaDeviceKind.Video, _videoDevice);
 
                 if (null == constraints) { return new MediaStream(); }
@@ -1222,12 +1222,15 @@ namespace ChatterBox.Client.Voip.Rtc
     {
         public static void SelectCodecs(
             RTCSessionDescription description,
-            CodecInfo audioCodec,
-            CodecInfo videoCodec
+            DtoCodecInfo inAudioCodec,
+            DtoCodecInfo inVideoCodec
             )
         {
-#warning TODO NEED IMPLEMENTATION SelectCodecs
-            throw new NotImplementedException();
+            CodecInfo audioCodec = DtoExtensions.FromDto(inAudioCodec); // converted if you need them as one of these objects intead, contains same data
+            CodecInfo videoCodec = DtoExtensions.FromDto(inVideoCodec);
+
+            SelectCodec(description.Description.AudioReceiverCapabilities, audioCodec);
+            SelectCodec(description.Description.VideoReceiverCapabilities, videoCodec);
 
             // force update to json blob
             description.Description = description.Description;
@@ -1253,6 +1256,74 @@ namespace ChatterBox.Client.Voip.Rtc
         {
 #warning TODO NEED IMPLEMENTATION PickLocalCodecBasedOnRemote
             throw new NotImplementedException();
+
+            PickLocalCodecBasedOnRemote(localCapabiliites.Description.AudioReceiverCapabilities, remoteCapabiliites.Description.AudioReceiverCapabilities);
+            PickLocalCodecBasedOnRemote(localCapabiliites.Description.VideoReceiverCapabilities, remoteCapabiliites.Description.VideoReceiverCapabilities);
+            PickLocalCodecBasedOnRemote(localCapabiliites.Description.AudioSenderCapabilities, remoteCapabiliites.Description.AudioSenderCapabilities);
+            PickLocalCodecBasedOnRemote(localCapabiliites.Description.VideoSenderCapabilities, remoteCapabiliites.Description.VideoSenderCapabilities);
+        }
+
+        private static void SelectCodec(
+            RtcRtpCapabilities caps,
+            CodecInfo codec
+            )
+        {
+            if (null == caps) return;
+            if (null == codec) return;
+            if (null == caps.Codecs) return;
+
+            var finalCodecs = new List<RtcRtpCodecCapability>();
+
+            foreach (var capsCodec in caps.Codecs)
+            {
+                if (codec.Name != capsCodec.Name) continue;
+                finalCodecs.Add(capsCodec);
+            }
+
+            foreach (var capsCodec in caps.Codecs)
+            {
+                if (codec.Name == capsCodec.Name) continue;
+                finalCodecs.Add(capsCodec);
+            }
+        }
+
+        public static void PickLocalCodecBasedOnRemote(
+            RtcRtpCapabilities localCaps,
+            RtcRtpCapabilities remoteCaps
+            )
+        {
+            if (null == localCaps) return;
+            if (null == remoteCaps) return;
+            if (null == localCaps.Codecs) return;
+            if (null == remoteCaps.Codecs) return;
+
+            var newList = new List<RtcRtpCodecCapability>();
+
+            // insert sort local codecs based on remote codec list
+            foreach (var remoteCodec in remoteCaps.Codecs)
+            {
+                foreach (var localCodec in localCaps.Codecs)
+                {
+                    if (remoteCodec.Name != localCodec.Name) continue;
+                    newList.Add(localCodec);
+                }
+            }
+
+            // insert sort local codecs based on codec not being found in remote codec list
+            foreach (var localCodec in localCaps.Codecs)
+            {
+                bool found = false;
+                foreach (var remoteCodec in remoteCaps.Codecs)
+                {
+                    if (remoteCodec.Name != localCodec.Name) continue;
+                    found = true;
+                    break;
+                }
+                if (found) continue;
+                newList.Add(localCodec);
+            }
+
+            localCaps.Codecs = newList;
         }
 
         public static RtcRtpParameters CapabilitiesToParameters(
