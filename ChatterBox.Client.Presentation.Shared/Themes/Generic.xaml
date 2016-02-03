@@ -283,18 +283,35 @@
                                                                            VerticalAlignment="Stretch" HorizontalAlignment="Stretch" />
                                                                     <ContentControl Visibility = "{Binding ShowPeerVideoPlaceHolder, Converter={StaticResource InvertedBooleanToVisibilityConverter}}"
                                                                                     Content="{Binding RemoteVideoRenderer}" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch"/>
+                                                                    <StackPanel Background="White" VerticalAlignment="Top" HorizontalAlignment="Left"
+                                                                                Visibility="{Binding IsPeerVideoAvailable, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                                                        <TextBlock Foreground="Black" FontSize="10">
+                                                                            <Run Text="{Binding RemoteNativeVideoSize.Width}"/>
+                                                                            <Run Text="x"/>
+                                                                            <Run Text="{Binding RemoteNativeVideoSize.Height}"/>
+                                                                        </TextBlock>
+                                                                    </StackPanel>
                                                                     <Image HorizontalAlignment="Right" VerticalAlignment="Bottom" 
-                                                                           Source="{Binding OwnProfileSource}"
-                                                                           Visibility="{Binding ShowSelfVideoPlaceHolder, Converter={StaticResource BooleanToVisibilityConverter}}"
-                                                                           Width="{Binding ElementName=CallGrid, Path=(attachedProperties:ActualSize.ActualWidth), Mode=OneWay, Converter={StaticResource ProportionalConverter}}"
-                                                                           Height="{Binding ElementName=CallGrid, Path=(attachedProperties:ActualSize.ActualHeight), Mode=OneWay, Converter={StaticResource ProportionalConverter}}" />
-
-                                                                    <ContentControl HorizontalAlignment="Right" VerticalAlignment="Bottom"
-                                                                                    Content="{Binding LocalVideoRenderer}" 
-                                                                                    Visibility="{Binding ShowSelfVideoPlaceHolder, Converter={StaticResource InvertedBooleanToVisibilityConverter}}"
-                                                                                    HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch"
-                                                                                    Width="{Binding ElementName=CallGrid, Path=(attachedProperties:ActualSize.ActualWidth), Mode=OneWay, Converter={StaticResource ProportionalConverter}}"
-                                                                                    Height="{Binding ElementName=CallGrid, Path=(attachedProperties:ActualSize.ActualHeight), Mode=OneWay, Converter={StaticResource ProportionalConverter}}"/>
+                                                                            Source="{Binding OwnProfileSource}"
+                                                                            Visibility="{Binding ShowSelfVideoPlaceHolder, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                                                            Width="{Binding ElementName=CallGrid, Path=(attachedProperties:ActualSize.ActualWidth), Mode=OneWay, Converter={StaticResource ProportionalConverter}}"
+                                                                            Height="{Binding ElementName=CallGrid, Path=(attachedProperties:ActualSize.ActualHeight), Mode=OneWay, Converter={StaticResource ProportionalConverter}}" />
+                                                                    <Grid HorizontalAlignment="Right" VerticalAlignment="Bottom">
+                                                                        <ContentControl HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                                                                                        Content="{Binding LocalVideoRenderer}" 
+                                                                                        Visibility="{Binding ShowSelfVideoPlaceHolder, Converter={StaticResource InvertedBooleanToVisibilityConverter}}"
+                                                                                        HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch"
+                                                                                        Width="{Binding ElementName=CallGrid, Path=(attachedProperties:ActualSize.ActualWidth), Mode=OneWay, Converter={StaticResource ProportionalConverter}}"
+                                                                                        Height="{Binding ElementName=CallGrid, Path=(attachedProperties:ActualSize.ActualHeight), Mode=OneWay, Converter={StaticResource ProportionalConverter}}"/>
+                                                                        <StackPanel Background="White" VerticalAlignment="Top" HorizontalAlignment="Left"
+                                                                                    Visibility="{Binding IsSelfVideoAvailable, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                                                            <TextBlock Foreground="Black" FontSize="10">
+                                                                                <Run Text="{Binding LocalNativeVideoSize.Width}"/>
+                                                                                <Run Text="x"/>
+                                                                                <Run Text="{Binding LocalNativeVideoSize.Height}"/>
+                                                                            </TextBlock>
+                                                                        </StackPanel>
+                                                                    </Grid>
 
                                                                 </Grid>
                                                                 <StackPanel Grid.Row="1" Margin="12,5" Orientation="Horizontal" HorizontalAlignment="Center">
