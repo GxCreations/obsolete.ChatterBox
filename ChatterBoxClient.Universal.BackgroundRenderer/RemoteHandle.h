@@ -11,6 +11,8 @@ public:
     RemoteHandle& Close();
     HANDLE GetLocalHandle() const;
     HANDLE GetRemoteHandle() const;
+    RemoteHandle& DetachMove(RemoteHandle& destRemoteHandle);
+    bool IsValid() const;
 private:
     RemoteHandle(const RemoteHandle&);
     const RemoteHandle& operator = (const RemoteHandle&) { return *this;  };
