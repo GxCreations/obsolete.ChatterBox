@@ -13,6 +13,7 @@ public:
     HANDLE GetRemoteHandle() const;
     RemoteHandle& DetachMove(RemoteHandle& destRemoteHandle);
     bool IsValid() const;
+    RemoteHandle& ResetRemoteProcessId(DWORD processId);
 private:
     RemoteHandle(const RemoteHandle&);
     const RemoteHandle& operator = (const RemoteHandle&) { return *this;  };

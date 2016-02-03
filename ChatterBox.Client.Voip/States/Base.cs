@@ -19,10 +19,6 @@ namespace ChatterBox.Client.Common.Communication.Voip.States
 
         #region IVoipChannel Members
 
-        public virtual async Task SetForegroundProcessId(uint processId)
-        {
-        }
-
         public virtual void DisplayOrientationChanged(DisplayOrientations orientation)
         {
         }
