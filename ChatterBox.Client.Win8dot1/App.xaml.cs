@@ -5,7 +5,6 @@ using ChatterBox.Client.Common.Communication.Signaling;
 using ChatterBox.Client.Common.Communication.Voip;
 using ChatterBox.Client.Common.Media;
 using ChatterBox.Client.Common.Notifications;
-using ChatterBox.Client.Common.Settings;
 using ChatterBox.Client.Common.Signaling;
 using ChatterBox.Client.Presentation.Shared.Services;
 using ChatterBox.Client.Presentation.Shared.ViewModels;
@@ -196,7 +195,10 @@ namespace ChatterBox.Client.Win8dot1
             PushNotificationHelper.RegisterPushNotificationChannel();
 
             var helper = new TaskHelper();
-            var pushNotificationTask = await helper.RegisterTask(nameof(PushNotificationTask), typeof(PushNotificationTask).FullName, new PushNotificationTrigger(), registerAgain);
+            var pushNotificationTask = await helper.RegisterTask(nameof(PushNotificationTask),
+                                                                 typeof(PushNotificationTask).FullName,
+                                                                 new PushNotificationTrigger(),
+                                                                 registerAgain);                                                                 
             if (pushNotificationTask == null)
             {
                 Debug.WriteLine("Push notification background task is not started");

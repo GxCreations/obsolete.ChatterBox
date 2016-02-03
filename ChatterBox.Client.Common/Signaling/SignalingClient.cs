@@ -56,11 +56,14 @@ namespace ChatterBox.Client.Common.Signaling
             await SendToServer(message);
         }
 
-        public async void Register(Registration message)
+        public void Register(Registration message)
         {
-            var bufferFile = await GetBufferFile();
-            await bufferFile.DeleteAsync();
-            await SendToServer(message);
+            Task.Run(async () =>
+            {
+                var bufferFile = await GetBufferFile();
+                await bufferFile.DeleteAsync();
+                await SendToServer(message);
+            }).Wait();
         }
 
         public async void Relay(RelayMessage message)
@@ -127,7 +130,7 @@ namespace ChatterBox.Client.Common.Signaling
             ClientConfirmation(Confirmation.For(message));
             SignaledRelayMessages.Add(message);
             var shownUserId = _foregroundChannel.GetShownUserId();
-            if (message.Tag == RelayMessageTags.InstantMessage && 
+            if (message.Tag == RelayMessageTags.InstantMessage &&
                 !SignaledRelayMessages.IsPushNotificationReceived(message.Id) &&
                 !(shownUserId != null && shownUserId.Equals(message.FromUserId)) &&
                 (DateTimeOffset.UtcNow.Subtract(message.SentDateTimeUtc).TotalMinutes < 10))
@@ -174,7 +177,7 @@ namespace ChatterBox.Client.Common.Signaling
             _foregroundChannel.OnSignaledRegistrationStatusUpdated();
         }
 
-#endregion
+        #endregion
 
         private IAsyncOperation<bool> BufferFileExists()
         {
