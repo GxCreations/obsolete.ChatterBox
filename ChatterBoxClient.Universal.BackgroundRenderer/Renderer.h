@@ -35,11 +35,6 @@ public:
     {
         bool get();
     }
-    property uint32 ForegroundProcessId
-    {
-        uint32 get();
-        void set(uint32 value);
-    }
     static uint32 GetProcessId();
     event RenderFormatUpdateHandler^ RenderFormatUpdate;
     // MediaEngineNotifyCallback
@@ -54,7 +49,6 @@ private:
         Windows::Foundation::Size videoSize);
     void ReleaseStaleSwapChainHandle();
     void ReleaseStaleSwapChainHandleWhenExpired();
-    void CheckForegroundProcessChange();
 
     bool _useHardware;
     Microsoft::WRL::ComPtr<ABI::Windows::Media::IMediaExtensionManager> _mediaExtensionManager;
@@ -65,8 +59,6 @@ private:
     Microsoft::WRL::ComPtr<IMFMediaEngine> _mediaEngine;
     Microsoft::WRL::ComPtr<IMFMediaEngineEx> _mediaEngineEx;
     DWORD _foregroundProcessId;
-    DWORD _newForegroundProcessId;
-    LONG _foregroundProcessIdModified;
     RemoteHandle _swapChainHandle;
     RemoteHandle _staleSwapChainHandle;
     ULONGLONG _staleHandleTimestamp;
