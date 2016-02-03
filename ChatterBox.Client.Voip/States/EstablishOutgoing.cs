@@ -24,6 +24,7 @@ using RtcSessionDescription = webrtc_winrt_api.RTCSessionDescription;
 using RtcMediaStreamConstraints = webrtc_winrt_api.RTCMediaStreamConstraints;
 using RtcNegotiationType = webrtc_winrt_api.RTCSdpType;
 using RtcIceCandidate = webrtc_winrt_api.RTCIceCandidate;
+using RtcHelper = ChatterBox.Client.Voip.Rtc.Helper;
 #elif USE_ORTC_API
 using RtcConfiguration = ChatterBox.Client.Voip.Rtc.RTCConfiguration;
 using RtcPeerConnection = ChatterBox.Client.Voip.Rtc.RTCPeerConnection;
@@ -32,6 +33,7 @@ using RtcSessionDescription = ChatterBox.Client.Voip.Rtc.RTCSessionDescription;
 using RtcMediaStreamConstraints = ChatterBox.Client.Voip.Rtc.RTCMediaStreamConstraints;
 using RtcNegotiationType = ChatterBox.Client.Voip.Rtc.RTCSdpType;
 using RtcIceCandidate = ortc_winrt_api.RTCIceCandidate;
+using RtcHelper = ChatterBox.Client.Voip.Rtc.Helper;
 #endif //USE_WEBRTC_API
 
 #pragma warning disable 1998
@@ -86,9 +88,7 @@ namespace ChatterBox.Client.Common.Communication.Voip.States
             });
             Context.PeerConnection.AddStream(Context.LocalStream);
             var sdpOffer = await Context.PeerConnection.CreateOffer();
-            var sdpString = sdpOffer.Sdp;
-            SdpUtils.SelectCodecs(ref sdpString, DtoExtensions.FromDto(Context.GetAudioCodec()), DtoExtensions.FromDto(Context.GetVideoCodec()));
-            sdpOffer.Sdp = sdpString;
+            RtcHelper.SelectCodecs(sdpOffer, Context.GetAudioCodec(), Context.GetVideoCodec());
             await Context.PeerConnection.SetLocalDescription(sdpOffer);
 
             var tracks = Context.LocalStream.GetVideoTracks();
