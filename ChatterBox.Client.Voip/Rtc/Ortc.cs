@@ -26,9 +26,8 @@ namespace ChatterBox.Client.Voip.Rtc
     using DtoCaptureCapabilities = Common.Media.Dto.CaptureCapabilities;
     using RtcHelper = ChatterBox.Client.Voip.Rtc.Helper;
     using RtcIceCandidate = ortc_winrt_api.RTCIceCandidate;
-    using RtcSender = ortc_winrt_api.RTCRtpSender;
-    using RtcReceiver = ortc_winrt_api.RTCRtpReceiver;
-    using RtcCodecCapability = ortc_winrt_api.RTCRtpCodecCapability;
+    using RtcRtpSender = ortc_winrt_api.RTCRtpSender;
+    using RtcRtpReceiver = ortc_winrt_api.RTCRtpReceiver;
     using RtcOrtc = ortc_winrt_api.Ortc;
     using RtcOrtcWithDispatcher = ortc_winrt_api.OrtcWithDispatcher;
     using RtcLog = ortc_winrt_api.Log;
@@ -56,6 +55,18 @@ namespace ChatterBox.Client.Voip.Rtc
     using RtcRtpCapabilities = ortc_winrt_api.RTCRtpCapabilities;
     using RtcIceRole = ortc_winrt_api.RTCIceRole;
     using RtcIceTypes = ortc_winrt_api.RTCIceTypes;
+    using RtcRtpParameters = ortc_winrt_api.RTCRtpParameters;
+    using RtcRtpCodecParameters = ortc_winrt_api.RTCRtpCodecParameters;
+    using RtcDegradationPreference = ortc_winrt_api.RTCDegradationPreference;
+    using RtcRtpEncodingParameters = ortc_winrt_api.RTCRtpEncodingParameters;
+    using RtcRtpHeaderExtensionParameters = ortc_winrt_api.RTCRtpHeaderExtensionParameters;
+    using RtcRtcpParameters = ortc_winrt_api.RTCRtcpParameters;
+    using RtcRtcpFeedback = ortc_winrt_api.RTCRtcpFeedback;
+    using RtcRtpFecParameters = ortc_winrt_api.RTCRtpFecParameters;
+    using RtcPriorityType = ortc_winrt_api.RTCPriorityType;
+    using RtcRtpRtxParameters = ortc_winrt_api.RTCRtpRtxParameters;
+    using RtcRtpCodecCapability = ortc_winrt_api.RTCRtpCodecCapability;
+    using RtcRtpHeaderExtensions = ortc_winrt_api.RTCRtpHeaderExtensions;
 
     internal delegate void OnMediaCaptureDeviceFoundDelegate(MediaDevice param);
     internal delegate void RTCPeerConnectionIceEventDelegate(RTCPeerConnectionIceEvent param);
@@ -260,11 +271,10 @@ namespace ChatterBox.Client.Voip.Rtc
         public bool SelectAudioDevice(MediaDevice device) { _audioCaptureDevice = device; return true; }
         public bool SelectAudioPlayoutDevice(MediaDevice device)
         {
-#warning TODO APPLY CONSTRAINTS TO THE OUTGOING TRACK
             _audioPlaybackDevice = device;
             return true;
         }
-        public void SelectVideoDevice(MediaDevice device) { _audioCaptureDevice = device; }
+        public void SelectVideoDevice(MediaDevice device) { _videoDevice = device; }
     }
 
     internal sealed class RTCPeerConnection
@@ -282,10 +292,11 @@ namespace ChatterBox.Client.Voip.Rtc
         private RTCSessionDescription _remoteCapabilities;
         private MediaStream _localStream;
         private MediaStream _remoteStream;
-        private RtcSender _audioSender;
-        private RtcSender _videoSender;
-        private RtcReceiver _audioReceiver;
-        private RtcReceiver _videoReceiver;
+        private RtcRtpSender _audioSender;
+        private RtcRtpSender _videoSender;
+        private RtcRtpReceiver _audioReceiver;
+        private RtcRtpReceiver _videoReceiver;
+        private MediaDevice _audioPlaybackDevice;
 
         private bool _installedIceEvents;
 
@@ -334,10 +345,10 @@ namespace ChatterBox.Client.Voip.Rtc
             if (null == _capabilitiesTcs) return;
 
             var localParams = _iceGatherer.GetLocalParameters();
-            var audioSenderCaps = RtcSender.GetCapabilities("audio");
-            var videoSenderCaps = RtcSender.GetCapabilities("audio");
-            var audioReceiverCaps = RtcReceiver.GetCapabilities("audio");
-            var videoReceiverCaps = RtcReceiver.GetCapabilities("audio");
+            var audioSenderCaps = RtcRtpSender.GetCapabilities("audio");
+            var videoSenderCaps = RtcRtpSender.GetCapabilities("audio");
+            var audioReceiverCaps = RtcRtpReceiver.GetCapabilities("audio");
+            var videoReceiverCaps = RtcRtpReceiver.GetCapabilities("audio");
             var dtlsParameters = _dtlsTransport.GetLocalParameters();
             bool hasAudio = false;
             bool hasVideo = false;
@@ -356,6 +367,8 @@ namespace ChatterBox.Client.Voip.Rtc
             }
 
             var caps = new RTCSessionDescription(new RtcDescription(hasAudio, hasVideo, _iceRole, localParams, audioSenderCaps, videoSenderCaps, audioReceiverCaps, videoReceiverCaps, dtlsParameters));
+
+            if (null != _remoteCapabilities) {RtcHelper.PickLocalCodecBasedOnRemote(caps, _remoteCapabilities);}
             _localCapabilities = caps;
 
             _capabilitiesTcs.SetResult(_localCapabilities);
@@ -379,14 +392,17 @@ namespace ChatterBox.Client.Voip.Rtc
 
             if (hasAudio)
             {
-                _audioReceiver = new RtcReceiver(_dtlsTransport);
-#warning TODO START RECEIVER
+                _audioReceiver = new RtcRtpReceiver(_dtlsTransport);
+
+                var @params = RtcHelper.CapabilitiesToParameters("a", _localCapabilities.Description.AudioReceiverCapabilities);
+                _audioReceiver.Receive(@params);
                 incomingAudioTrack = new MediaAudioTrack(_audioReceiver.Track);
             }
             if (hasVideo)
             {
-#warning TODO START RECEIVER
-                _videoReceiver = new RtcReceiver(_dtlsTransport);
+                _videoReceiver = new RtcRtpReceiver(_dtlsTransport);
+                var @params = RtcHelper.CapabilitiesToParameters("v", _localCapabilities.Description.VideoReceiverCapabilities);
+                _videoReceiver.Receive(@params);
                 incomingVideoTrack = new MediaVideoTrack(_videoReceiver.Track);
             }
 
@@ -435,8 +451,10 @@ namespace ChatterBox.Client.Voip.Rtc
 
                     if (null != track)
                     {
-                        _audioSender = new RtcSender(track, _dtlsTransport);
-#warning START SENDER
+                        _audioSender = new RtcRtpSender(track, _dtlsTransport);
+                        var @params = RtcHelper.CapabilitiesToParameters("a", _remoteCapabilities.Description.AudioReceiverCapabilities);
+                        RtcHelper.SetupSenderEncodings(@params);
+                        _audioSender.Send(@params);
                     }
                 }
             }
@@ -452,13 +470,31 @@ namespace ChatterBox.Client.Voip.Rtc
 
                     if (null != track)
                     {
-                        _videoSender = new RtcSender(track, _dtlsTransport);
-#warning START SENDER
+                        _videoSender = new RtcRtpSender(track, _dtlsTransport);
+                        var @params = RtcHelper.CapabilitiesToParameters("v", _remoteCapabilities.Description.VideoReceiverCapabilities);
+                        RtcHelper.SetupSenderEncodings(@params);
+                        _videoSender.Send(@params);
                     }
                 }
             }
             _remoteCapabilitiesTcs.SetResult(_remoteCapabilities);
             _remoteCapabilitiesTcs = null;
+        }
+
+        public void SelectAudioPlayoutDevice(MediaDevice device)
+        {
+            _audioPlaybackDevice = device;
+            if (null == device) return;
+            if (null == _audioReceiver) return;
+
+            var track = _audioReceiver.Track;
+            if (null == track) return;
+
+            //var constraints = new RtcMediaTrackConstraints();
+
+            var constraints = RtcHelper.MakeConstraints(true, null, RtcMediaDeviceKind.AudioOutput, device);
+
+            track.ApplyConstraints(constraints.Audio).AsTask();
         }
 
         //public RTCIceConnectionState IceConnectionState { get; }
@@ -498,14 +534,14 @@ namespace ChatterBox.Client.Voip.Rtc
 
         private void IceGatherer_OnICEGathererCandidateComplete(RtcIceGathererCandidateCompleteEvent evt)
         {
-#warning TODO IMPROVE ICE WIRING
+#warning TODO IMPROVE ICE WIRING IceGatherer_OnICEGathererCandidateComplete
             //throw new NotImplementedException();
         }
 
         private void IceGatherer_OnICEGathererLocalCandidateGone(RtcIceGathererCandidateEvent evt)
         {
             //throw new NotImplementedException();
-#warning TODO IMPROVE ICE WIRING
+#warning TODO IMPROVE ICE WIRING IceGatherer_OnICEGathererLocalCandidateGone
         }
 
 
@@ -902,7 +938,7 @@ namespace ChatterBox.Client.Voip.Rtc
 
     internal sealed class RTCSessionDescription
     {
-        private string _sdp;
+        private string _blob;
 
         private RtcDescription _description;
 
@@ -915,19 +951,21 @@ namespace ChatterBox.Client.Voip.Rtc
 
         public RTCSessionDescription(RTCSdpType type, string caps) {Sdp = caps;}
 
-        public string Sdp {
+        public string Sdp { get { return Blob; } set { Blob = value; } }
+
+        public string Blob
+        {
             get
             {
-                return _sdp;
+                return _blob;
             }
             set
             {
-                _sdp = value;
+                _blob = value;
                 var jsonDescription = RtcHelper.DeserializeJSon<RtcJsonDescription>(value);
                 _description = new RtcDescription(jsonDescription);
             }
         }
-
         public RtcDescription Description
         {
             get
@@ -938,7 +976,7 @@ namespace ChatterBox.Client.Voip.Rtc
             {
                 _description = value;
                 var jsonDescription = new RtcJsonDescription(_description);
-                _sdp = RtcHelper.SerializeJSon<RtcJsonDescription>(jsonDescription);
+                _blob = RtcHelper.SerializeJSon<RtcJsonDescription>(jsonDescription);
             }
         }
 
@@ -1182,6 +1220,94 @@ namespace ChatterBox.Client.Voip.Rtc
 
     internal sealed class Helper
     {
+        public static void SelectCodecs(RTCSessionDescription description, CodecInfo codec)
+        {
+#warning TODO NEED IMPLEMENTATION SelectCodecs
+            throw new NotImplementedException();
+
+            // force update to json blob
+            description.Description = description.Description;
+        }
+
+        public static bool SelectAudioPlayoutDevice(
+            RTCPeerConnection peerConnection,
+            Media media,
+            MediaDevice device
+            )
+        {
+            bool result = true;
+            if (null == device) return false;
+            if (null != media) result = media.SelectAudioPlayoutDevice(device);
+            if (null != peerConnection) {peerConnection.SelectAudioPlayoutDevice(device);}
+            return true;
+        }
+
+        public static void PickLocalCodecBasedOnRemote(
+            RTCSessionDescription localCapabiliites,
+            RTCSessionDescription remoteCapabiliites
+            )
+        {
+#warning TODO NEED IMPLEMENTATION PickLocalCodecBasedOnRemote
+            throw new NotImplementedException();
+        }
+
+        public static RtcRtpParameters CapabilitiesToParameters(
+            string muxId,
+            RtcRtpCapabilities caps
+            )
+        {
+            var result = new RtcRtpParameters();
+
+            result.Codecs = new List<RtcRtpCodecParameters>();
+            foreach (var codec in caps.Codecs) {result.Codecs.Add(CapabilitiesToParameters(codec));}
+            result.DegradationPreference = RtcDegradationPreference.MaintainBalanced;
+            result.HeaderExtensions = new List<RtcRtpHeaderExtensionParameters>();
+            result.Encodings = new List<RtcRtpEncodingParameters>();
+            foreach (var ext in caps.HeaderExtensions) { result.HeaderExtensions.Add(CapabilitiesToParameters(ext)); }
+            result.MuxId = muxId;
+            result.Rtcp = new RtcRtcpParameters();
+            result.Rtcp.Mux = true;
+            result.Rtcp.ReducedSize = true;
+
+            return result;
+        }
+
+        public static RtcRtpCodecParameters CapabilitiesToParameters(
+            RtcRtpCodecCapability caps
+            )
+        {
+            var result = new RtcRtpCodecParameters();
+
+            result.ClockRate = caps.ClockRate;
+            result.Maxptime = caps.Maxptime;
+            result.Name = caps.Name;
+            result.NumChannels = caps.NumChannels;
+            result.PayloadType = caps.PreferredPayloadType;
+            result.RtcpFeedback = caps.RtcpFeedback;
+            result.Parameters = caps.Parameters;
+
+            return result;
+        }
+        public static RtcRtpHeaderExtensionParameters CapabilitiesToParameters(
+            RtcRtpHeaderExtensions caps
+            )
+        {
+            var result = new RtcRtpHeaderExtensionParameters();
+
+            result.Encrypt = caps.PreferredEncrypt;
+            result.Id = caps.PreferredId;
+            result.Uri = caps.Uri;
+
+            return result;
+        }
+
+        public static void SetupSenderEncodings(RtcRtpParameters @params)
+        {
+            var encoding = new RtcRtpEncodingParameters();
+            encoding.EncodingId = "e1";
+            @params.Encodings.Add(encoding);
+        }
+
         // see https://philcurnow.wordpress.com/2013/12/29/serializing-and-deserializing-json-in-c/
         public static string SerializeJSon<T>(T t)
         {
@@ -1202,14 +1328,14 @@ namespace ChatterBox.Client.Voip.Rtc
             return obj;
         }
 
-        public static CodecInfo ToDto(RtcCodecCapability codec, int index)
+        public static CodecInfo ToDto(RtcRtpCodecCapability codec, int index)
         {
             return new CodecInfo(index, (int)codec.ClockRate, codec.Name);
         }
 
         public static IList<CodecInfo> GetCodecs(string kind)
         {
-            var caps = RtcSender.GetCapabilities(kind);
+            var caps = RtcRtpSender.GetCapabilities(kind);
             var codecs = caps.Codecs;
             var results = new List<CodecInfo>();
 
