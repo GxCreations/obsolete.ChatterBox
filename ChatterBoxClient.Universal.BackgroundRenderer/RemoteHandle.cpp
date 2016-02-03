@@ -128,13 +128,7 @@ RemoteHandle& RemoteHandle::ResetRemoteProcessId(DWORD processId)
     }
     if (_processHandle != INVALID_HANDLE_VALUE)
     {
-        try
-        {
-            CloseHandle(_processHandle);
-        }
-        catch (...)
-        {
-        }
+        CloseHandle(_processHandle);
     }
     _processId = processId;
     _processHandle = OpenProcess(PROCESS_DUP_HANDLE, TRUE, processId);
