@@ -95,7 +95,7 @@ namespace ChatterBox.Client.Universal.Background
                     if (statValues.Keys.Contains(RTCStatsValueName.StatsValueNameTrackId))
                     {
                         string trackId = statValues[RTCStatsValueName.StatsValueNameTrackId].ToString();
-                        if (trackId == "audio_label")
+                        if (trackId.StartsWith("audio_label"))
                         {
                             if (statValues.Keys.Contains(RTCStatsValueName.StatsValueNamePacketsSent)) {
                                 _metricsCollector._audioPacketsSent += Convert.ToInt32(statValues[RTCStatsValueName.StatsValueNamePacketsSent]);
@@ -114,7 +114,7 @@ namespace ChatterBox.Client.Universal.Background
                                 _metricsCollector.AudioCodec = statValues[RTCStatsValueName.StatsValueNameCodecName].ToString();
                             }
                         }
-                        else if (trackId == "video_label")
+                        else if (trackId.StartsWith("video_label"))
                         {
                             if (statValues.Keys.Contains(RTCStatsValueName.StatsValueNamePacketsSent))
                             {
