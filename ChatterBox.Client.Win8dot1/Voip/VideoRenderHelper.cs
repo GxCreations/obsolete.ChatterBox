@@ -50,5 +50,9 @@ namespace ChatterBox.Client.Win8dot1.Voip
         {
             RenderFormatUpdate?.Invoke(0, width, height);
         }
+
+        public void SetForegroundProcessId(uint processId)
+        {
+        }
     }
 }

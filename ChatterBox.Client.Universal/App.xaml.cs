@@ -219,6 +219,8 @@ namespace ChatterBox.Client.Universal
             var client = Container.Resolve<HubClient>();
             if (client.IsConnected)
             {
+                client.SetForegroundProcessId(
+                    ChatterBox.Client.WebRTCSwapChainPanel.WebRTCSwapChainPanel.CurrentProcessId);
                 client.ResumeVoipVideo();
             }
 

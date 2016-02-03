@@ -46,6 +46,11 @@ namespace ChatterBox.Client.Universal.Background.Voip
             //For W10, the resolution is obtained from Renderer
         }
 
+        public void SetForegroundProcessId(uint processId)
+        {
+            _renderer.ForegroundProcessId = processId;
+        }
+
         private Renderer _renderer = new Renderer();
         bool _isSetup = false;
     }

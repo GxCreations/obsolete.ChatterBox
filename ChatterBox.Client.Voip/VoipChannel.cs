@@ -39,7 +39,11 @@ namespace ChatterBox.Client.Common.Communication.Voip
 
         public void SetForegroundProcessId(uint processId)
         {
-            Context.ForegroundProcessId = processId;
+            Task.Run(() =>
+            {
+                Debug.WriteLine("VoipChannel.SetForegroundProcessId");
+                Context.WithState(st => st.SetForegroundProcessId(processId)).Wait();
+            });
         }
 
 

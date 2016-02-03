@@ -21,6 +21,15 @@ namespace ChatterBox.Client.Common.Communication.Voip.States
 
         public virtual async Task SetForegroundProcessId(uint processId)
         {
+            Context.ForegroundProcessId = processId;
+            if(Context.LocalVideoRenderer != null)
+            {
+                Context.LocalVideoRenderer.SetForegroundProcessId(processId);
+            }
+            if(Context.RemoteVideoRenderer != null)
+            {
+                Context.RemoteVideoRenderer.SetForegroundProcessId(processId);
+            }
         }
 
         public virtual void DisplayOrientationChanged(DisplayOrientations orientation)
