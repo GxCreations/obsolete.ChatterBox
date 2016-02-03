@@ -25,6 +25,7 @@ using RtcMedia = webrtc_winrt_api.Media;
 using RtcPeerConnection = webrtc_winrt_api.RTCPeerConnection;
 using RtcIceCandidate = webrtc_winrt_api.RTCIceCandidate;
 using RtcResolutionHelper = webrtc_winrt_api.ResolutionHelper;
+using RtcHelper = ChatterBox.Client.Voip.Rtc.Helper;
 #elif USE_ORTC_API
 using RtcMediaStream = ChatterBox.Client.Voip.Rtc.MediaStream;
 using RtcEngine = ChatterBox.Client.Voip.Rtc.Engine;
@@ -32,6 +33,7 @@ using RtcMedia = ChatterBox.Client.Voip.Rtc.Media;
 using RtcPeerConnection = ChatterBox.Client.Voip.Rtc.RTCPeerConnection;
 using RtcIceCandidate = ortc_winrt_api.RTCIceCandidate;
 using RtcResolutionHelper = ChatterBox.Client.Voip.Rtc.ResolutionHelper;
+using RtcHelper = ChatterBox.Client.Voip.Rtc.Helper;
 #endif //USE_WEBRTC_API
 
 using DtoMediaDevice = ChatterBox.Client.Common.Media.Dto.MediaDevice;
@@ -156,11 +158,7 @@ namespace ChatterBox.Client.Common.Communication.Voip
         {
             _audioPlayoutDevice = device;
             _localSettings.Values[MediaSettingsIds.AudioPlayoutDeviceSettings] = device?.Id;
-            if ((null != device) &&
-                (null != Media))
-            {
-                Media.SelectAudioPlayoutDevice(DtoExtensions.FromDto(device));
-            }
+            RtcHelper.SelectAudioPlayoutDevice(PeerConnection, Media, DtoExtensions.FromDto(device));
         }
 
         public DtoCaptureCapabilities GetVideoCaptureCapabilities(DtoMediaDevice device)
@@ -282,10 +280,7 @@ namespace ChatterBox.Client.Common.Communication.Voip
             var audioPlayoutDevices = Media.GetAudioPlayoutDevices();
             var selectedAudioPlayoutDevice = audioPlayoutDevices.FirstOrDefault(d => d.Id.Equals(audioPlayoutDeviceId));
             selectedAudioPlayoutDevice = selectedAudioPlayoutDevice ?? audioPlayoutDevices.FirstOrDefault();
-            if (selectedAudioPlayoutDevice != null)
-            {
-                Media.SelectAudioPlayoutDevice(selectedAudioPlayoutDevice);
-            }
+            RtcHelper.SelectAudioPlayoutDevice(PeerConnection, Media, selectedAudioPlayoutDevice);
 
             int videoCodecId = int.MinValue;
             if (_localSettings.Values.ContainsKey(MediaSettingsIds.VideoCodecSettings))
