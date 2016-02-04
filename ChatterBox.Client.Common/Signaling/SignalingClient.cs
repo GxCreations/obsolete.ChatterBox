@@ -129,7 +129,7 @@ namespace ChatterBox.Client.Common.Signaling
             var shownUserId = _foregroundChannel.GetShownUserId();
             if (message.Tag == RelayMessageTags.InstantMessage && 
                 !SignaledRelayMessages.IsPushNotificationReceived(message.Id) &&
-                !shownUserId.Equals(message.FromUserId) &&
+                !(shownUserId != null && shownUserId.Equals(message.FromUserId)) &&
                 (DateTimeOffset.UtcNow.Subtract(message.SentDateTimeUtc).TotalMinutes < 10))
             {
                 ToastNotificationService.ShowInstantMessageNotification(message.FromName,

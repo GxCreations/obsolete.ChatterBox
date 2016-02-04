@@ -47,8 +47,8 @@ namespace ChatterBox.Common.Communication.Helpers
                 return new InvocationResult
                 {
                     Invoked = false,
-                  ErrorMessage = exception.ToString()
-                 };
+                    ErrorMessage = exception.ToString()
+                };
             }
         }
     }
