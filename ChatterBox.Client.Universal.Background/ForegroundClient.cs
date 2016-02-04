@@ -37,7 +37,12 @@ namespace ChatterBox.Client.Universal.Background
 
         public void OnUpdateFrameFormat(FrameFormat frameFormat)
         {
-           SendToForeground(frameFormat);
+            SendToForeground(frameFormat);
+        }
+
+        public void OnUpdateFrameRate(FrameRate frameRate)
+        {
+            SendToForeground(frameRate);
         }
 
         public ForegroundState GetForegroundState()

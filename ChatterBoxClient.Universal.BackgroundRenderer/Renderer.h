@@ -29,7 +29,8 @@ public:
     Renderer();
     void Teardown();
     virtual ~Renderer();
-    void SetupRenderer(uint32 foregroundProcessId, Windows::Media::Core::IMediaSource^ streamSource);
+    void SetupRenderer(uint32 foregroundProcessId, Windows::Media::Core::IMediaSource^ streamSource,
+        Windows::Foundation::Size videoControlSize);
     void SetRenderControlSize(Windows::Foundation::Size size);
     property bool GPUVideoBuffersSupported
     {

@@ -143,11 +143,11 @@ namespace ChatterBox.Client.Common.Communication.Voip.States
             {
                 var tracks = Context.RemoteStream.GetVideoTracks();
 #if WIN10
-                var source = Context.Media.CreateMediaSource(tracks[0], "PEER");
+                var source = Context.Media.CreateMediaSource(tracks[0], VoipContext.PeerMediaStreamId);
 #else
-                var source = Context.Media.CreateMediaStreamSource(tracks[0], 30, "PEER");
+                var source = Context.Media.CreateMediaStreamSource(tracks[0], 30, VoipContext.PeerMediaStreamId);
 #endif
-                Context.RemoteVideoRenderer.SetupRenderer(Context.ForegroundProcessId, source);
+                Context.RemoteVideoRenderer.SetupRenderer(Context.ForegroundProcessId, source, Context.RemoteVideoControlSize);
             }
             // TODO: Delay here prevents a crash in the MF media engine when setting up the second
             //       renderer.  Investigate why this is happening.  Occurred 100% of the time.
@@ -161,11 +161,11 @@ namespace ChatterBox.Client.Common.Communication.Voip.States
                 }
 
 #if WIN10
-                var source = Context.Media.CreateMediaSource(tracks[0], "LOCAL");
+                var source = Context.Media.CreateMediaSource(tracks[0], VoipContext.LocalMediaStreamId);
 #else
-                var source = Context.Media.CreateMediaStreamSource(tracks[0], 30, "LOCAL");
+                var source = Context.Media.CreateMediaStreamSource(tracks[0], 30, VoipContext.LocalMediaStreamId);
 #endif
-                Context.LocalVideoRenderer.SetupRenderer(Context.ForegroundProcessId, source);
+                Context.LocalVideoRenderer.SetupRenderer(Context.ForegroundProcessId, source, Context.LocalVideoControlSize);
             }
         }
     }

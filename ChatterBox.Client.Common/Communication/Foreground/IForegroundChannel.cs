@@ -10,6 +10,7 @@ namespace ChatterBox.Client.Common.Communication.Foreground
         void OnSignaledRelayMessagesUpdated();
         void OnVoipState(VoipState state);
         void OnUpdateFrameFormat(FrameFormat frameFormat);
+        void OnUpdateFrameRate(FrameRate frameRate);
         ForegroundState GetForegroundState();
         string GetShownUserId();
     }

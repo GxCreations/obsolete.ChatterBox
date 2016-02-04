@@ -117,6 +117,7 @@
     <Compile Include="SignalingSocketService.cs" />
     <Compile Include="StatsManager.cs" />
     <Compile Include="Tasks\ForegroundAppServiceTask.cs" />
+    <Compile Include="Tasks\SessionConnectedTask.cs" />
     <Compile Include="Tasks\SignalingTask.cs" />
     <Compile Include="Tasks\VoipTask.cs" />
     <Compile Include="Voip\VideoRenderHelper.cs" />

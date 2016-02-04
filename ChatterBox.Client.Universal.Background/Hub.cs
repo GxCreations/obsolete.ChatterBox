@@ -198,6 +198,11 @@ namespace ChatterBox.Client.Universal.Background
             ForegroundClient.OnUpdateFrameFormat(frameFormat);
         }
 
+        public void OnUpdateFrameRate(FrameRate frameRate)
+        {
+            ForegroundClient.OnUpdateFrameRate(frameRate);
+        }
+
         public void TrackStatsManagerEvent(String name, IDictionary<string, string> props)
         {
             RTCStatsManager.TrackEvent(name, props);
