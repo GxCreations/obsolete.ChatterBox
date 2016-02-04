@@ -254,8 +254,10 @@ namespace ChatterBox.Client.Voip.Rtc
 
         public IMediaSource CreateMediaSource(MediaVideoTrack track, string id)
         {
-#warning TODO IMPLEMENT CreateMediaSource
-            return null;
+            var useTrack = track.Track;
+            if (null == useTrack) return null;
+
+            return useTrack.CreateMediaSource(useTrack, id);
         }
 
         //public IMediaSource CreateMediaStreamSource(MediaVideoTrack track, uint framerate, string id) { return null; }
