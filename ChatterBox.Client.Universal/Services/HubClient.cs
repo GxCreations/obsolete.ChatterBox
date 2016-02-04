@@ -46,6 +46,7 @@ namespace ChatterBox.Client.Universal.Services
         private readonly TaskHelper _taskHelper;
         private AppServiceConnection _appConnection;
         private ApplicationDataContainer _localSettings;
+        private Dictionary<string, CaptureCapabilities> _videoCaptureCap = new Dictionary<string, CaptureCapabilities>();
 
         public HubClient(CoreDispatcher uiDispatcher, TaskHelper taskHelper) : base(uiDispatcher)
         {
@@ -137,6 +138,8 @@ namespace ChatterBox.Client.Universal.Services
         {
             return Task.Run(async () =>
             {
+                if (_videoCaptureCap.ContainsKey(device.Id))
+                    return _videoCaptureCap[device.Id];
                 var settings = new MediaCaptureInitializationSettings()
                 {
                     VideoDeviceId = device.Id,
@@ -180,7 +183,9 @@ namespace ChatterBox.Client.Universal.Services
                         captureCap.FullDescription = $"{captureCap.ResolutionDescription} {captureCap.FrameRateDescription}";
                         arr.Add(captureCap);
                     }
-                    return new CaptureCapabilities() { Capabilities = arr.GroupBy(o => o.FullDescription).Select(o => o.First()).ToArray() };
+                    _videoCaptureCap.Add(device.Id, new CaptureCapabilities() { Capabilities = arr.GroupBy(o => o.FullDescription).Select(o => o.First()).ToArray()});
+
+                    return _videoCaptureCap[device.Id];
                 }
             }).AsAsyncOperation();
         }
