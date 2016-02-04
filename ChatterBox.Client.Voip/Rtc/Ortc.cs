@@ -17,9 +17,11 @@ using System.Runtime.Serialization;
 using System.IO;
 using System.Runtime.Serialization.Json;
 using System.Text;
+using System.Threading;
 
 namespace ChatterBox.Client.Voip.Rtc
 {
+    using AutoLock = ChatterBox.Client.Voip.Utils.AutoLock;
     //using LogLevel = webrtc_winrt_api.LogLevel;
     using DtoCaptureCapability = Common.Media.Dto.CaptureCapability;
     using DtoMediaRatio = Common.Media.Dto.MediaRatio;
@@ -83,7 +85,9 @@ namespace ChatterBox.Client.Voip.Rtc
 
     internal sealed class Engine
     {
-        private static Engine _singleton;
+        private static Engine _singleton = new Engine();
+
+        private SemaphoreSlim _lock = new SemaphoreSlim(1, 1);
 
         private string _tracingHost = null;
         private UInt16 _tracingPort = 0;
@@ -110,40 +114,53 @@ namespace ChatterBox.Client.Voip.Rtc
         //public static bool SaveTrace(string filename) { return false; }
         public static bool SaveTrace(string host, int port)
         {
-            Singleton._tracingHost = host;
-            Singleton._tracingPort = (UInt16)port;
+            using (var @lock = new AutoLock(Singleton._lock))
+            {
+                Singleton._tracingHost = host;
+                Singleton._tracingPort = (UInt16)port;
+            }
             return true;
         }
 
-        public static void SetPreferredVideoCaptureFormat(int frame_width, int frame_height, int fps) { }
+        public static void SetPreferredVideoCaptureFormat(int frame_width, int frame_height, int fps)
+        {
+#warning TODO IMPLEMENT SetPreferredVideoCaptureFormat
+        }
+
         public static void StartTracing()
         {
-            var port = Singleton._tracingPort;
-            if (0 == port) port = 59999;
-
-            string host = Singleton._tracingHost;
-
-            RtcLogger.SetLogLevel(RtcLog.Level.Trace);
-            RtcLogger.SetLogLevel(RtcLog.Component.ZsLib, RtcLog.Level.Trace);
-            RtcLogger.SetLogLevel(RtcLog.Component.Services, RtcLog.Level.Trace);
-            RtcLogger.SetLogLevel(RtcLog.Component.ServicesHttp, RtcLog.Level.Trace);
-            RtcLogger.SetLogLevel(RtcLog.Component.OrtcLib, RtcLog.Level.Trace);
-
-            if (String.IsNullOrEmpty(host))
+            using (var @lock = new AutoLock(Singleton._lock))
             {
-                RtcLogger.InstallOutgoingTelnetLogger(host + ":" + port.ToString(), true, null);
-            }
-            else {
-                RtcLogger.UninstallOutgoingTelnetLogger();
-            }
+                var port = Singleton._tracingPort;
+                if (0 == port) port = 59999;
 
-            RtcLogger.InstallTelnetLogger(port, 60, true);
+                string host = Singleton._tracingHost;
+
+                RtcLogger.SetLogLevel(RtcLog.Level.Trace);
+                RtcLogger.SetLogLevel(RtcLog.Component.ZsLib, RtcLog.Level.Trace);
+                RtcLogger.SetLogLevel(RtcLog.Component.Services, RtcLog.Level.Trace);
+                RtcLogger.SetLogLevel(RtcLog.Component.ServicesHttp, RtcLog.Level.Trace);
+                RtcLogger.SetLogLevel(RtcLog.Component.OrtcLib, RtcLog.Level.Trace);
+
+                if (String.IsNullOrEmpty(host))
+                {
+                    RtcLogger.InstallOutgoingTelnetLogger(host + ":" + port.ToString(), true, null);
+                }
+                else {
+                    RtcLogger.UninstallOutgoingTelnetLogger();
+                }
+
+                RtcLogger.InstallTelnetLogger(port, 60, true);
+            }
         }
 
         public static void StopTracing()
         {
-            RtcLogger.UninstallOutgoingTelnetLogger();
-            RtcLogger.UninstallTelnetLogger();
+            using (var @lock = new AutoLock(Singleton._lock))
+            {
+                RtcLogger.UninstallOutgoingTelnetLogger();
+                RtcLogger.UninstallTelnetLogger();
+            }
         }
 
         public static void SynNTPTime(long current_ntp_time) { }
@@ -153,7 +170,9 @@ namespace ChatterBox.Client.Voip.Rtc
 
     internal sealed class Media
     {
-        private static Media _singleton;
+        private static Media _singleton = new Media();
+
+        private SemaphoreSlim _lock = new SemaphoreSlim(1, 1);
 
         private RtcMediaDevices _media;
 
@@ -173,8 +192,11 @@ namespace ChatterBox.Client.Voip.Rtc
         public static Media CreateMedia()
         {
             var media = new Media();
-            media._media = new RtcMediaDevices();
-            media._media.OnDeviceChange += media.Media_OnDeviceChange;
+            using (var @lock = new AutoLock(media._lock))
+            {
+                media._media = new RtcMediaDevices();
+                media._media.OnDeviceChange += media.Media_OnDeviceChange;
+            }
             return media;
         }
 
@@ -183,6 +205,7 @@ namespace ChatterBox.Client.Voip.Rtc
             var asyncOp = RtcMediaDevices.EnumerateDevices();
             asyncOp.Completed = (op, state) => {
                 var devices = op.GetResults();
+
                 List<RtcMediaDeviceInfo> audioCaptureEventList;
                 List<RtcMediaDeviceInfo> audioCaptureReplacementList;
                 RtcHelper.CalculateDeltas(RtcMediaDeviceKind.AudioInput, _audioCaptureDevices, devices, out audioCaptureEventList, out audioCaptureReplacementList);
@@ -195,18 +218,24 @@ namespace ChatterBox.Client.Voip.Rtc
                 List<RtcMediaDeviceInfo> videoReplacementList;
                 RtcHelper.CalculateDeltas(RtcMediaDeviceKind.Video, _videoDevices, devices, out videoEventList, out videoReplacementList);
 
-                foreach (var info in audioCaptureEventList)
+                using (var @lock = new AutoLock(_lock))
                 {
-                    OnAudioCaptureDeviceFound(new MediaDevice(info.DeviceID, info.Label));
-                }
-                foreach (var info in videoEventList)
-                {
-                    OnVideoCaptureDeviceFound(new MediaDevice(info.DeviceID, info.Label));
-                }
+                    Task.Run(() =>
+                    {
+                        foreach (var info in audioCaptureEventList)
+                        {
+                            OnAudioCaptureDeviceFound(new MediaDevice(info.DeviceID, info.Label));
+                        }
+                        foreach (var info in videoEventList)
+                        {
+                            OnVideoCaptureDeviceFound(new MediaDevice(info.DeviceID, info.Label));
+                        }
+                    });
 
-                _audioCaptureDevices = audioCaptureReplacementList;
-                _audioPlaybackDevices = audioPlaybackReplacementList;
-                _videoDevices = videoReplacementList;
+                    _audioCaptureDevices = audioCaptureReplacementList;
+                    _audioPlaybackDevices = audioPlaybackReplacementList;
+                    _videoDevices = videoReplacementList;
+                }
             };
             throw new NotImplementedException();
         }
@@ -238,47 +267,96 @@ namespace ChatterBox.Client.Voip.Rtc
                 var audioPlaybackList = RtcHelper.Filter(RtcMediaDeviceKind.AudioOutput, devices);
                 var videoList = RtcHelper.Filter(RtcMediaDeviceKind.Video, devices);
 
-                _audioCaptureDevices = audioCaptureList;
-                _audioPlaybackDevices = audioPlaybackList;
-                _videoDevices = videoList;
+                using (var @lock = new AutoLock(_lock))
+                {
+                    _audioCaptureDevices = audioCaptureList;
+                    _audioPlaybackDevices = audioPlaybackList;
+                    _videoDevices = videoList;
+                }
 
                 return devices.Count > 0;
             }).AsAsyncOperation();
         }
 
 
-        public IList<MediaDevice> GetAudioCaptureDevices() { return RtcHelper.ToMediaDevices(_audioCaptureDevices); }
-        public IList<MediaDevice> GetAudioPlayoutDevices() { return RtcHelper.ToMediaDevices(_audioPlaybackDevices); }
+        public IList<MediaDevice> GetAudioCaptureDevices() {
+            IList<RtcMediaDeviceInfo> result = null;
+            using (var @lock = new AutoLock(_lock))
+            {
+                result = _audioCaptureDevices;
+            }
+            return RtcHelper.ToMediaDevices(result);
+        }
+        public IList<MediaDevice> GetAudioPlayoutDevices() {
+            IList<RtcMediaDeviceInfo> result = null;
+            using (var @lock = new AutoLock(_lock))
+            {
+                result = _audioPlaybackDevices;
+            }
+           return RtcHelper.ToMediaDevices(result);
+        }
 
         public IAsyncOperation<MediaStream> GetUserMedia(RTCMediaStreamConstraints mediaStreamConstraints)
         {
+            MediaDevice audioCaptureDevice = null;
+            MediaDevice videoDevice = null;
+            using (var @lock = new AutoLock(_lock))
+            {
+                audioCaptureDevice = _audioCaptureDevice;
+                videoDevice = _videoDevice;
+            }
+
             return Task.Run<MediaStream>(async () =>
             {
-                var constraints = RtcHelper.MakeConstraints(mediaStreamConstraints.audioEnabled, null, RtcMediaDeviceKind.AudioInput, _audioCaptureDevice);
-                constraints = RtcHelper.MakeConstraints(mediaStreamConstraints.videoEnabled, constraints, RtcMediaDeviceKind.Video, _videoDevice);
+                var constraints = RtcHelper.MakeConstraints(mediaStreamConstraints.audioEnabled, null, RtcMediaDeviceKind.AudioInput, audioCaptureDevice);
+                constraints = RtcHelper.MakeConstraints(mediaStreamConstraints.videoEnabled, constraints, RtcMediaDeviceKind.Video, videoDevice);
 
                 if (null == constraints) { return new MediaStream(); }
 
                 var tracks = await RtcMediaDevices.GetUserMedia(constraints);
 
-                var audioTracks = RtcHelper.InsertAudioIfValid(mediaStreamConstraints.audioEnabled, null, tracks, _audioCaptureDevice);
-                var videoTracks = RtcHelper.InsertVideoIfValid(mediaStreamConstraints.videoEnabled, null, tracks, _videoDevice);
+                var audioTracks = RtcHelper.InsertAudioIfValid(mediaStreamConstraints.audioEnabled, null, tracks, audioCaptureDevice);
+                var videoTracks = RtcHelper.InsertVideoIfValid(mediaStreamConstraints.videoEnabled, null, tracks, videoDevice);
 
                 return new MediaStream(audioTracks, videoTracks);
             }).AsAsyncOperation();
         }
-        public IList<MediaDevice> GetVideoCaptureDevices() { return RtcHelper.ToMediaDevices(_videoDevices); }
-        public bool SelectAudioDevice(MediaDevice device) { _audioCaptureDevice = device; return true; }
-        public bool SelectAudioPlayoutDevice(MediaDevice device)
-        {
-            _audioPlaybackDevice = device;
+        public IList<MediaDevice> GetVideoCaptureDevices() {
+            IList<RtcMediaDeviceInfo> result = null;
+            using (var @lock = new AutoLock(_lock))
+            {
+                result = _videoDevices;
+            }
+            return RtcHelper.ToMediaDevices(result);
+        }
+        public bool SelectAudioDevice(MediaDevice device) {
+            using (var @lock = new AutoLock(_lock))
+            {
+                _audioCaptureDevice = device;
+            }
             return true;
         }
-        public void SelectVideoDevice(MediaDevice device) { _videoDevice = device; }
+        public bool SelectAudioPlayoutDevice(MediaDevice device)
+        {
+            using (var @lock = new AutoLock(_lock))
+            {
+                _audioPlaybackDevice = device;
+            }
+            return true;
+        }
+        public void SelectVideoDevice(MediaDevice device)
+        {
+            using (var @lock = new AutoLock(_lock))
+            {
+                _videoDevice = device;
+            }
+        }
     }
 
     internal sealed class RTCPeerConnection
     {
+        private SemaphoreSlim _lock = new SemaphoreSlim(1, 1);
+
         private bool _closed = false;
         private RtcIceGatherer _iceGatherer;
         private RtcIceTransport _iceTransport;
@@ -306,18 +384,25 @@ namespace ChatterBox.Client.Voip.Rtc
 
         public RTCPeerConnection(RTCConfiguration configuration)
         {
-            _installedIceEvents = false;
-
             var options = RtcHelper.ToGatherOptions(configuration);
-            _iceGatherer = new RtcIceGatherer(options);
-            _iceTransport = new RtcIceTransport(_iceGatherer);
 
-            OnStep += RTCPeerConnection_OnStep;
+            using (var @lock = new AutoLock(_lock))
+            {
+                _installedIceEvents = false;
+
+                _iceGatherer = new RtcIceGatherer(options);
+                _iceTransport = new RtcIceTransport(_iceGatherer);
+
+                OnStep += RTCPeerConnection_OnStep;
+            }
 
             RtcCertificate.GenerateCertificate("").AsTask<RtcCertificate>().ContinueWith((cert) =>
             {
-                _dtlsTransport = new RtcDtlsTransport(_iceTransport, cert.Result);
-                if (_closed) _dtlsTransport.Stop();
+                using (var @lock = new AutoLock(_lock))
+                {
+                    _dtlsTransport = new RtcDtlsTransport(_iceTransport, cert.Result);
+                    if (_closed) _dtlsTransport.Stop();
+                }
                 Wake();
             });
         }
@@ -329,15 +414,18 @@ namespace ChatterBox.Client.Voip.Rtc
 
         private void RTCPeerConnection_OnStep()
         {
-            if (_closed)
+            using (var @lock = new AutoLock(_lock))
             {
-                Close();
-                return;
+                if (_closed)
+                {
+                    Close();
+                    return;
+                }
+                if (null == _dtlsTransport) return;
+                StepGetCapabilities();
+                StepSetupReceiver();
+                StepSetupSender();
             }
-            if (null == _dtlsTransport) return;
-            StepGetCapabilities();
-            StepSetupReceiver();
-            StepSetupSender();
         }
 
         private void StepGetCapabilities()
@@ -483,14 +571,18 @@ namespace ChatterBox.Client.Voip.Rtc
 
         public void SelectAudioPlayoutDevice(MediaDevice device)
         {
-            _audioPlaybackDevice = device;
-            if (null == device) return;
-            if (null == _audioReceiver) return;
+            RtcMediaStreamTrack track = null;
 
-            var track = _audioReceiver.Track;
+            using (var @lock = new AutoLock(_lock))
+            {
+                _audioPlaybackDevice = device;
+                if (null == device) return;
+                if (null == _audioReceiver) return;
+
+                track = _audioReceiver.Track;
+            }
+
             if (null == track) return;
-
-            //var constraints = new RtcMediaTrackConstraints();
 
             var constraints = RtcHelper.MakeConstraints(true, null, RtcMediaDeviceKind.AudioOutput, device);
 
@@ -511,17 +603,23 @@ namespace ChatterBox.Client.Voip.Rtc
         {
             add
             {
-                if (!_installedIceEvents)
+                using (var @lock = new AutoLock(_lock))
                 {
-                    _iceGatherer.OnICEGathererLocalCandidate += IceGatherer_OnICEGathererLocalCandidate;
-                    _iceGatherer.OnICEGathererCandidateComplete += IceGatherer_OnICEGathererCandidateComplete;
-                    _iceGatherer.OnICEGathererLocalCandidateGone += IceGatherer_OnICEGathererLocalCandidateGone;
+                    if (!_installedIceEvents)
+                    {
+                        _iceGatherer.OnICEGathererLocalCandidate += IceGatherer_OnICEGathererLocalCandidate;
+                        _iceGatherer.OnICEGathererCandidateComplete += IceGatherer_OnICEGathererCandidateComplete;
+                        _iceGatherer.OnICEGathererLocalCandidateGone += IceGatherer_OnICEGathererLocalCandidateGone;
+                    }
+                    return _onIceCandidate.AddEventHandler(value);
                 }
-                return _onIceCandidate.AddEventHandler(value);
             }
             remove
             {
-                _onIceCandidate.RemoveEventHandler(value);
+                using (var @lock = new AutoLock(_lock))
+                {
+                    _onIceCandidate.RemoveEventHandler(value);
+                }
             }
         }
 
@@ -529,7 +627,15 @@ namespace ChatterBox.Client.Voip.Rtc
         {
             RTCPeerConnectionIceEvent wrapperEvt = new RTCPeerConnectionIceEvent();
             wrapperEvt.Candidate = evt.Candidate;
-            _onIceCandidate.InvocationList.Invoke(wrapperEvt);
+
+            RTCPeerConnectionIceEventDelegate invokeList = null;
+
+            using (var @lock = new AutoLock(_lock))
+            {
+                invokeList = _onIceCandidate.InvocationList;
+            }
+
+            invokeList.Invoke(wrapperEvt);
         }
 
         private void IceGatherer_OnICEGathererCandidateComplete(RtcIceGathererCandidateCompleteEvent evt)
@@ -558,7 +664,10 @@ namespace ChatterBox.Client.Voip.Rtc
 
         public void AddStream(MediaStream stream)
         {
-            _localStream = stream;
+            using (var @lock = new AutoLock(_lock))
+            {
+                _localStream = stream;
+            }
             Wake();
         }
 
@@ -566,44 +675,56 @@ namespace ChatterBox.Client.Voip.Rtc
         {
             _iceGatherer.Close();
             _iceTransport.Stop();
-            if (null != _dtlsTransport) _dtlsTransport.Stop();
-            if (null != _capabilitiesTcs)
+
+            using (var @lock = new AutoLock(_lock))
             {
-                _capabilitiesTcs.SetResult(null);
-                _capabilitiesTcs = null;
+                if (null != _dtlsTransport) _dtlsTransport.Stop();
+                if (null != _capabilitiesTcs)
+                {
+                    _capabilitiesTcs.SetResult(null);
+                    _capabilitiesTcs = null;
+                }
+                if (null != _capabilitiesFinalTcs)
+                {
+                    _capabilitiesFinalTcs.SetResult(null);
+                    _capabilitiesFinalTcs = null;
+                }
+                if (null != _remoteCapabilitiesTcs)
+                {
+                    _remoteCapabilitiesTcs.SetResult(null);
+                    _remoteCapabilitiesTcs = null;
+                }
+                if (null != _remoteStream) { _remoteStream.Stop(); }
+                if (null != _audioSender) { _audioSender.Stop(); }
+                if (null != _videoSender) { _videoSender.Stop(); }
+                if (null != _audioReceiver) { _audioReceiver.Stop(); }
+                if (null != _videoReceiver) { _videoReceiver.Stop(); }
             }
-            if (null != _capabilitiesFinalTcs)
-            {
-                _capabilitiesFinalTcs.SetResult(null);
-                _capabilitiesFinalTcs = null;
-            }
-            if (null != _remoteCapabilitiesTcs)
-            {
-                _remoteCapabilitiesTcs.SetResult(null);
-                _remoteCapabilitiesTcs = null;
-            }
-            if (null != _remoteStream) {_remoteStream.Stop();}
-            if (null != _audioSender) { _audioSender.Stop(); }
-            if (null != _videoSender) { _videoSender.Stop(); }
-            if (null != _audioReceiver) { _audioReceiver.Stop(); }
-            if (null != _videoReceiver) { _videoReceiver.Stop(); }
         }
 
         public IAsyncOperation<RTCSessionDescription> CreateAnswer()
         {
-            _iceRole = RtcIceRole.Controlled;
-            _capabilitiesTcs = new TaskCompletionSource<RTCSessionDescription>();
+            var capabilitiesTcs = new TaskCompletionSource<RTCSessionDescription>();
+            using (var @lock = new AutoLock(_lock))
+            {
+                _iceRole = RtcIceRole.Controlled;
+                _capabilitiesTcs = capabilitiesTcs;
+            }
             Wake();
-            return _capabilitiesTcs.Task.AsAsyncOperation();
+            return capabilitiesTcs.Task.AsAsyncOperation();
         }
 
         //public RTCDataChannel CreateDataChannel(string label, RTCDataChannelInit init) { return null; }
         public IAsyncOperation<RTCSessionDescription> CreateOffer()
         {
-            _iceRole = RtcIceRole.Controlling;
-            _capabilitiesTcs = new TaskCompletionSource<RTCSessionDescription>();
+            var capabilitiesTcs = new TaskCompletionSource<RTCSessionDescription>();
+            using (var @lock = new AutoLock(_lock))
+            {
+                _iceRole = RtcIceRole.Controlling;
+                _capabilitiesTcs = capabilitiesTcs;
+            }
             Wake();
-            return _capabilitiesTcs.Task.AsAsyncOperation();
+            return capabilitiesTcs.Task.AsAsyncOperation();
         }
         //public RTCConfiguration GetConfiguration() { return null; }
         //public IList<MediaStream> GetLocalStreams() { return null; }
@@ -612,17 +733,25 @@ namespace ChatterBox.Client.Voip.Rtc
         //public void RemoveStream(MediaStream stream) { }
         public IAsyncAction SetLocalDescription(RTCSessionDescription description)
         {
-            _localCapabilitiesFinal = description;
-            _capabilitiesFinalTcs = new TaskCompletionSource<RTCSessionDescription>();
+            var capabilitiesFinalTcs = new TaskCompletionSource<RTCSessionDescription>();
+            using (var @lock = new AutoLock(_lock))
+            {
+                _localCapabilitiesFinal = description;
+                _capabilitiesFinalTcs = capabilitiesFinalTcs;
+            }
             Wake();
-            return _capabilitiesFinalTcs.Task.AsAsyncAction();
+            return capabilitiesFinalTcs.Task.AsAsyncAction();
         }
         public IAsyncAction SetRemoteDescription(RTCSessionDescription description)
         {
-            _remoteCapabilities = description;
-            _remoteCapabilitiesTcs = new TaskCompletionSource<RTCSessionDescription>();
+            var remoteCapabilitiesTcs = new TaskCompletionSource<RTCSessionDescription>();
+            using (var @lock = new AutoLock(_lock))
+            {
+                _remoteCapabilities = description;
+                _remoteCapabilitiesTcs = remoteCapabilitiesTcs;
+            }
             Wake();
-            return _capabilitiesFinalTcs.Task.AsAsyncAction();
+            return remoteCapabilitiesTcs.Task.AsAsyncAction();
         }
         //public void ToggleConnectionHealthStats(bool enable) { }
         //public void ToggleETWStats(bool enable) { }
@@ -1254,9 +1383,6 @@ namespace ChatterBox.Client.Voip.Rtc
             RTCSessionDescription remoteCapabiliites
             )
         {
-#warning TODO NEED IMPLEMENTATION PickLocalCodecBasedOnRemote
-            throw new NotImplementedException();
-
             PickLocalCodecBasedOnRemote(localCapabiliites.Description.AudioReceiverCapabilities, remoteCapabiliites.Description.AudioReceiverCapabilities);
             PickLocalCodecBasedOnRemote(localCapabiliites.Description.VideoReceiverCapabilities, remoteCapabiliites.Description.VideoReceiverCapabilities);
             PickLocalCodecBasedOnRemote(localCapabiliites.Description.AudioSenderCapabilities, remoteCapabiliites.Description.AudioSenderCapabilities);
