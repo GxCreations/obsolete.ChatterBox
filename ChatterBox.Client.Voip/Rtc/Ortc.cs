@@ -824,7 +824,12 @@ namespace ChatterBox.Client.Voip.Rtc
 
     internal sealed class CodecInfo
     {
-        public CodecInfo(int id, int clockrate, string name) { }
+        public CodecInfo(int id, int clockrate, string name)
+        {
+            Id = id;
+            Clockrate = clockrate;
+            Name = name;
+        }
 
         public int Clockrate { get; set; }
         public int Id { get; set; }
