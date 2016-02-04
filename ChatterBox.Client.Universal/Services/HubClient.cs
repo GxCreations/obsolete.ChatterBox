@@ -292,6 +292,11 @@ namespace ChatterBox.Client.Universal.Services
             RunOnUiThread(() => OnFrameFormatUpdate?.Invoke(frameFormat));
         }
 
+        public void OnUpdateFrameRate(FrameRate frameRate)
+        {
+            RunOnUiThread(() => OnFrameRateUpdate?.Invoke(frameRate));
+        }
+
         public ForegroundState GetForegroundState()
         {
             return new ForegroundState { IsForegroundVisible = true };
@@ -313,6 +318,7 @@ namespace ChatterBox.Client.Universal.Services
         public event Action OnRelayMessagesUpdated;
         public event Action<VoipState> OnVoipStateUpdate;
         public event Action<FrameFormat> OnFrameFormatUpdate;
+        public event Action<FrameRate> OnFrameRateUpdate;
         public event Func<string> GetShownUser;
 
         #endregion

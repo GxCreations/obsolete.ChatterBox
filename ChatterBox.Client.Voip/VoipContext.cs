@@ -40,6 +40,9 @@ namespace ChatterBox.Client.Common.Communication.Voip
         private IHub _hub;
         private ApplicationDataContainer _localSettings;
 
+        public const string LocalMediaStreamId = "LOCAL";
+        public const string PeerMediaStreamId = "PEER";
+
         public VoipContext(IHub hub,
                            CoreDispatcher dispatcher,
                            Func<IVideoRenderHelper> renderResolver,
@@ -302,18 +305,29 @@ namespace ChatterBox.Client.Common.Communication.Voip
 
             ResolutionHelper.ResolutionChanged += (id, width, height) =>
             {
-                if (id == "LOCAL")
+                if (id == LocalMediaStreamId)
                 {
                     LocalVideoRenderer.ResolutionChanged(width, height);
                 }
-                else if (id == "PEER")
+                else if (id == PeerMediaStreamId)
                 {
                     RemoteVideoRenderer.ResolutionChanged(width, height);
                 }
             };
+
+            FrameCounterHelper.FramesPerSecondChanged += (id, frameRate) =>
+            {
+                if (id == LocalMediaStreamId)
+                {
+                    LocalVideo_FrameRateUpdate(frameRate);
+                }
+                else if (id == PeerMediaStreamId)
+                {
+                    RemoteVideo_FrameRateUpdate(frameRate);
+                }
+            };
         }
-
-
+        
         private ThreadPoolTimer _appPerfTimer = null;
 
         private void AppPerformanceCheck()
@@ -347,6 +361,16 @@ namespace ChatterBox.Client.Common.Communication.Voip
                 });
         }
 
+        private void LocalVideo_FrameRateUpdate(string fpsValue)
+        {
+            _hub.OnUpdateFrameRate(
+                new FrameRate()
+                {
+                    IsLocal = true,
+                    FPS = fpsValue
+                });
+        }
+
         private void RemoteVideoRenderer_RenderFormatUpdate(long swapChainHandle, uint width, uint height)
         {
             _hub.OnUpdateFrameFormat(
@@ -356,6 +380,16 @@ namespace ChatterBox.Client.Common.Communication.Voip
                     SwapChainHandle = swapChainHandle,
                     Width = width,
                     Height = height
+                });
+        }
+
+        private void RemoteVideo_FrameRateUpdate(string fpsValue)
+        {
+            _hub.OnUpdateFrameRate(
+                new FrameRate()
+                {
+                    IsLocal = false,
+                    FPS = fpsValue
                 });
         }
 

@@ -14,6 +14,7 @@ namespace ChatterBox.Client.Win8dot1.Services
         public event Action OnRelayMessagesUpdated;
         public event Action<VoipState> OnVoipStateUpdate;
         public event Action<FrameFormat> OnFrameFormatUpdate;
+        public event Action<FrameRate> OnFrameRateUpdate;
         public event Func<string> GetShownUser;
 
         private CoreDispatcher _uiDispatcher;
@@ -53,6 +54,11 @@ namespace ChatterBox.Client.Win8dot1.Services
             RunOnUiThread(() => OnFrameFormatUpdate?.Invoke(frameFormat));
         }
 
+        public void OnUpdateFrameRate(FrameRate frameRate)
+        {
+            RunOnUiThread(() => OnFrameRateUpdate?.Invoke(frameRate));
+        }
+        
         public ForegroundState GetForegroundState()
         {
             return new ForegroundState { IsForegroundVisible = true };
