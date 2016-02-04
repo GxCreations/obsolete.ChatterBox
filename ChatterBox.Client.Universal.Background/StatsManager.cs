@@ -107,7 +107,7 @@ namespace ChatterBox.Client.Universal.Background
                     IDictionary<RtcStatsValueName, Object> statValues = report.Values;
                     if (statValues.Keys.Contains(RtcStatsValueName.StatsValueNameTrackId))
                     {
-                        string trackId = statValues[RTCStatsValueName.StatsValueNameTrackId].ToString();
+                        string trackId = statValues[RtcStatsValueName.StatsValueNameTrackId].ToString();
                         if (trackId.StartsWith("audio_label"))
                         {
                             if (statValues.Keys.Contains(RtcStatsValueName.StatsValueNamePacketsSent)) {
