@@ -289,6 +289,8 @@
                                                                             <Run Text="{Binding RemoteNativeVideoSize.Width}"/>
                                                                             <Run Text="x"/>
                                                                             <Run Text="{Binding RemoteNativeVideoSize.Height}"/>
+                                                                            <Run Text="@"/>
+                                                                            <Run Text="{Binding RemoteFrameRate}"/>
                                                                         </TextBlock>
                                                                     </StackPanel>
                                                                     <Image HorizontalAlignment="Right" VerticalAlignment="Bottom" 
@@ -309,6 +311,8 @@
                                                                                 <Run Text="{Binding LocalNativeVideoSize.Width}"/>
                                                                                 <Run Text="x"/>
                                                                                 <Run Text="{Binding LocalNativeVideoSize.Height}"/>
+                                                                                <Run Text="@"/>
+                                                                                <Run Text="{Binding LocalFrameRate}"/>
                                                                             </TextBlock>
                                                                         </StackPanel>
                                                                     </Grid>
