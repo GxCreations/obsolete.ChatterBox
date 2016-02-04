@@ -140,7 +140,7 @@ namespace ChatterBox.Client.Common.Communication.Voip.States
 #else
                 var source = Context.Media.CreateMediaStreamSource(tracks[0], 30, VoipContext.PeerMediaStreamId);
 #endif
-                Context.RemoteVideoRenderer.SetupRenderer(Context.ForegroundProcessId, source);
+                Context.RemoteVideoRenderer.SetupRenderer(Context.ForegroundProcessId, source, Context.RemoteVideoControlSize);
             }
             // TODO: Delay here prevents a crash in the MF media engine when setting up the second
             //       renderer.  Investigate why this is happening.  Occurred 100% of the time.
@@ -158,7 +158,7 @@ namespace ChatterBox.Client.Common.Communication.Voip.States
 #else
                 var source = Context.Media.CreateMediaStreamSource(tracks[0], 30, VoipContext.LocalMediaStreamId);
 #endif
-                Context.LocalVideoRenderer.SetupRenderer(Context.ForegroundProcessId, source);
+                Context.LocalVideoRenderer.SetupRenderer(Context.ForegroundProcessId, source, Context.LocalVideoControlSize);
             }
         }
     }

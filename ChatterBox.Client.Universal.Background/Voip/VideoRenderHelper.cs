@@ -16,9 +16,10 @@ namespace ChatterBox.Client.Universal.Background.Voip
             _renderer.RenderFormatUpdate += (a, b, c) => RenderFormatUpdate(a, b, c);
         }
 
-        public void SetupRenderer(uint foregroundProcessId, IMediaSource source)
+        public void SetupRenderer(uint foregroundProcessId, IMediaSource source,
+            Windows.Foundation.Size videoControlSize)
         {
-            _renderer.SetupRenderer(foregroundProcessId, source);
+            _renderer.SetupRenderer(foregroundProcessId, source, videoControlSize);
             _isSetup = true;
         }
 
