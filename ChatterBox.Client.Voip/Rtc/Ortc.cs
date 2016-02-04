@@ -143,7 +143,7 @@ namespace ChatterBox.Client.Voip.Rtc
                 RtcLogger.SetLogLevel(RtcLog.Component.ServicesHttp, RtcLog.Level.Trace);
                 RtcLogger.SetLogLevel(RtcLog.Component.OrtcLib, RtcLog.Level.Trace);
 
-                if (String.IsNullOrEmpty(host))
+                if (!String.IsNullOrEmpty(host))
                 {
                     RtcLogger.InstallOutgoingTelnetLogger(host + ":" + port.ToString(), true, null);
                 }
