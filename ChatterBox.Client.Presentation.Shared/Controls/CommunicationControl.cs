@@ -13,7 +13,6 @@ namespace ChatterBox.Client.Presentation.Shared.Controls
             Conversations = new ObservableCollection<IConversation>();
         }
 
-
         /// <summary>
         /// The <see cref="Conversations" /> dependency property's name.
         /// </summary>
@@ -40,10 +39,10 @@ namespace ChatterBox.Client.Presentation.Shared.Controls
         /// </summary>
         public static readonly DependencyProperty ConversationsProperty = DependencyProperty.Register(
             ConversationsPropertyName,
-            typeof(IEnumerable<IConversation>),
+            typeof(object), // a bug prevents using typeof(IEnumerable) and binding to an implementation of IEnumerable
+                            // happens only on win8.1
             typeof(CommunicationControl),
             new PropertyMetadata(null));
-
 
         /// <summary>
             /// The <see cref="SelectedConversation" /> dependency property's name.
@@ -71,7 +70,8 @@ namespace ChatterBox.Client.Presentation.Shared.Controls
         /// </summary>
         public static readonly DependencyProperty SelectedConversationProperty = DependencyProperty.Register(
             SelectedConversationPropertyName,
-            typeof(IConversation),
+            typeof(object), // a bug prevents using typeof(IConversation) and binding to an implementation of IConversation
+                            // happens only on win8.1
             typeof(CommunicationControl),
             new PropertyMetadata(null));
 
