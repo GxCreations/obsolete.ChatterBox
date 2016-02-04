@@ -711,6 +711,8 @@ namespace ChatterBox.Client.Common.Communication.Voip
 
         public IVideoRenderHelper LocalVideoRenderer { get; private set; }
         public IVideoRenderHelper RemoteVideoRenderer { get; private set; }
+        public Windows.Foundation.Size LocalVideoControlSize { get; set; }
+        public Windows.Foundation.Size RemoteVideoControlSize { get; set; }
 
         public void ResetRenderers()
         {

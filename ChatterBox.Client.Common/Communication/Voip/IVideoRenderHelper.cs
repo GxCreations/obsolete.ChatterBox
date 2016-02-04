@@ -9,7 +9,8 @@ namespace ChatterBox.Client.Common.Communication.Voip
     public interface IVideoRenderHelper
     {
         event RenderFormatUpdateHandler RenderFormatUpdate;
-        void SetupRenderer(uint foregroundProcessId, IMediaSource source);
+        void SetupRenderer(uint foregroundProcessId, IMediaSource source,
+            Windows.Foundation.Size videoControlSize);
         void Teardown();
         bool IsRendererAlreadySetup();
 

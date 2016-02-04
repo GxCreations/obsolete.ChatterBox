@@ -187,8 +187,13 @@ namespace ChatterBox.Client.Common.Communication.Voip
         {
             Task.Run(() =>
             {
-                Context.WithState(st => {
-                    return Task.Run(() => { Context.RemoteVideoRenderer.SetDisplaySize(size.Size); });
+                Context.WithState(st =>
+                {
+                    return Task.Run(() =>
+                    {
+                        Context.RemoteVideoControlSize = size.Size;
+                        Context.RemoteVideoRenderer.SetDisplaySize(size.Size);
+                    });
                 }).Wait();
             });
         }
@@ -196,8 +201,13 @@ namespace ChatterBox.Client.Common.Communication.Voip
         {
             Task.Run(() =>
             {
-                Context.WithState(st => {
-                    return Task.Run(() => { Context.LocalVideoRenderer.SetDisplaySize(size.Size); });
+                Context.WithState(st =>
+                {
+                    return Task.Run(() =>
+                    {
+                        Context.LocalVideoControlSize = size.Size;
+                        Context.LocalVideoRenderer.SetDisplaySize(size.Size);
+                    });
                 }).Wait();
             });
         }

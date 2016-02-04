@@ -45,9 +45,11 @@ void Renderer::Teardown() {
   _streamSource = nullptr;
 }
 
-void Renderer::SetupRenderer(uint32 foregroundProcessId, Windows::Media::Core::IMediaSource^ streamSource)
+void Renderer::SetupRenderer(uint32 foregroundProcessId, Windows::Media::Core::IMediaSource^ streamSource,
+    Windows::Foundation::Size videoControlSize)
 {
     OutputDebugString(L"Renderer::SetupRenderer\n");
+    _renderControlSize = videoControlSize;
     _streamSource = streamSource;
     _foregroundProcessId = foregroundProcessId;
     SetupSchemeHandler();
