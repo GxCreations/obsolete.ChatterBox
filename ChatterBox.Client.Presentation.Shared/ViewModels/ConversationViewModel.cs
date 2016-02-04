@@ -51,6 +51,8 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
         private Size _remoteVideoControlSize;
         private Size _localNativeVideoSize;
         private Size _remoteNativeVideoSize;
+        private string _localFrameRate;
+        private string _remoteFrameRate;
         private bool _isMicEnabled;
         private bool _isVideoEnabled;
         private bool _canCloseConversation;
@@ -66,6 +68,7 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
             foregroundUpdateService.OnRelayMessagesUpdated += OnRelayMessagesUpdated;
             foregroundUpdateService.OnVoipStateUpdate += OnVoipStateUpdate;
             foregroundUpdateService.OnFrameFormatUpdate += OnFrameFormatUpdate;
+            foregroundUpdateService.OnFrameRateUpdate += OnFrameRateUpdate;
             SendInstantMessageCommand = new DelegateCommand(OnSendInstantMessageCommandExecute,
                 OnSendInstantMessageCommandCanExecute);
             AudioCallCommand = new DelegateCommand(OnCallCommandExecute, OnCallCommandCanExecute);
@@ -387,6 +390,18 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
             set { SetProperty(ref _remoteNativeVideoSize, value); }
         }
 
+        public string LocalFrameRate
+        {
+            get { return _localFrameRate; }
+            set { SetProperty(ref _localFrameRate, value); }
+        }
+
+        public string RemoteFrameRate
+        {
+            get { return _remoteFrameRate; }
+            set { SetProperty(ref _remoteFrameRate, value); }
+        }
+
         public bool IsMicrophoneEnabled
         {
             get
@@ -594,6 +609,8 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
                         IsAudioOnlyCall = !voipState.IsVideoEnabled;
                         LocalNativeVideoSize = new Size(0, 0);
                         RemoteNativeVideoSize = new Size(0, 0);
+                        LocalFrameRate = "N/A";
+                        RemoteFrameRate = "N/A";
                     }
                     else
                     {
@@ -608,6 +625,8 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
                         IsVideoEnabled = voipState.IsVideoEnabled;
                         LocalNativeVideoSize = new Size(0, 0);
                         RemoteNativeVideoSize = new Size(0, 0);
+                        LocalFrameRate = "N/A";
+                        RemoteFrameRate = "N/A";
                     }
                     else
                     {
@@ -685,6 +704,14 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
 #endif
                 RemoteNativeVideoSize = new Size(obj.Width, obj.Height);
             }
+        }
+
+        private void OnFrameRateUpdate(FrameRate obj)
+        {
+            if (obj.IsLocal)
+                LocalFrameRate = obj.FPS;
+            else
+                RemoteFrameRate = obj.FPS;
         }
 
         public override string ToString()

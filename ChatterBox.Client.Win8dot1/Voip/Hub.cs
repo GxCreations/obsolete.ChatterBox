@@ -23,8 +23,6 @@ namespace ChatterBox.Client.Win8dot1.Voip
         private SignalingClient _signalingClient;
         private IForegroundChannel _foregroundChannel;
 
-        public event Action<FrameFormat> OnFrameFormatUpdate;
-
         public Hub(IUnityContainer container)
         {
             _container = container;
@@ -94,6 +92,15 @@ namespace ChatterBox.Client.Win8dot1.Voip
                 _foregroundChannel = _container.Resolve<IForegroundChannel>();
             }
             _foregroundChannel.OnUpdateFrameFormat(frameFormat);
+        }
+
+        public void OnUpdateFrameRate(FrameRate frameRate)
+        {
+            if (_foregroundChannel == null)
+            {
+                _foregroundChannel = _container.Resolve<IForegroundChannel>();
+            }
+            _foregroundChannel.OnUpdateFrameRate(frameRate);
         }
     }
 }

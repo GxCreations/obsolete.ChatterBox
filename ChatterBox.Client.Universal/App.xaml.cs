@@ -3,9 +3,10 @@ using ChatterBox.Client.Common.Background;
 using ChatterBox.Client.Common.Communication.Foreground.Dto;
 using ChatterBox.Client.Common.Communication.Signaling;
 using ChatterBox.Client.Common.Communication.Voip;
+using ChatterBox.Client.Common.Media;
 using ChatterBox.Client.Common.Notifications;
 using ChatterBox.Client.Common.Signaling;
-using ChatterBox.Client.Common.Media;
+using ChatterBox.Client.Presentation.Shared.Controls;
 using ChatterBox.Client.Presentation.Shared.Services;
 using ChatterBox.Client.Presentation.Shared.ViewModels;
 using ChatterBox.Client.Presentation.Shared.Views;
@@ -27,8 +28,6 @@ using Windows.UI.Popups;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
-using ChatterBox.Client.Common.Avatars;
-using ChatterBox.Client.Presentation.Shared.Controls;
 
 namespace ChatterBox.Client.Universal
 {
@@ -134,6 +133,8 @@ namespace ChatterBox.Client.Universal
                 await message.ShowAsync();
                 return;
             }
+
+            await RegisterSessionConnectedTask(Container.Resolve<TaskHelper>());
 
             var rootFrame = Window.Current.Content as Frame;
 
@@ -315,7 +316,7 @@ namespace ChatterBox.Client.Universal
             client.DisplayOrientationChanged(sender.CurrentOrientation);
         }
 
-        private static async System.Threading.Tasks.Task RegisterForPush(TaskHelper helper, bool registerAgain = true)
+        private static async Task RegisterForPush(TaskHelper helper, bool registerAgain = true)
         {
             try
             {
@@ -354,14 +355,23 @@ namespace ChatterBox.Client.Universal
                 regOp.Unregister(true);
         }
 
-        private static async System.Threading.Tasks.Task<IBackgroundTaskRegistration> RegisterSignalingTask(TaskHelper helper, bool registerAgain = true)
+        private static async Task<IBackgroundTaskRegistration> RegisterSignalingTask(TaskHelper helper, bool registerAgain = true)
         {
             var signalingTask = helper.GetTask(nameof(SignalingTask)) ??
                     await helper.RegisterTask(nameof(SignalingTask), typeof(SignalingTask).FullName,
                             new SocketActivityTrigger(), registerAgain).AsTask();
 
             return signalingTask;
+        }
 
+        private static async Task<IBackgroundTaskRegistration> RegisterSessionConnectedTask(TaskHelper helper)
+        {
+            var sessionConnTask = helper.GetTask(nameof(SessionConnectedTask)) ??
+                await helper.RegisterTask(nameof(SessionConnectedTask),
+                                          typeof(SessionConnectedTask).FullName,
+                                          new SystemTrigger(SystemTriggerType.SessionConnected, oneShot: false),
+                                          removeIfRegistered: false);
+            return sessionConnTask;
         }
 
         public async void ShowDialog(string message)

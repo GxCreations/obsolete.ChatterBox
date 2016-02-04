@@ -44,6 +44,10 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
                 {
                     OnRegistered?.Invoke();
                 }
+                else
+                {
+                    _connection.Register();
+                }
             }
             else
             {

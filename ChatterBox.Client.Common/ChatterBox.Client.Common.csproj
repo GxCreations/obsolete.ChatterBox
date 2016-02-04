@@ -90,6 +90,7 @@
   <ItemGroup>
     <Compile Include="Communication\Foreground\Dto\ForegroundState.cs" />
     <Compile Include="Communication\Foreground\Dto\FrameFormat.cs" />
+    <Compile Include="Communication\Foreground\Dto\FrameRate.cs" />
     <Compile Include="Communication\Foreground\Dto\VoipState.cs" />
     <Compile Include="Communication\Foreground\IForegroundChannel.cs" />
     <Compile Include="Communication\Signaling\Dto\ConnectionOwner.cs" />

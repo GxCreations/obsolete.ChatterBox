@@ -20,7 +20,8 @@ namespace ChatterBox.Client.Win8dot1.Voip
             _mediaElement = mediaElement;
         }
 
-        public void SetupRenderer(uint foregroundProcessId, IMediaSource source)
+        public void SetupRenderer(uint foregroundProcessId, IMediaSource source,
+            Windows.Foundation.Size videoControlSize)
         {
             if (_mediaElement != null)
             {

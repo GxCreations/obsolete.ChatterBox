@@ -95,11 +95,11 @@ namespace ChatterBox.Client.Common.Communication.Voip.States
             if (tracks.Count > 0)
             {
 #if WIN10
-                var source = Context.Media.CreateMediaSource(tracks[0], "LOCAL");
+                var source = Context.Media.CreateMediaSource(tracks[0], VoipContext.LocalMediaStreamId);
 #else
-                var source = Context.Media.CreateMediaStreamSource(tracks[0], 30, "LOCAL");
+                var source = Context.Media.CreateMediaStreamSource(tracks[0], 30, VoipContext.LocalMediaStreamId);
 #endif
-                Context.LocalVideoRenderer.SetupRenderer(Context.ForegroundProcessId, source);
+                Context.LocalVideoRenderer.SetupRenderer(Context.ForegroundProcessId, source, Context.LocalVideoControlSize);
             }
 
             Context.SendToPeer(RelayMessageTags.SdpOffer, sdpOffer.Sdp);
@@ -112,11 +112,11 @@ namespace ChatterBox.Client.Common.Communication.Voip.States
             if (tracks.Count > 0)
             {
 #if WIN10
-                var source = Context.Media.CreateMediaSource(tracks[0], "PEER");
+                var source = Context.Media.CreateMediaSource(tracks[0], VoipContext.PeerMediaStreamId);
 #else
-                var source = Context.Media.CreateMediaStreamSource(tracks[0], 30, "PEER");
+                var source = Context.Media.CreateMediaStreamSource(tracks[0], 30, VoipContext.PeerMediaStreamId);
 #endif
-                Context.RemoteVideoRenderer.SetupRenderer(Context.ForegroundProcessId, source);
+                Context.RemoteVideoRenderer.SetupRenderer(Context.ForegroundProcessId, source, Context.RemoteVideoControlSize);
             }
         }
 
