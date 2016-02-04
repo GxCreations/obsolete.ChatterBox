@@ -113,6 +113,21 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
       SignalingSettings.AppInsightsEnabled = AppInsightsEnabled;
 #endif
 
+            if (NtpServerIP!=null)
+            {
+                _localSettings.Values[nameof(NtpServerIP)] = NtpServerIP;
+            }
+
+            if (RTCTraceServerIp != null)
+            {
+                _localSettings.Values[nameof(RTCTraceServerIp)] = RTCTraceServerIp;
+            }
+
+            if (RTCTraceServerPort != null)
+            {
+                _localSettings.Values[nameof(RTCTraceServerPort)] = RTCTraceServerPort;
+            }
+
             if (SelectedCamera != null)
             {
                 _mediaSettings.SetVideoDevice(SelectedCamera);
@@ -176,6 +191,20 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
 #if WIN10
             AppInsightsEnabled = SignalingSettings.AppInsightsEnabled;
 #endif
+            if (_localSettings.Values[nameof(NtpServerIP)] != null)
+            {
+                NtpServerIP = (string)_localSettings.Values[nameof(NtpServerIP)];
+            }
+
+            if (_localSettings.Values[nameof(RTCTraceServerIp)] != null)
+            {
+                RTCTraceServerIp = (string)_localSettings.Values[nameof(RTCTraceServerIp)];
+            }
+
+            if (_localSettings.Values[nameof(RTCTraceServerPort)] != null)
+            {
+                RTCTraceServerPort = (string)_localSettings.Values[nameof(RTCTraceServerPort)];
+            }
 
             Cameras = new ObservableCollection<MediaDevice>(_mediaSettings.GetVideoCaptureDevices().Devices);
             if (_localSettings.Values[nameof(SelectedCamera)] != null)
