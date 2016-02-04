@@ -78,6 +78,7 @@ namespace ChatterBox.Client.Voip.Rtc
     internal delegate void ResolutionChangedEventHandler(string id, uint width, uint height);
     internal delegate void RTCPeerConnectionHealthStatsDelegate(RTCPeerConnectionHealthStats param);
     internal delegate void StepEventHandler();
+    internal delegate void FramesPerSecondChangedEventHandler(string id, string fps);
 
     //using EventDelegate = webrtc_winrt_api.EventDelegate;
     //using RTCDataChannelMessageEventDelegate = webrtc_winrt_api.RTCDataChannelMessageEventDelegate;
@@ -1345,6 +1346,13 @@ namespace ChatterBox.Client.Voip.Rtc
         //public ResolutionHelper() { }
 
         public static event ResolutionChangedEventHandler ResolutionChanged;
+    }
+
+    internal sealed class FrameCounterHelper
+    {
+        public FrameCounterHelper() { }
+
+        public static event FramesPerSecondChangedEventHandler FramesPerSecondChanged;
     }
 
     internal sealed class Helper
