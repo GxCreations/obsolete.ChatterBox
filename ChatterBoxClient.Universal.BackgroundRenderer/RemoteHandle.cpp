@@ -24,22 +24,26 @@ RemoteHandle& RemoteHandle::AssignHandle(HANDLE localHandle, DWORD processId)
 {
     if (localHandle != _localHandle)
     {
-        HANDLE remoteHandle;
+        HANDLE remoteHandle = INVALID_HANDLE_VALUE;
         HANDLE processHandle = _processHandle;
-        if (processId != _processId)
+        bool newProcessHandle = false;
+        if ((processId != _processId) || (_processHandle == INVALID_HANDLE_VALUE))
         {
+            newProcessHandle = true;
             processHandle = OpenProcess(PROCESS_DUP_HANDLE, TRUE, processId);
             if ((processHandle == nullptr) || (processHandle == INVALID_HANDLE_VALUE))
             {
-                throw std::exception();
+                processHandle = INVALID_HANDLE_VALUE;
             }
         }
-        if (!DuplicateHandle(GetCurrentProcess(), localHandle, processHandle, &remoteHandle, 0, TRUE, DUPLICATE_SAME_ACCESS))
+        if ((processHandle != INVALID_HANDLE_VALUE) &&
+            (!DuplicateHandle(GetCurrentProcess(),
+                localHandle, processHandle, &remoteHandle, 0, TRUE, DUPLICATE_SAME_ACCESS)))
         {
-            throw std::exception();
+            remoteHandle = INVALID_HANDLE_VALUE;
         }
         Close();
-        if (processId != _processId)
+        if (newProcessHandle)
         {
             if (_processHandle != INVALID_HANDLE_VALUE)
             {
@@ -98,6 +102,13 @@ RemoteHandle& RemoteHandle::DetachMove(RemoteHandle& destRemoteHandle)
     _processId = 0;
     _processHandle = INVALID_HANDLE_VALUE;
     return *this;
+}
+
+HANDLE RemoteHandle::DetechLocalHandle()
+{
+    HANDLE handle = _localHandle;
+    _localHandle = INVALID_HANDLE_VALUE;
+    return handle;
 }
 
 bool RemoteHandle::IsValid() const

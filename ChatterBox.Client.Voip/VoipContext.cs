@@ -349,7 +349,7 @@ namespace ChatterBox.Client.Common.Communication.Voip
         }
 
 
-        private void LocalVideoRenderer_RenderFormatUpdate(long swapChainHandle, uint width, uint height)
+        private void LocalVideoRenderer_RenderFormatUpdate(long swapChainHandle, uint width, uint height, uint foregroundProcessId)
         {
             _hub.OnUpdateFrameFormat(
                 new FrameFormat()
@@ -357,7 +357,8 @@ namespace ChatterBox.Client.Common.Communication.Voip
                     IsLocal = true,
                     SwapChainHandle = swapChainHandle,
                     Width = width,
-                    Height = height
+                    Height = height,
+                    ForegroundProcessId = foregroundProcessId
                 });
         }
 
@@ -371,7 +372,7 @@ namespace ChatterBox.Client.Common.Communication.Voip
                 });
         }
 
-        private void RemoteVideoRenderer_RenderFormatUpdate(long swapChainHandle, uint width, uint height)
+        private void RemoteVideoRenderer_RenderFormatUpdate(long swapChainHandle, uint width, uint height, uint foregroundProcessId)
         {
             _hub.OnUpdateFrameFormat(
                 new FrameFormat()
@@ -379,7 +380,8 @@ namespace ChatterBox.Client.Common.Communication.Voip
                     IsLocal = false,
                     SwapChainHandle = swapChainHandle,
                     Width = width,
-                    Height = height
+                    Height = height,
+                    ForegroundProcessId = foregroundProcessId
                 });
         }
 

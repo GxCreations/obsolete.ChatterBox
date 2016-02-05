@@ -39,6 +39,21 @@ namespace ChatterBox.Client.Common.Communication.Voip
 
         public void SetForegroundProcessId(uint processId)
         {
+            Task.Run(() =>
+            {
+                Context.WithContextAction(cx =>
+                {
+                    Context.ForegroundProcessId = processId;
+                    if(Context.LocalVideoRenderer != null)
+                    {
+                        Context.LocalVideoRenderer.UpdateForegroundProcessId(processId);
+                    }
+                    if(Context.RemoteVideoRenderer != null)
+                    {
+                        Context.RemoteVideoRenderer.UpdateForegroundProcessId(processId);
+                    }
+                }).Wait();
+            });
             Context.ForegroundProcessId = processId;
         }
 

@@ -4,7 +4,7 @@ using Windows.UI.Xaml.Controls;
 
 namespace ChatterBox.Client.Common.Communication.Voip
 {
-    public delegate void RenderFormatUpdateHandler(long swapChainHandle, uint width, uint height);
+    public delegate void RenderFormatUpdateHandler(long swapChainHandle, uint width, uint height, uint foregroundProcessId);
 
     public interface IVideoRenderHelper
     {
@@ -17,5 +17,6 @@ namespace ChatterBox.Client.Common.Communication.Voip
         void SetMediaElement(CoreDispatcher dispatcher, MediaElement mediaElement);
         void SetDisplaySize(Windows.Foundation.Size size);
         void ResolutionChanged(uint width, uint height);
+        void UpdateForegroundProcessId(uint foregroundProcessId);
     }
 }

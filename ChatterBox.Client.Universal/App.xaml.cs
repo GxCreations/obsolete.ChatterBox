@@ -220,6 +220,8 @@ namespace ChatterBox.Client.Universal
             var client = Container.Resolve<HubClient>();
             if (client.IsConnected)
             {
+                client.SetForegroundProcessId(
+                    ChatterBox.Client.WebRTCSwapChainPanel.WebRTCSwapChainPanel.CurrentProcessId);
                 client.ResumeVoipVideo();
             }
 
@@ -266,14 +268,16 @@ namespace ChatterBox.Client.Universal
                 IsLocal = true,
                 Width = 0,
                 Height = 0,
-                SwapChainHandle = 0
+                SwapChainHandle = 0,
+                ForegroundProcessId = 0
             });
             client.OnUpdateFrameFormat(new FrameFormat
             {
                 IsLocal = false,
                 Width = 0,
                 Height = 0,
-                SwapChainHandle = 0
+                SwapChainHandle = 0,
+                ForegroundProcessId = 0
             });
             // Suspend video capture and rendering in the background.
             client.SuspendVoipVideo();
