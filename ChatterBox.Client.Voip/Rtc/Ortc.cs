@@ -70,6 +70,7 @@ namespace ChatterBox.Client.Voip.Rtc
     using RtcRtpRtxParameters = ortc_winrt_api.RTCRtpRtxParameters;
     using RtcRtpCodecCapability = ortc_winrt_api.RTCRtpCodecCapability;
     using RtcRtpHeaderExtension = ortc_winrt_api.RTCRtpHeaderExtension;
+    using RtcSettings = ortc_winrt_api.Settings;
 
     internal delegate void OnMediaCaptureDeviceFoundDelegate(MediaDevice param);
     internal delegate void RTCPeerConnectionIceEventDelegate(RTCPeerConnectionIceEvent param);
@@ -105,6 +106,7 @@ namespace ChatterBox.Client.Voip.Rtc
 
         public static void Initialize(CoreDispatcher dispatcher)
         {
+            RtcSettings.ApplyDefaults();
             RtcOrtcWithDispatcher.Setup(dispatcher);
         }
 
