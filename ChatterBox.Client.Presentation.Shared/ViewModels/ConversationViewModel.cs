@@ -34,7 +34,7 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
         public ICommand SwitchVideoCommand { get; }
         public ICommand SendInstantMessageCommand { get; }
 
-
+        public event Action<ConversationViewModel> OnIsInCallMode;
 
         private readonly IClientChannel _clientChannel;
         private readonly IVoipChannel _voipChannel;
@@ -56,6 +56,8 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
         private bool _isMicEnabled;
         private bool _isVideoEnabled;
         private bool _canCloseConversation;
+        private bool _isSelected;
+        private bool _isHighlighted;
 
 
         public ConversationViewModel(IClientChannel clientChannel,
@@ -92,10 +94,17 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
 
         internal void OnNavigatedTo()
         {
+            _isSelected = true;
+            IsHighlighted = false;
         }
 
         internal void OnNavigatedFrom()
         {
+            _isSelected = false;
+            foreach (var msg in InstantMessages)
+            {
+                msg.IsHighlighted = false;
+            }
         }
 
 
@@ -427,7 +436,11 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
             }
         }
 
-
+        public bool IsHighlighted
+        {
+            get { return _isHighlighted; }
+            set { SetProperty(ref _isHighlighted, value); }
+        }
 
         public void Initialize()
         {
@@ -557,9 +570,14 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
                     DeliveredAt = message.SentDateTimeUtc.LocalDateTime,
                     IsSender = false,
                     SenderName = Name,
-                    SenderProfileSource = ProfileSource
+                    SenderProfileSource = ProfileSource,
+                    IsHighlighted = !_isSelected
                 });
                 SignaledRelayMessages.Delete(message.Id);
+            }
+            if (!_isSelected && newMessages.Count > 0)
+            {
+                IsHighlighted = true;
             }
         }
 
@@ -729,16 +747,6 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
             ((DelegateCommand)SwitchMicrophoneCommand).RaiseCanExecuteChanged();
             ((DelegateCommand)SwitchVideoCommand).RaiseCanExecuteChanged();
         }
-
-        public event Action<ConversationViewModel> OnIsInCallMode;
-
-
-
-
-
-
-
-
 
         // Avoid memory leak by unsubscribing from foregroundUpdateService object
         // because its lifetime may be much longer.

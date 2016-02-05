@@ -97,7 +97,8 @@
     <converters:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
     <converters:BooleanToVisibilityConverter x:Key="InvertedBooleanToVisibilityConverter" Inverted="True" />
     <converters:NullToVisibilityConverter x:Key="NullToVisibilityConverter" />
-    <converters:BoolToBrushConverter x:Key="BoolToBrushConverter" ColorForTrue="LightGreen" ColorForFalse="LightGray" />
+    <converters:BoolToBrushConverter x:Key="BoolToBrushConverter_ContactPresence" ColorForTrue="LightGreen" ColorForFalse="LightGray" />
+    <converters:BoolToBrushConverter x:Key="BoolToBrushConverter_IM" ColorForFalse="Blue" ColorForTrue="Orange" />
     <converters:BoolToFontWeightConverter x:Key="BoolToFontWeightConverter" />
     <converters:CallStateToVisibilityConverter x:Key="CallStateToVisibilityConverter" />
     <converters:CallStateToVisibilityConverter x:Key="InvertedCallStateToVisibilityConverter" Inverted="True" />
@@ -141,7 +142,7 @@
 
     <DataTemplate x:Key="Default.CommunicationControl.Conversations.Item.Template">
         <StackPanel Orientation="Horizontal">
-            <Ellipse Fill="{Binding IsOnline, Mode=OneWay, Converter={StaticResource BoolToBrushConverter}}" Width="15" Height="15" />
+            <Ellipse Fill="{Binding IsOnline, Mode=OneWay, Converter={StaticResource BoolToBrushConverter_ContactPresence}}" Width="15" Height="15" />
             <Image Source="{Binding ProfileSource}" Margin="5" Width="45" Height="45" />
             <TextBlock Text="{Binding Name}" MaxWidth="250" TextTrimming="CharacterEllipsis" FontWeight="{Binding IsHighlighted, Mode=OneWay, Converter={StaticResource BoolToFontWeightConverter}}"
                  VerticalAlignment="Center" Margin="5" />
@@ -151,7 +152,7 @@
 
     <ControlTemplate x:Key="Default.CommunicationControl.Conversations.Item.InstantMessaging.ItemTemplate" TargetType="ListBoxItem">
         <Grid Margin="3">
-            <Border CornerRadius="5" Background="{TemplateBinding Background}" Opacity=".2" />
+            <Border CornerRadius="5" Opacity=".2" Background="{Binding IsHighlighted, Converter={StaticResource BoolToBrushConverter_IM}}"  />
             <Border Margin="5">
                 <Grid>
                     <Grid.ColumnDefinitions>
