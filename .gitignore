@@ -10,3 +10,6 @@ Release/
 ChatterBox.sln.DotSettings
 ChatterBox.sdf
 ChatterBox.VC.opendb
+ChatterBox.Client.Universal/project.lock.json
+ChatterBox.Client.Universal.Background/project.lock.json
+ChatterBox.Client.Universal.Background/ChatterBox.Client.Universal.Background.nuget.targets
