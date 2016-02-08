@@ -647,8 +647,10 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
                     if (voipState.PeerId == UserId)
                     {
                         CallState = CallState.Connected;
+                        IsVideoEnabled = voipState.IsVideoEnabled;
+                        IsAudioOnlyCall = !voipState.IsVideoEnabled;
                         IsSelfVideoAvailable = IsVideoEnabled;
-                        IsPeerVideoAvailable = voipState.IsVideoEnabled;
+                        IsPeerVideoAvailable = IsVideoEnabled;
                     }
                     else
                     {
@@ -688,6 +690,13 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
                 return;
             }
 
+#if WIN10
+            if(obj.ForegroundProcessId != ChatterBoxClient.Universal.BackgroundRenderer.Renderer.GetProcessId())
+            {
+                // Ignore this update because it's for an old foreground process
+                return;
+            }
+#endif
             if (obj.IsLocal)
             {
 #if WIN10

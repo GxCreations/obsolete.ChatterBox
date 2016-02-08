@@ -13,7 +13,7 @@ namespace ChatterBox.Client.Universal.Background.Voip
         public VideoRenderHelper()
         {
             // Pipe the event
-            _renderer.RenderFormatUpdate += (a, b, c) => RenderFormatUpdate(a, b, c);
+            _renderer.RenderFormatUpdate += (a, b, c, d) => RenderFormatUpdate(a, b, c, d);
         }
 
         public void SetupRenderer(uint foregroundProcessId, IMediaSource source,
@@ -45,6 +45,11 @@ namespace ChatterBox.Client.Universal.Background.Voip
         {
             //Do nothing
             //For W10, the resolution is obtained from Renderer
+        }
+
+        public void UpdateForegroundProcessId(uint foregroundProcessId)
+        {
+            _renderer.UpdateForegroundProcessId(foregroundProcessId);
         }
 
         private Renderer _renderer = new Renderer();
