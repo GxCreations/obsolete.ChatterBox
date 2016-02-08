@@ -65,6 +65,7 @@
 
     <Style x:Key="Button.Conversation.Base" TargetType="Button">
         <Setter Property="Margin" Value="5"/>
+        <Setter Property="Background" Value="LightGray"/>
     </Style>
 
 
@@ -234,7 +235,6 @@
                                                     <ControlTemplate TargetType="ListBoxItem">
                                                         <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
                                                               Visibility="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=IsSelected, Converter = {StaticResource BooleanToVisibilityConverter}}">
-                                                            <!--Chat View-->
                                                             <Grid>
                                                                 <Grid.RowDefinitions>
                                                                     <RowDefinition Height="Auto" />
@@ -271,13 +271,13 @@
                                                                 </Grid>
                                                             </Grid>
 
-                                                            <!--Call View-->
-                                                            <Grid Background="White"  Visibility="{Binding CallState, Converter= {StaticResource InvertedCallStateToVisibilityConverter}, ConverterParameter={StaticResource CallState.Idle}}">
+                                                            <Grid Background="White"  
+                                                                  Visibility="{Binding CallState, Converter= {StaticResource InvertedCallStateToVisibilityConverter}, ConverterParameter={StaticResource CallState.Idle}}">
                                                                 <Grid.RowDefinitions>
                                                                     <RowDefinition Height="*" />
                                                                     <RowDefinition Height="Auto" />
                                                                 </Grid.RowDefinitions>
-                                                                <Grid x:Name="CallGrid" Grid.Row="0" Margin="12,5" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" attachedProperties:ActualSize.Enabled="True">
+                                                                <Grid x:Name="RemoteCallGrid" Grid.Row="0" Grid.RowSpan="2" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" attachedProperties:ActualSize.Enabled="True">
                                                                     <Image Source="{Binding ProfileSource}"
                                                                            Visibility="{Binding ShowPeerVideoPlaceHolder, Converter={StaticResource BooleanToVisibilityConverter}}"
                                                                            VerticalAlignment="Stretch" HorizontalAlignment="Stretch" />
@@ -293,18 +293,21 @@
                                                                             <Run Text="{Binding RemoteFrameRate}"/>
                                                                         </TextBlock>
                                                                     </StackPanel>
+                                                                </Grid>
+
+                                                                <Grid x:Name="LocalCallGrid" Grid.Row="0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
                                                                     <Image HorizontalAlignment="Right" VerticalAlignment="Bottom" 
                                                                             Source="{Binding OwnProfileSource}"
                                                                             Visibility="{Binding ShowSelfVideoPlaceHolder, Converter={StaticResource BooleanToVisibilityConverter}}"
-                                                                            Width="{Binding ElementName=CallGrid, Path=(attachedProperties:ActualSize.ActualWidth), Mode=OneWay, Converter={StaticResource ProportionalConverter}}"
-                                                                            Height="{Binding ElementName=CallGrid, Path=(attachedProperties:ActualSize.ActualHeight), Mode=OneWay, Converter={StaticResource ProportionalConverter}}" />
+                                                                            Width="{Binding ElementName=RemoteCallGrid, Path=(attachedProperties:ActualSize.ActualWidth), Mode=OneWay, Converter={StaticResource ProportionalConverter}}"
+                                                                            Height="{Binding ElementName=RemoteCallGrid, Path=(attachedProperties:ActualSize.ActualHeight), Mode=OneWay, Converter={StaticResource ProportionalConverter}}" />
                                                                     <Grid HorizontalAlignment="Right" VerticalAlignment="Bottom">
                                                                         <ContentControl HorizontalAlignment="Right" VerticalAlignment="Bottom"
                                                                                         Content="{Binding LocalVideoRenderer}" 
                                                                                         Visibility="{Binding ShowSelfVideoPlaceHolder, Converter={StaticResource InvertedBooleanToVisibilityConverter}}"
                                                                                         HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch"
-                                                                                        Width="{Binding ElementName=CallGrid, Path=(attachedProperties:ActualSize.ActualWidth), Mode=OneWay, Converter={StaticResource ProportionalConverter}}"
-                                                                                        Height="{Binding ElementName=CallGrid, Path=(attachedProperties:ActualSize.ActualHeight), Mode=OneWay, Converter={StaticResource ProportionalConverter}}"/>
+                                                                                        Width="{Binding ElementName=RemoteCallGrid, Path=(attachedProperties:ActualSize.ActualWidth), Mode=OneWay, Converter={StaticResource ProportionalConverter}}"
+                                                                                        Height="{Binding ElementName=RemoteCallGrid, Path=(attachedProperties:ActualSize.ActualHeight), Mode=OneWay, Converter={StaticResource ProportionalConverter}}"/>
                                                                         <StackPanel Background="White" VerticalAlignment="Top" HorizontalAlignment="Left"
                                                                                     Visibility="{Binding IsSelfVideoAvailable, Converter={StaticResource BooleanToVisibilityConverter}}">
                                                                             <TextBlock Foreground="Black" FontSize="10">
@@ -316,8 +319,10 @@
                                                                             </TextBlock>
                                                                         </StackPanel>
                                                                     </Grid>
-
                                                                 </Grid>
+
+
+
                                                                 <StackPanel Grid.Row="1" Margin="12,5" Orientation="Horizontal" HorizontalAlignment="Center">
                                                                     <Button Command="{Binding AnswerCommand}" Style="{StaticResource Button.Conversation.Call.AudioCall}" Visibility="{Binding CallState, Converter= {StaticResource CallStateToVisibilityConverter}, ConverterParameter={StaticResource CallState.LocalRinging}}" />
                                                                     <Button Command="{Binding HangupCommand}" Style="{StaticResource Button.Conversation.Call.End}" Visibility="{Binding CallState, Converter= {StaticResource CallStateToVisibilityConverter}, ConverterParameter={StaticResource CallState.RemoteRinging}}" />
