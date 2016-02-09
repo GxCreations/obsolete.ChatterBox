@@ -206,8 +206,9 @@ namespace ChatterBox.Client.Universal
                 }
             }
 
-            /* If the call was hung-up while we were suspended, we need to update the UI */
             var contactView = Container.Resolve<MainViewModel>().ContactsViewModel;
+            contactView.ReloadPeerData();
+            /* If the call was hung-up while we were suspended, we need to update the UI */
             if (contactView.SelectedConversation != null)
             {
                 if (contactView.SelectedConversation.CallState != CallState.Idle)
