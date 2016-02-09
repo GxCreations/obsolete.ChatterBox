@@ -13,6 +13,7 @@ namespace ChatterBox.Client.Presentation.Shared.Controls
         bool IsPeerVideoAvailable { get; }
         bool IsMicrophoneEnabled { get; }
         bool IsVideoEnabled { get; }
+        bool IsHighlighted { get; }
         string InstantMessage { get; set; }
         IEnumerable<IInstantMessage> InstantMessages { get; }
 
