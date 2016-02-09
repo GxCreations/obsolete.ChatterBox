@@ -1,5 +1,6 @@
 ﻿using ChatterBox.Client.Common.Avatars;
 using ChatterBox.Client.Common.Background;
+using ChatterBox.Client.Common.Communication.Foreground;
 using ChatterBox.Client.Common.Communication.Foreground.Dto;
 using ChatterBox.Client.Common.Communication.Signaling;
 using ChatterBox.Client.Common.Communication.Voip;
@@ -107,6 +108,7 @@ namespace ChatterBox.Client.Universal
                 Container.RegisterType<TaskHelper>(new ContainerControlledLifetimeManager());
                 Container.RegisterType<HubClient>(new ContainerControlledLifetimeManager());
                 Container.RegisterInstance<IForegroundUpdateService>(Container.Resolve<HubClient>(), new ContainerControlledLifetimeManager());
+                Container.RegisterInstance<IForegroundChannel>(Container.Resolve<HubClient>(), new ContainerControlledLifetimeManager());
                 Container.RegisterInstance<ISignalingSocketChannel>(Container.Resolve<HubClient>(), new ContainerControlledLifetimeManager());
                 Container.RegisterInstance<IClientChannel>(Container.Resolve<HubClient>(), new ContainerControlledLifetimeManager());
                 Container.RegisterInstance<IVoipChannel>(Container.Resolve<HubClient>(), new ContainerControlledLifetimeManager());
@@ -217,6 +219,10 @@ namespace ChatterBox.Client.Universal
                     contactView.SelectedConversation.Initialize();
                 }
             }
+
+            // Force reload all stored relay messages
+            var foregroundUpdateChannel = Container.Resolve<IForegroundChannel>();
+            foregroundUpdateChannel.OnSignaledRelayMessagesUpdated();
 
             var client = Container.Resolve<HubClient>();
             if (client.IsConnected)
