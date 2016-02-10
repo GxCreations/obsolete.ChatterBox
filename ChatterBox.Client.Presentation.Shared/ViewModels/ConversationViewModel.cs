@@ -30,7 +30,8 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
         public ICommand AnswerCommand { get; }
         public ICommand HangupCommand { get; }
         public ICommand RejectCommand { get; }
-        public ICommand SwitchMicrophoneCommand { get; }
+        public ICommand MuteMicrophoneCommand { get; }
+        public ICommand UnMuteMicrophoneCommand { get; }
         public ICommand SwitchVideoCommand { get; }
         public ICommand SendInstantMessageCommand { get; }
 
@@ -79,7 +80,8 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
             AnswerCommand = new DelegateCommand(OnAnswerCommandExecute, OnAnswerCommandCanExecute);
             RejectCommand = new DelegateCommand(OnRejectCommandExecute, OnRejectCommandCanExecute);
             CloseConversationCommand = new DelegateCommand(OnCloseConversationCommandExecute, () => _canCloseConversation);
-            SwitchMicrophoneCommand = new DelegateCommand(SwitchMicCommandExecute, SwitchMicCommandCanExecute);
+            MuteMicrophoneCommand = new DelegateCommand(MuteMicCommandExecute, MicCommandCanExecute);
+            UnMuteMicrophoneCommand = new DelegateCommand(UnMuteCommandExecute, MicCommandCanExecute);
             SwitchVideoCommand = new DelegateCommand(SwitchVideoCommandExecute, SwitchVideoCommandCanExecute);
             LayoutService.Instance.LayoutChanged += LayoutChanged;
             LayoutChanged(LayoutService.Instance.LayoutType);
@@ -527,20 +529,28 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
             });
         }
 
-        private bool SwitchMicCommandCanExecute()
+        private bool MicCommandCanExecute()
         {
             return CallState != CallState.Idle;
         }
 
-        private void SwitchMicCommandExecute()
+        private void MuteMicCommandExecute()
         {
-            IsMicrophoneEnabled = !IsMicrophoneEnabled;
+            IsMicrophoneEnabled = false;
             _voipChannel.ConfigureMicrophone(new MicrophoneConfig
             {
                 Muted = !IsMicrophoneEnabled
             });
         }
 
+        private void UnMuteCommandExecute()
+        {
+            IsMicrophoneEnabled = true;
+            _voipChannel.ConfigureMicrophone(new MicrophoneConfig
+            {
+                Muted = !IsMicrophoneEnabled
+            });
+        }
         private bool SwitchVideoCommandCanExecute()
         {
             return CallState != CallState.Idle;
@@ -622,7 +632,7 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
                     if (voipState.PeerId == UserId)
                     {
                         CallState = CallState.LocalRinging;
-                        IsMicrophoneEnabled = true; //Start new calls with mic enabled
+                        UnMuteCommandExecute(); //Start new calls with mic enabled
                         IsVideoEnabled = voipState.IsVideoEnabled;
                         IsAudioOnlyCall = !voipState.IsVideoEnabled;
                         LocalNativeVideoSize = new Size(0, 0);
@@ -639,7 +649,7 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
                     if (voipState.PeerId == UserId)
                     {
                         CallState = CallState.RemoteRinging;
-                        IsMicrophoneEnabled = true; //Start new calls with mic enabled
+                        UnMuteCommandExecute(); //Start new calls with mic enabled
                         IsVideoEnabled = voipState.IsVideoEnabled;
                         LocalNativeVideoSize = new Size(0, 0);
                         RemoteNativeVideoSize = new Size(0, 0);
@@ -753,7 +763,8 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
             ((DelegateCommand)AnswerCommand).RaiseCanExecuteChanged();
             ((DelegateCommand)HangupCommand).RaiseCanExecuteChanged();
             ((DelegateCommand)RejectCommand).RaiseCanExecuteChanged();
-            ((DelegateCommand)SwitchMicrophoneCommand).RaiseCanExecuteChanged();
+            ((DelegateCommand)MuteMicrophoneCommand).RaiseCanExecuteChanged();
+            ((DelegateCommand)UnMuteMicrophoneCommand).RaiseCanExecuteChanged();
             ((DelegateCommand)SwitchVideoCommand).RaiseCanExecuteChanged();
         }
 
