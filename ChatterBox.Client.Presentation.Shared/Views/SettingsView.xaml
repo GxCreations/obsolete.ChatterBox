@@ -88,6 +88,7 @@
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
                     <TextBlock Text="ChatterBox Settings" Margin="5" HorizontalAlignment="Center" FontSize="18"
                                FontWeight="Bold" Grid.Row="0" />
@@ -103,26 +104,28 @@
                     <ToggleSwitch Header="AppInsight Logging" Grid.Row="7" IsOn="{Binding AppInsightsEnabled, Mode=TwoWay}"
                                   Width="Auto" MinWidth="200" Margin="5,3"
                                   Visibility="{Binding IsWin10App, Converter={StaticResource BoolToVisConverter}}"/>
-                    <ToggleSwitch Header="RTC Trace" Grid.Row="8" IsOn="{Binding RTCTraceEnabled, Mode=TwoWay}"
+                    <ToggleSwitch Header="ETW Statistics" Grid.Row="8" IsOn="{Binding ETWStatsEnabled, Mode=TwoWay}"
                                   Width="Auto" MinWidth="200" Margin="5,3"/>
-                    <TextBlock Text="RTC Trace server Ip" Margin="5,3" Grid.Row="9" HorizontalAlignment="Left" />
-                    <TextBox Text="{Binding RTCTraceServerIp, Mode=TwoWay}" HorizontalAlignment="Stretch" Grid.Row="10" Margin="5,3"
+                    <ToggleSwitch Header="RTC Trace" Grid.Row="9" IsOn="{Binding RTCTraceEnabled, Mode=TwoWay}"
+                                  Width="Auto" MinWidth="200" Margin="5,3"/>
+                    <TextBlock Text="RTC Trace server Ip" Margin="5,3" Grid.Row="10" HorizontalAlignment="Left" />
+                    <TextBox Text="{Binding RTCTraceServerIp, Mode=TwoWay}" HorizontalAlignment="Stretch" Grid.Row="11" Margin="5,3"
                              behaviors:ReturnKeyCloseKeyboardBehavior.Enabled="True" IsEnabled="{Binding RTCTraceEnabled}"/>
-                    <TextBlock Text="RTC Trace server Port" Margin="5,3" Grid.Row="11" HorizontalAlignment="Left" />
-                    <TextBox Text="{Binding RTCTraceServerPort, Mode=TwoWay}" HorizontalAlignment="Stretch" Grid.Row="12" Margin="5,3"
+                    <TextBlock Text="RTC Trace server Port" Margin="5,3" Grid.Row="12" HorizontalAlignment="Left" />
+                    <TextBox Text="{Binding RTCTraceServerPort, Mode=TwoWay}" HorizontalAlignment="Stretch" Grid.Row="13" Margin="5,3"
                              behaviors:ReturnKeyCloseKeyboardBehavior.Enabled="True" IsEnabled="{Binding RTCTraceEnabled}"/>
-                    <ToggleSwitch Header="NTP Sync" Grid.Row="13" IsOn="{Binding NtpSyncEnabled, Mode=TwoWay}"
+                    <ToggleSwitch Header="NTP Sync" Grid.Row="14" IsOn="{Binding NtpSyncEnabled, Mode=TwoWay}"
                                   Width="Auto" MinWidth="200" Margin="5,3"/>
                     <TextBlock Name="NtpSyncInProgressLabel"
                        Text="NTP sync in progress..."
                        Visibility="{Binding NtpSyncInProgress, Mode=OneWay, Converter={StaticResource BoolToVisConverter}}"
-                       Grid.Row="13" HorizontalAlignment="Right"/>
-                    <TextBlock Text="NTP server Ip" Margin="5,3" Grid.Row="14" HorizontalAlignment="Left" />
-                    <TextBox Text="{Binding NtpServerIP, Mode=TwoWay}" HorizontalAlignment="Stretch" Grid.Row="15" Margin="5,3"
+                       Grid.Row="14" HorizontalAlignment="Right"/>
+                    <TextBlock Text="NTP server Ip" Margin="5,3" Grid.Row="15" HorizontalAlignment="Left" />
+                    <TextBox Text="{Binding NtpServerIP, Mode=TwoWay}" HorizontalAlignment="Stretch" Grid.Row="16" Margin="5,3"
                              behaviors:ReturnKeyCloseKeyboardBehavior.Enabled="True" IsEnabled="{Binding NtpSyncInProgress, Mode=OneWay, Converter={StaticResource NegatedBoolConverter}}"/>
                     <TextBlock Text="About" Margin="5,3" HorizontalAlignment="Center" FontSize="18"
-                               FontWeight="Bold" Grid.Row="16" />
-                    <TextBlock Text="{Binding ApplicationVersion}" Margin="5,3" Grid.Row="17" HorizontalAlignment="Left" />
+                               FontWeight="Bold" Grid.Row="17" />
+                    <TextBlock Text="{Binding ApplicationVersion}" Margin="5,3" Grid.Row="18" HorizontalAlignment="Left" />
                 </Grid>
                 <Grid HorizontalAlignment="Stretch" Grid.Row="1" Grid.Column="1"
                       MaxWidth="500" Margin="10">

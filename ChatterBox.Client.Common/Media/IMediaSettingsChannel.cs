@@ -48,6 +48,7 @@ namespace ChatterBox.Client.Common.Media
         void StartTrace();
         void StopTrace();
         void SaveTrace(TraceServerConfig config);
+        void ToggleETWStats(bool enabled);
 
         void ReleaseDevices();
     }

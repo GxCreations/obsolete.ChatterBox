@@ -212,6 +212,13 @@ namespace ChatterBox.Client.Common.Communication.Voip
             }).Wait();
         }
 
+        public void ToggleETWStats(bool enabled)
+        {
+            Task.Run(async () => {
+                await Context.WithContextAction(ctx => { ctx.ToggleETWStats(enabled); });
+            }).Wait();
+        }
+
         #endregion
     }
 }
