@@ -51,6 +51,7 @@ namespace ChatterBox.Client.Presentation.Shared.Views
                 MainGrid.RowDefinitions[0].Height = new GridLength(value);
                 MainGrid.InvalidateArrange();
             }
+            args.EnsuredFocusedElementInView = true;
         }
     }
 }
