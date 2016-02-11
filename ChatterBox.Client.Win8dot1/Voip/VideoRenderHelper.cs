@@ -49,7 +49,10 @@ namespace ChatterBox.Client.Win8dot1.Voip
 
         public void ResolutionChanged(uint width, uint height)
         {
-            RenderFormatUpdate?.Invoke(0, width, height);
+            RenderFormatUpdate?.Invoke(0, width, height, 0);
+        }
+        public void UpdateForegroundProcessId(uint foregroundProcessId)
+        {
         }
     }
 }

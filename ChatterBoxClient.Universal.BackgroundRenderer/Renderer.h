@@ -19,7 +19,7 @@
 
 namespace ChatterBoxClient { namespace Universal { namespace BackgroundRenderer {
 
-public delegate void RenderFormatUpdateHandler(int64 swapChainHandle, uint32 width, uint32 height);
+public delegate void RenderFormatUpdateHandler(int64 swapChainHandle, uint32 width, uint32 height, uint32 foregroundProcessId);
 
 [Windows::Foundation::Metadata::WebHostHidden]
 public ref class Renderer sealed :
@@ -36,6 +36,7 @@ public:
     {
         bool get();
     }
+    void UpdateForegroundProcessId(uint32 foregroundProcessId);
     static uint32 GetProcessId();
     event RenderFormatUpdateHandler^ RenderFormatUpdate;
     // MediaEngineNotifyCallback
@@ -50,6 +51,7 @@ private:
         Windows::Foundation::Size videoSize);
     void ReleaseStaleSwapChainHandle();
     void ReleaseStaleSwapChainHandleWhenExpired();
+    void CheckForegroundProcessId();
 
     bool _useHardware;
     Microsoft::WRL::ComPtr<ABI::Windows::Media::IMediaExtensionManager> _mediaExtensionManager;
@@ -68,6 +70,8 @@ private:
     Windows::Foundation::Size _renderControlSize;
     Windows::Foundation::Size _videoSize;
     CRITICAL_SECTION _lock;
+    LONG _foregroundProcessIdChange;
+    uint32 _newforegroundProcessId;
 
     static const ULONGLONG StaleHandleTimeoutMS = 2000LL;
 };

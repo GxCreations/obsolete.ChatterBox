@@ -45,7 +45,7 @@
         </DataTemplate>
         <converters:LayoutTypeToStyleConverter x:Key="LayoutTypeToStyleConverter" ParallelStyle="{StaticResource ParallelStyle}" OverlayStyle="{StaticResource OverlayStyle}" />
     </UserControl.Resources>
-    <Grid>
+    <Grid x:Name="MainGrid">
         <Grid.RowDefinitions>
             <RowDefinition Height="*"/>
             <RowDefinition Height="0"/>

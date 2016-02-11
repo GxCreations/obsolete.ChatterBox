@@ -1,5 +1,6 @@
 ﻿using ChatterBox.Client.Common.Avatars;
 using ChatterBox.Client.Common.Background;
+using ChatterBox.Client.Common.Communication.Foreground;
 using ChatterBox.Client.Common.Communication.Foreground.Dto;
 using ChatterBox.Client.Common.Communication.Signaling;
 using ChatterBox.Client.Common.Communication.Voip;
@@ -107,6 +108,7 @@ namespace ChatterBox.Client.Universal
                 Container.RegisterType<TaskHelper>(new ContainerControlledLifetimeManager());
                 Container.RegisterType<HubClient>(new ContainerControlledLifetimeManager());
                 Container.RegisterInstance<IForegroundUpdateService>(Container.Resolve<HubClient>(), new ContainerControlledLifetimeManager());
+                Container.RegisterInstance<IForegroundChannel>(Container.Resolve<HubClient>(), new ContainerControlledLifetimeManager());
                 Container.RegisterInstance<ISignalingSocketChannel>(Container.Resolve<HubClient>(), new ContainerControlledLifetimeManager());
                 Container.RegisterInstance<IClientChannel>(Container.Resolve<HubClient>(), new ContainerControlledLifetimeManager());
                 Container.RegisterInstance<IVoipChannel>(Container.Resolve<HubClient>(), new ContainerControlledLifetimeManager());
@@ -206,8 +208,9 @@ namespace ChatterBox.Client.Universal
                 }
             }
 
-            /* If the call was hung-up while we were suspended, we need to update the UI */
             var contactView = Container.Resolve<MainViewModel>().ContactsViewModel;
+            contactView.ReloadPeerData();
+            /* If the call was hung-up while we were suspended, we need to update the UI */
             if (contactView.SelectedConversation != null)
             {
                 if (contactView.SelectedConversation.CallState != CallState.Idle)
@@ -217,9 +220,15 @@ namespace ChatterBox.Client.Universal
                 }
             }
 
+            // Force reload all stored relay messages
+            var foregroundUpdateChannel = Container.Resolve<IForegroundChannel>();
+            foregroundUpdateChannel.OnSignaledRelayMessagesUpdated();
+
             var client = Container.Resolve<HubClient>();
             if (client.IsConnected)
             {
+                client.SetForegroundProcessId(
+                    ChatterBox.Client.WebRTCSwapChainPanel.WebRTCSwapChainPanel.CurrentProcessId);
                 client.ResumeVoipVideo();
             }
 
@@ -266,14 +275,16 @@ namespace ChatterBox.Client.Universal
                 IsLocal = true,
                 Width = 0,
                 Height = 0,
-                SwapChainHandle = 0
+                SwapChainHandle = 0,
+                ForegroundProcessId = 0
             });
             client.OnUpdateFrameFormat(new FrameFormat
             {
                 IsLocal = false,
                 Width = 0,
                 Height = 0,
-                SwapChainHandle = 0
+                SwapChainHandle = 0,
+                ForegroundProcessId = 0
             });
             // Suspend video capture and rendering in the background.
             client.SuspendVoipVideo();

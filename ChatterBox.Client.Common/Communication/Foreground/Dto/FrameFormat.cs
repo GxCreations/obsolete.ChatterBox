@@ -15,5 +15,7 @@ namespace ChatterBox.Client.Common.Communication.Foreground.Dto
         public UInt32 Width { get; set; }
 
         public UInt32 Height { get; set; }
+
+        public UInt32 ForegroundProcessId { get; set; }
     }
 }

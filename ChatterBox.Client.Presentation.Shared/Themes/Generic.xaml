@@ -65,6 +65,7 @@
 
     <Style x:Key="Button.Conversation.Base" TargetType="Button">
         <Setter Property="Margin" Value="5"/>
+        <Setter Property="Background" Value="LightGray"/>
     </Style>
 
 
@@ -97,7 +98,8 @@
     <converters:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
     <converters:BooleanToVisibilityConverter x:Key="InvertedBooleanToVisibilityConverter" Inverted="True" />
     <converters:NullToVisibilityConverter x:Key="NullToVisibilityConverter" />
-    <converters:BoolToBrushConverter x:Key="BoolToBrushConverter" ColorForTrue="LightGreen" ColorForFalse="LightGray" />
+    <converters:BoolToBrushConverter x:Key="BoolToBrushConverter_ContactPresence" ColorForTrue="LightGreen" ColorForFalse="LightGray" />
+    <converters:BoolToBrushConverter x:Key="BoolToBrushConverter_IM" ColorForFalse="Blue" ColorForTrue="Orange" />
     <converters:BoolToFontWeightConverter x:Key="BoolToFontWeightConverter" />
     <converters:CallStateToVisibilityConverter x:Key="CallStateToVisibilityConverter" />
     <converters:CallStateToVisibilityConverter x:Key="InvertedCallStateToVisibilityConverter" Inverted="True" />
@@ -141,7 +143,7 @@
 
     <DataTemplate x:Key="Default.CommunicationControl.Conversations.Item.Template">
         <StackPanel Orientation="Horizontal">
-            <Ellipse Fill="{Binding IsOnline, Mode=OneWay, Converter={StaticResource BoolToBrushConverter}}" Width="15" Height="15" />
+            <Ellipse Fill="{Binding IsOnline, Mode=OneWay, Converter={StaticResource BoolToBrushConverter_ContactPresence}}" Width="15" Height="15" />
             <Image Source="{Binding ProfileSource}" Margin="5" Width="45" Height="45" />
             <TextBlock Text="{Binding Name}" MaxWidth="250" TextTrimming="CharacterEllipsis" FontWeight="{Binding IsHighlighted, Mode=OneWay, Converter={StaticResource BoolToFontWeightConverter}}"
                  VerticalAlignment="Center" Margin="5" />
@@ -151,7 +153,7 @@
 
     <ControlTemplate x:Key="Default.CommunicationControl.Conversations.Item.InstantMessaging.ItemTemplate" TargetType="ListBoxItem">
         <Grid Margin="3">
-            <Border CornerRadius="5" Background="{TemplateBinding Background}" Opacity=".2" />
+            <Border CornerRadius="5" Opacity=".2" Background="{Binding IsHighlighted, Converter={StaticResource BoolToBrushConverter_IM}}"  />
             <Border Margin="5">
                 <Grid>
                     <Grid.ColumnDefinitions>
@@ -234,7 +236,6 @@
                                                     <ControlTemplate TargetType="ListBoxItem">
                                                         <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
                                                               Visibility="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=IsSelected, Converter = {StaticResource BooleanToVisibilityConverter}}">
-                                                            <!--Chat View-->
                                                             <Grid>
                                                                 <Grid.RowDefinitions>
                                                                     <RowDefinition Height="Auto" />
@@ -271,13 +272,13 @@
                                                                 </Grid>
                                                             </Grid>
 
-                                                            <!--Call View-->
-                                                            <Grid Background="White"  Visibility="{Binding CallState, Converter= {StaticResource InvertedCallStateToVisibilityConverter}, ConverterParameter={StaticResource CallState.Idle}}">
+                                                            <Grid Background="White"  
+                                                                  Visibility="{Binding CallState, Converter= {StaticResource InvertedCallStateToVisibilityConverter}, ConverterParameter={StaticResource CallState.Idle}}">
                                                                 <Grid.RowDefinitions>
                                                                     <RowDefinition Height="*" />
                                                                     <RowDefinition Height="Auto" />
                                                                 </Grid.RowDefinitions>
-                                                                <Grid x:Name="CallGrid" Grid.Row="0" Margin="12,5" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" attachedProperties:ActualSize.Enabled="True">
+                                                                <Grid x:Name="RemoteCallGrid" Grid.Row="0" Grid.RowSpan="2" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" attachedProperties:ActualSize.Enabled="True">
                                                                     <Image Source="{Binding ProfileSource}"
                                                                            Visibility="{Binding ShowPeerVideoPlaceHolder, Converter={StaticResource BooleanToVisibilityConverter}}"
                                                                            VerticalAlignment="Stretch" HorizontalAlignment="Stretch" />
@@ -293,18 +294,21 @@
                                                                             <Run Text="{Binding RemoteFrameRate}"/>
                                                                         </TextBlock>
                                                                     </StackPanel>
+                                                                </Grid>
+
+                                                                <Grid x:Name="LocalCallGrid" Grid.Row="0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
                                                                     <Image HorizontalAlignment="Right" VerticalAlignment="Bottom" 
                                                                             Source="{Binding OwnProfileSource}"
                                                                             Visibility="{Binding ShowSelfVideoPlaceHolder, Converter={StaticResource BooleanToVisibilityConverter}}"
-                                                                            Width="{Binding ElementName=CallGrid, Path=(attachedProperties:ActualSize.ActualWidth), Mode=OneWay, Converter={StaticResource ProportionalConverter}}"
-                                                                            Height="{Binding ElementName=CallGrid, Path=(attachedProperties:ActualSize.ActualHeight), Mode=OneWay, Converter={StaticResource ProportionalConverter}}" />
+                                                                            Width="{Binding ElementName=RemoteCallGrid, Path=(attachedProperties:ActualSize.ActualWidth), Mode=OneWay, Converter={StaticResource ProportionalConverter}}"
+                                                                            Height="{Binding ElementName=RemoteCallGrid, Path=(attachedProperties:ActualSize.ActualHeight), Mode=OneWay, Converter={StaticResource ProportionalConverter}}" />
                                                                     <Grid HorizontalAlignment="Right" VerticalAlignment="Bottom">
                                                                         <ContentControl HorizontalAlignment="Right" VerticalAlignment="Bottom"
                                                                                         Content="{Binding LocalVideoRenderer}" 
                                                                                         Visibility="{Binding ShowSelfVideoPlaceHolder, Converter={StaticResource InvertedBooleanToVisibilityConverter}}"
                                                                                         HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch"
-                                                                                        Width="{Binding ElementName=CallGrid, Path=(attachedProperties:ActualSize.ActualWidth), Mode=OneWay, Converter={StaticResource ProportionalConverter}}"
-                                                                                        Height="{Binding ElementName=CallGrid, Path=(attachedProperties:ActualSize.ActualHeight), Mode=OneWay, Converter={StaticResource ProportionalConverter}}"/>
+                                                                                        Width="{Binding ElementName=RemoteCallGrid, Path=(attachedProperties:ActualSize.ActualWidth), Mode=OneWay, Converter={StaticResource ProportionalConverter}}"
+                                                                                        Height="{Binding ElementName=RemoteCallGrid, Path=(attachedProperties:ActualSize.ActualHeight), Mode=OneWay, Converter={StaticResource ProportionalConverter}}"/>
                                                                         <StackPanel Background="White" VerticalAlignment="Top" HorizontalAlignment="Left"
                                                                                     Visibility="{Binding IsSelfVideoAvailable, Converter={StaticResource BooleanToVisibilityConverter}}">
                                                                             <TextBlock Foreground="Black" FontSize="10">
@@ -316,15 +320,17 @@
                                                                             </TextBlock>
                                                                         </StackPanel>
                                                                     </Grid>
-
                                                                 </Grid>
+
+
+
                                                                 <StackPanel Grid.Row="1" Margin="12,5" Orientation="Horizontal" HorizontalAlignment="Center">
                                                                     <Button Command="{Binding AnswerCommand}" Style="{StaticResource Button.Conversation.Call.AudioCall}" Visibility="{Binding CallState, Converter= {StaticResource CallStateToVisibilityConverter}, ConverterParameter={StaticResource CallState.LocalRinging}}" />
                                                                     <Button Command="{Binding HangupCommand}" Style="{StaticResource Button.Conversation.Call.End}" Visibility="{Binding CallState, Converter= {StaticResource CallStateToVisibilityConverter}, ConverterParameter={StaticResource CallState.RemoteRinging}}" />
                                                                     <Button Command="{Binding HangupCommand}" Style="{StaticResource Button.Conversation.Call.End}" Visibility="{Binding CallState, Converter= {StaticResource CallStateToVisibilityConverter}, ConverterParameter={StaticResource CallState.Connected}}" />
                                                                     <Button Command="{Binding RejectCommand}" Style="{StaticResource Button.Conversation.Call.End}" Visibility="{Binding CallState, Converter= {StaticResource CallStateToVisibilityConverter}, ConverterParameter={StaticResource CallState.LocalRinging}}" />
-                                                                    <Button Command="{Binding SwitchMicrophoneCommand}" Style="{StaticResource Button.Conversation.Call.Audio.Mute}" Visibility="{Binding IsMicrophoneEnabled, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}" />
-                                                                    <Button Command="{Binding SwitchMicrophoneCommand}" Style="{StaticResource Button.Conversation.Call.Audio.Unmute}" Visibility="{Binding IsMicrophoneEnabled, Mode=OneWay, Converter={StaticResource InvertedBooleanToVisibilityConverter}}" />
+                                                                    <Button Command="{Binding MuteMicrophoneCommand}" Style="{StaticResource Button.Conversation.Call.Audio.Mute}" Visibility="{Binding IsMicrophoneEnabled, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                                                                    <Button Command="{Binding UnMuteMicrophoneCommand}" Style="{StaticResource Button.Conversation.Call.Audio.Unmute}" Visibility="{Binding IsMicrophoneEnabled, Mode=OneWay, Converter={StaticResource InvertedBooleanToVisibilityConverter}}" />
                                                                     <Button Command="{Binding SwitchVideoCommand}" Style="{StaticResource Button.Conversation.Call.Video.Disable}" Visibility="{Binding ShowVideoOnButton, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}" />
                                                                     <Button Command="{Binding SwitchVideoCommand}" Style="{StaticResource Button.Conversation.Call.Video.Enable}" Visibility="{Binding ShowVideoOffButton, Converter={StaticResource BooleanToVisibilityConverter}}" />
                                                                 </StackPanel>
