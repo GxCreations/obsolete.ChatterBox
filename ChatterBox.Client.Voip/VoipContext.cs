@@ -207,6 +207,11 @@ namespace ChatterBox.Client.Common.Communication.Voip
             WebRTC.SaveTrace(traceServer.Ip, traceServer.Port);
         }
 
+        public void ToggleETWStats(bool enabled)
+        {
+            ETWStatsEnabled = enabled;
+        }
+
         public void ReleaseDevices()
         {
             WebRTCMedia.OnAppSuspending();
@@ -475,6 +480,21 @@ namespace ChatterBox.Client.Common.Communication.Voip
             }
         }
 
+        private bool _etwStatsEnabled = false;
+
+        public bool ETWStatsEnabled
+        {
+            get { return _etwStatsEnabled; }
+            set
+            {
+                _etwStatsEnabled = value;
+                if (_peerConnection != null)
+                {
+                    _peerConnection.ToggleETWStats(_etwStatsEnabled);
+                }
+            }
+        }
+
         private RTCPeerConnection _peerConnection { get; set; }
         public RTCPeerConnection PeerConnection
         {
@@ -499,6 +519,9 @@ namespace ChatterBox.Client.Common.Communication.Voip
                         _hub.InitialiazeStatsManager(_peerConnection);
                         _hub.ToggleStatsManagerConnectionState(true);
                     }
+
+                    _peerConnection.ToggleETWStats(ETWStatsEnabled);
+
                     _peerConnection.OnAddStream += evt =>
                     {
                         if (evt.Stream != null)

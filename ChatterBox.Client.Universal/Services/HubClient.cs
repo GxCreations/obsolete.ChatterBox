@@ -229,6 +229,11 @@ namespace ChatterBox.Client.Universal.Services
           InvokeHubChannel<IMediaSettingsChannel>(traceServer);
         }
 
+        public void ToggleETWStats(bool enabled)
+        {
+            InvokeHubChannel<IMediaSettingsChannel>(enabled);
+        }
+
         public void ReleaseDevices()
         {
             InvokeHubChannel<IMediaSettingsChannel>();

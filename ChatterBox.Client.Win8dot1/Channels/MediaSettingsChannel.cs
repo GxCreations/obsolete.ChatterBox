@@ -134,6 +134,11 @@ namespace ChatterBox.Client.Win8dot1.Channels
             _voipContext.SaveTrace(traceServer);
         }
 
+        public void ToggleETWStats(bool enabled)
+        {
+            _voipContext.ToggleETWStats(enabled);
+        }
+
         public void ReleaseDevices()
         {
             _voipContext.ReleaseDevices();
