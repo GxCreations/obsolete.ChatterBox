@@ -12,6 +12,7 @@ public:
     HANDLE GetLocalHandle() const;
     HANDLE GetRemoteHandle() const;
     RemoteHandle& DetachMove(RemoteHandle& destRemoteHandle);
+    HANDLE DetechLocalHandle();
     bool IsValid() const;
 private:
     RemoteHandle(const RemoteHandle&);

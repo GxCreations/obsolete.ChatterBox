@@ -13,6 +13,7 @@ namespace ChatterBox.Client.Presentation.Shared.Controls
         bool IsPeerVideoAvailable { get; }
         bool IsMicrophoneEnabled { get; }
         bool IsVideoEnabled { get; }
+        bool IsHighlighted { get; }
         string InstantMessage { get; set; }
         IEnumerable<IInstantMessage> InstantMessages { get; }
 
@@ -28,7 +29,8 @@ namespace ChatterBox.Client.Presentation.Shared.Controls
         ICommand AnswerCommand { get; }
         ICommand HangupCommand { get; }
         ICommand RejectCommand { get; }
-        ICommand SwitchMicrophoneCommand { get; }
+        ICommand MuteMicrophoneCommand { get; }
+        ICommand UnMuteMicrophoneCommand { get; }
         ICommand SwitchVideoCommand { get; }
         ICommand SendInstantMessageCommand { get; }
         ICommand CloseConversationCommand { get; }

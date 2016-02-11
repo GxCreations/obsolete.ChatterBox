@@ -161,6 +161,11 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
             UpdateSelection();
         }
 
+        public void ReloadPeerData()
+        {
+            OnPeerDataUpdated();
+        }
+
         private void Contact_OnIsInCallMode(ConversationViewModel conversation)
         {
             SelectedConversation = conversation;

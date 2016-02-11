@@ -10,5 +10,6 @@ namespace ChatterBox.Client.Presentation.Shared.Controls
         DateTime DeliveredAt { get; }
         ImageSource SenderProfileSource { get; }
         string SenderName { get; }
+        bool IsHighlighted { get; set; }
     }
 }

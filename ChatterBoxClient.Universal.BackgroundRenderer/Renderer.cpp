@@ -15,7 +15,9 @@ Renderer::Renderer() :
     _useHardware(true),
     _foregroundProcessId(0),
     _staleHandleTimestamp(0LL),
-    _gpuVideoBuffersSupported(false)
+    _gpuVideoBuffersSupported(false),
+    _foregroundProcessIdChange(0),
+    _newforegroundProcessId(0)
 {
     InitializeCriticalSection(&_lock);
 }
@@ -98,6 +100,14 @@ bool Renderer::GPUVideoBuffersSupported::get()
     return _gpuVideoBuffersSupported;
 }
 
+void Renderer::UpdateForegroundProcessId(uint32 foregroundProcessId)
+{
+    EnterCriticalSection(&_lock);
+    _newforegroundProcessId = foregroundProcessId;
+    LeaveCriticalSection(&_lock);
+    InterlockedIncrement(&_foregroundProcessIdChange);
+}
+
 uint32 Renderer::GetProcessId()
 {
     return ::GetCurrentProcessId();
@@ -113,6 +123,7 @@ void Renderer::OnMediaEngineEvent(uint32 meEvent, uintptr_t param1, uint32 param
         break;
     case MF_MEDIA_ENGINE_EVENT_FORMATCHANGE:
         ReleaseStaleSwapChainHandleWhenExpired();
+        CheckForegroundProcessId();
         if ((SUCCEEDED(_mediaEngineEx->GetVideoSwapchainHandle(&swapChainHandle))) &&
             (swapChainHandle != nullptr) && (swapChainHandle != INVALID_HANDLE_VALUE))
         {
@@ -124,6 +135,7 @@ void Renderer::OnMediaEngineEvent(uint32 meEvent, uintptr_t param1, uint32 param
         break;
     case MF_MEDIA_ENGINE_EVENT_TIMEUPDATE:
         ReleaseStaleSwapChainHandleWhenExpired();
+        CheckForegroundProcessId();
         break;
     }
 }
@@ -286,15 +298,21 @@ void Renderer::CreateDXDevice()
 
 void Renderer::SendSwapChainHandle(HANDLE swapChain)
 {
-    _swapChainHandle.DetachMove(_staleSwapChainHandle);
-    _staleHandleTimestamp = GetTickCount64();
-    _swapChainHandle.AssignHandle(swapChain, _foregroundProcessId);
+    if (swapChain != INVALID_HANDLE_VALUE)
+    {
+        _swapChainHandle.DetachMove(_staleSwapChainHandle);
+        _staleHandleTimestamp = GetTickCount64();
+        _swapChainHandle.AssignHandle(swapChain, _foregroundProcessId);
+    }
     DWORD width;
     DWORD height;
     _mediaEngine->GetNativeVideoSize(&width, &height);
 
     OutputDebugString(L"RenderFormatUpdate\n");
-    RenderFormatUpdate((int64)_swapChainHandle.GetRemoteHandle(), width, height);
+    if (_swapChainHandle.GetRemoteHandle() != INVALID_HANDLE_VALUE)
+    {
+        RenderFormatUpdate((int64)_swapChainHandle.GetRemoteHandle(), width, height, _foregroundProcessId);
+    }
     Windows::Foundation::Size size;
     size.Width = (float)width;
     size.Height = (float)height;
@@ -366,5 +384,27 @@ void Renderer::ReleaseStaleSwapChainHandleWhenExpired()
     if ((currentTime - _staleHandleTimestamp) >= StaleHandleTimeoutMS)
     {
         ReleaseStaleSwapChainHandle();
+    }
+}
+
+void Renderer::CheckForegroundProcessId()
+{
+    if (_foregroundProcessIdChange > 0)
+    {
+        EnterCriticalSection(&_lock);
+        uint32 newForegroundProcessId = _newforegroundProcessId;
+        LeaveCriticalSection(&_lock);
+        InterlockedDecrement(&_foregroundProcessIdChange);
+        if (newForegroundProcessId == _foregroundProcessId)
+        {
+            return;
+        }
+        _foregroundProcessId = newForegroundProcessId;
+        HANDLE swapChainHandle = _swapChainHandle.DetechLocalHandle();
+        ReleaseStaleSwapChainHandle();
+        _swapChainHandle.DetachMove(_staleSwapChainHandle);
+        _staleHandleTimestamp = GetTickCount64();
+        _swapChainHandle.AssignHandle(swapChainHandle, _foregroundProcessId);
+        SendSwapChainHandle(INVALID_HANDLE_VALUE);
     }
 }
