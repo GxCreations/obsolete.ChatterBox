@@ -133,7 +133,7 @@ namespace ChatterBox.Client.Presentation.Shared.Services
 
         }
 
-        private void SendNTPQuery(object sender, object e)
+        private async void SendNTPQuery(object sender, object e)
         {
             currentNtpQueryCount++;
             // NTP message size - 16 bytes of the digest (RFC 2030)
@@ -145,8 +145,7 @@ namespace ChatterBox.Client.Presentation.Shared.Services
             ntpQueryTimer.Start();
 
             ntpResponseMonitor.Restart();
-            ntpSocket.OutputStream.WriteAsync(ntpData.AsBuffer());
-
+            await ntpSocket.OutputStream.WriteAsync(ntpData.AsBuffer());
         }
 
         /// <summary>
@@ -183,7 +182,7 @@ namespace ChatterBox.Client.Presentation.Shared.Services
                     averageNtpRTT = 1;
                 }
 
-                RunOnUiThread(async () =>
+                RunOnUiThread(() =>
                 {
                     ntpQueryTimer.Stop();
                     ntpRTTIntervalTimer.Start();
@@ -226,7 +225,7 @@ namespace ChatterBox.Client.Presentation.Shared.Services
 
             ulong milliseconds = (intPart * 1000) + ((fractPart * 1000) / 0x100000000L);
 
-            RunOnUiThread(async () =>
+            RunOnUiThread(() =>
             {
                 OnNTPTimeAvailable?.Invoke((long)milliseconds + currentRTT / 2);
             });
