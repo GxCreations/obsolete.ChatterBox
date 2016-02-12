@@ -158,7 +158,6 @@ namespace ChatterBox.Client.Win8dot1
             msgDialog.Commands.Add(new UICommand("OK", (cmd) => Current.Exit()) { Id = 0 });
             msgDialog.DefaultCommandIndex = 0;
             msgDialog.CancelCommandIndex = 0;
-            Debug.WriteLine("Message dialog for missing lock screen showed");
             await msgDialog.ShowAsync();
         }
 

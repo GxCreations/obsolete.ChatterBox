@@ -126,7 +126,7 @@ namespace ChatterBox.Client.Presentation.Shared.Services
             }
             catch (Exception e)
             {
-                Debug.WriteLine($"Exception when connect socket: {e.Message}");
+                Debug.WriteLine($"NtpSync: Exception when connect socket: {e.Message}");
                 ntpResponseMonitor.Stop();
                 ReportNtpSyncStatus(false);
             }
@@ -157,7 +157,7 @@ namespace ChatterBox.Client.Presentation.Shared.Services
         {
             int currentRTT = (int)ntpResponseMonitor.ElapsedMilliseconds;
 
-            Debug.WriteLine($"current RTT {currentRTT}");
+            Debug.WriteLine($"NtpSync: current RTT {currentRTT}");
 
 
             ntpResponseMonitor.Stop();

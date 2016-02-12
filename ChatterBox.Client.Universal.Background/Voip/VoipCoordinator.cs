@@ -33,7 +33,6 @@ namespace ChatterBox.Client.Universal.Background.Voip
 
         public void StartIncomingCall(RelayMessage message)
         {
-            Debug.WriteLine("GetForegroundState");
             var foregroundIsVisible = false;
             var state = Hub.Instance.ForegroundClient.GetForegroundState();
             if (state != null) foregroundIsVisible = state.IsForegroundVisible;

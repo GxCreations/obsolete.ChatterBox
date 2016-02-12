@@ -647,7 +647,7 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
 
         private void handleNtpTimeSync( long ntpTime)
         {
-            Debug.WriteLine($"new ntp time: {ntpTime}");
+            Debug.WriteLine($"New ntp time: {ntpTime}");
             NtpSyncInProgress = false;
             _mediaSettings.SyncWithNTP(ntpTime);
 
