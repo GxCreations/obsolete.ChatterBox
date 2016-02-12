@@ -81,7 +81,7 @@ void WebRTCSwapChainPanel::UpdateHandle(int64 handle) {
   }
 
   _handle = dupHandle;
-  OutputDebugString((L"Setting swap chain handle done: " + ((int32)(void*)this).ToString() + "\n")->Data());
+  OutputDebugString((L"Setting swap chain handle done: " + ((size_t)(void*)this).ToString() + "\n")->Data());
 }
 
 void WebRTCSwapChainPanel::SwapChainPanelHandle::set(int64 handle)
