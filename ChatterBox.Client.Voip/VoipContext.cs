@@ -235,6 +235,12 @@ namespace ChatterBox.Client.Common.Communication.Voip
                 Media = WebRTCMedia.CreateMedia();
                 WebRTCMedia.SetDisplayOrientation(_displayOrientation);
                 await Media.EnumerateAudioVideoCaptureDevices();
+
+                // Uncomment the following line to enable WebRTC logging.
+                // Logs are:
+                //  - Saved to local storage. Log folder location can be obtained using WebRTC.LogFolder()
+                //  - Sent over network if client is connected to TCP port 47003
+                //WebRTC.EnableLogging(LogLevel.LOGLVL_INFO);
             }
 
             if (DisplayOrientations.None != _displayOrientation)
