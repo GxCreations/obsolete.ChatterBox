@@ -75,7 +75,7 @@ namespace ChatterBox.Client.Win8dot1.Channels
                 }
                 catch (Exception exception)
                 {
-                    Debug.WriteLine($"Reading error: {exception.Message}");
+                    Debug.WriteLine($"Signaling socket read error: {exception.Message}");
                     _signalingClient.ServerConnectionError();
                     _isConnected = false;
                 }

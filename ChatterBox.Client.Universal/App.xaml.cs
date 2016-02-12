@@ -256,7 +256,6 @@ namespace ChatterBox.Client.Universal
         {
             Debug.WriteLine("App.OnSuspending");
             var deferral = e.SuspendingOperation.GetDeferral();
-            //TODO: Save application state and stop any background activity
 
             if (ChatterBox.Client.Common.Settings.SignalingSettings.AppInsightsEnabled)
             {

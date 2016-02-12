@@ -20,7 +20,6 @@ namespace ChatterBox.Client.Voip.Utils
             if (_isLocked) return Task.Run(() => { });
             _isLocked = true;
             var result = _sem.WaitAsync();
-            Debug.WriteLine("Lock - Semaphore - Got");
             return result;
         }
 
@@ -28,7 +27,6 @@ namespace ChatterBox.Client.Voip.Utils
         {
             if (_isLocked)
             {
-                Debug.WriteLine("Lock - Semaphore - Release");
                 _sem.Release();
             }
         }
