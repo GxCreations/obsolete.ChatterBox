@@ -1,4 +1,15 @@
-﻿using System;
+﻿//*********************************************************
+//
+// Copyright (c) Microsoft. All rights reserved.
+// This code is licensed under the MIT License (MIT).
+// THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF
+// ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY
+// IMPLIED WARRANTIES OF FITNESS FOR A PARTICULAR
+// PURPOSE, MERCHANTABILITY, OR NON-INFRINGEMENT.
+//
+//*********************************************************
+
+using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 
@@ -16,7 +27,7 @@ namespace ChatterBox.Client.Voip.Utils
         private static extern IntPtr GetCurrentProcess();
 #endif
 #if WINDOWS_PHONE_APP || USE_WIN10_PHONE_DLL
-    [DllImport("api-ms-win-core-sysinfo-l1-2-0.dll", CharSet = CharSet.Unicode, ExactSpelling = true, PreserveSig = true)]
+        [DllImport("api-ms-win-core-sysinfo-l1-2-0.dll", CharSet = CharSet.Unicode, ExactSpelling = true, PreserveSig = true)]
         private static extern bool GetProcessMemoryInfo(IntPtr hProcess, out PROCESS_MEMORY_COUNTERS_EX counters, uint size);
 #else
         [DllImport("psapi.dll", ExactSpelling = true, SetLastError = true)]
@@ -24,10 +35,10 @@ namespace ChatterBox.Client.Voip.Utils
 #endif
 
 
-    /// <summary>
-    /// Get the current memory usage
-    /// </summary>
-    public static Int64 GetMEMUsage()
+        /// <summary>
+        /// Get the current memory usage
+        /// </summary>
+        public static Int64 GetMEMUsage()
         {
             Int64 ret = 0;
 
@@ -41,11 +52,10 @@ namespace ChatterBox.Client.Voip.Utils
 
             }
 
-            Debug.WriteLine(ret);
+            Debug.WriteLine($"Memory usage:{ret}");
 
             return ret;
         }
-
     }
 
     internal static class CPUData
@@ -74,7 +84,7 @@ namespace ChatterBox.Client.Voip.Utils
 #endif
 
 #if WINDOWS_PHONE_APP || USE_WIN10_PHONE_DLL
-    [DllImport("api-ms-win-core-sysinfo-l1-2-0.dll", CharSet = CharSet.Unicode, ExactSpelling = true, PreserveSig = true)]
+        [DllImport("api-ms-win-core-sysinfo-l1-2-0.dll", CharSet = CharSet.Unicode, ExactSpelling = true, PreserveSig = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
         private static extern bool GetProcessTimes(
             IntPtr hProcess,
@@ -94,7 +104,7 @@ namespace ChatterBox.Client.Voip.Utils
 #endif
 
 
-    public struct ProcessTimes
+        public struct ProcessTimes
         {
             public UInt64 CreationTime;
             public UInt64 ExitTime;
@@ -123,8 +133,8 @@ namespace ChatterBox.Client.Voip.Utils
         }
 
         /// <summary>
-        ///calculate CPU usage, e.g.: this process time vs system process time
-        ///return the CPU usage in percentage
+        /// Calculate CPU usage, e.g.: this process time vs system process time
+        /// return the CPU usage in percentage
         /// </summary>
         public static double GetCPUUsage() 
         {
@@ -134,14 +144,12 @@ namespace ChatterBox.Client.Voip.Utils
             //retrieve process time
             ProcessTimes processTimes = GetProcessTimes();
 
-            Debug.WriteLine(processTimes.KernelTime);
-            Debug.WriteLine(processTimes.UserTime);
-
             UInt64 currentProcessTime = processTimes.KernelTime + processTimes.UserTime;
 
             //retrieve system time
             // get number of CPU cores, then, check system time for every CPU core
-            if(numberOfProcessors == 0 ) {
+            if(numberOfProcessors == 0 )
+            {
                 SystemInfo info;
                 GetSystemInfo(out info);
 
@@ -160,8 +168,7 @@ namespace ChatterBox.Client.Voip.Utils
 
             if (result != NtStatus.Success)
             {
-                Debug.WriteLine(result);
-
+                Debug.WriteLine($"Failed to obtain processor performance information ({result})");
                 return ret;
             }
             UInt64 currentSystemTime = 0;
@@ -176,18 +183,14 @@ namespace ChatterBox.Client.Voip.Utils
             //we need to at least measure twice 
             if (previousProcessTime != 0 && previousSystemTIme != 0)
             {
-
                 ret = ((double)(currentProcessTime - previousProcessTime) / (double)(currentSystemTime - previousSystemTIme)) * 100.0;
             }
-
 
             previousProcessTime = currentProcessTime;
 
             previousSystemTIme = currentSystemTime;
 
-            Debug.WriteLine(ret);
-
-
+            Debug.WriteLine($"CPU usage: {ret}%");
 
             return ret;
         }
@@ -203,13 +206,13 @@ namespace ChatterBox.Client.Voip.Utils
             public ulong Reserved2;
         }
 
-    /// <summary>Retrieves the specified system information.</summary>
-    /// <param name="InfoClass">indicate the kind of system information to be retrieved</param>
-    /// <param name="Info">a buffer that receives the requested information</param>
-    /// <param name="Size">The allocation size of the buffer pointed to by Info</param>
-    /// <param name="Length">If null, ignored.  Otherwise tells you the size of the information returned by the kernel.</param>
-    /// <returns>Status Information</returns>
-    /// http://msdn.microsoft.com/en-us/library/windows/desktop/ms724509%28v=vs.85%29.aspx
+        /// <summary>Retrieves the specified system information.</summary>
+        /// <param name="InfoClass">indicate the kind of system information to be retrieved</param>
+        /// <param name="Info">a buffer that receives the requested information</param>
+        /// <param name="Size">The allocation size of the buffer pointed to by Info</param>
+        /// <param name="Length">If null, ignored.  Otherwise tells you the size of the information returned by the kernel.</param>
+        /// <returns>Status Information</returns>
+        /// http://msdn.microsoft.com/en-us/library/windows/desktop/ms724509%28v=vs.85%29.aspx
 
         [DllImport("ntdll.dll", SetLastError = false, ExactSpelling = true)]
         private static extern NtStatus NtQuerySystemInformation(SYSTEM_INFORMATION_CLASS InfoClass, IntPtr Info, UInt32 Size, out UInt32 Length);
@@ -225,7 +228,7 @@ namespace ChatterBox.Client.Voip.Utils
 #endif
 
 
-    private static uint numberOfProcessors = 0;
+        private static uint numberOfProcessors = 0;
         private static UInt64 previousProcessTime = 0;
         private static UInt64 previousSystemTIme = 0;
 

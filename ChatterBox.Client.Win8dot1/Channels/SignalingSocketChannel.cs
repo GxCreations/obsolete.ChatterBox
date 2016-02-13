@@ -1,4 +1,15 @@
-﻿using ChatterBox.Client.Common.Communication.Signaling;
+﻿//*********************************************************
+//
+// Copyright (c) Microsoft. All rights reserved.
+// This code is licensed under the MIT License (MIT).
+// THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF
+// ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY
+// IMPLIED WARRANTIES OF FITNESS FOR A PARTICULAR
+// PURPOSE, MERCHANTABILITY, OR NON-INFRINGEMENT.
+//
+//*********************************************************
+
+using ChatterBox.Client.Common.Communication.Signaling;
 using ChatterBox.Client.Common.Communication.Signaling.Dto;
 using ChatterBox.Client.Common.Settings;
 using ChatterBox.Client.Common.Signaling;
@@ -75,7 +86,7 @@ namespace ChatterBox.Client.Win8dot1.Channels
                 }
                 catch (Exception exception)
                 {
-                    Debug.WriteLine($"Reading error: {exception.Message}");
+                    Debug.WriteLine($"Signaling socket read error: {exception.Message}");
                     _signalingClient.ServerConnectionError();
                     _isConnected = false;
                 }

@@ -1,4 +1,15 @@
-﻿using ChatterBox.Client.Voip;
+﻿//*********************************************************
+//
+// Copyright (c) Microsoft. All rights reserved.
+// This code is licensed under the MIT License (MIT).
+// THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF
+// ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY
+// IMPLIED WARRANTIES OF FITNESS FOR A PARTICULAR
+// PURPOSE, MERCHANTABILITY, OR NON-INFRINGEMENT.
+//
+//*********************************************************
+
+using ChatterBox.Client.Voip;
 using System;
 using System.Diagnostics;
 using ChatterBox.Client.Common.Communication.Foreground.Dto;
@@ -48,32 +59,32 @@ namespace ChatterBox.Client.Win8dot1.Voip
 
 		public void InitialiazeStatsManager(RtcPeerConnection pc)
         {
-            Debug.WriteLine("Stats Manager is not integrated to 8.1 yet");
+            Debug.WriteLine("Stats Manager is not integrated to 8.1 client");
         }
 
         public void ToggleStatsManagerConnectionState(bool enable)
         {
-            Debug.WriteLine("Stats Manager is not integrated to 8.1 yet");
+            Debug.WriteLine("Stats Manager is not integrated to 8.1 client");
         }
 
         public void TrackStatsManagerEvent(string name, IDictionary<string, string> props)
         {
-            Debug.WriteLine("Stats Manager is not integrated to 8.1 yet");
+            Debug.WriteLine("Stats Manager is not integrated to 8.1 client");
         }
 
         public void TrackStatsManagerMetric(string name, double value)
         {
-            Debug.WriteLine("Stats Manager is not integrated to 8.1 yet");
+            Debug.WriteLine("Stats Manager is not integrated to 8.1 client");
         }
 
         public void StartStatsManagerCallWatch()
         {
-            Debug.WriteLine("Stats Manager is not integrated to 8.1 yet");
+            Debug.WriteLine("Stats Manager is not integrated to 8.1 client");
         }
 
         public void StopStatsManagerCallWatch()
         {
-            Debug.WriteLine("Stats Manager is not integrated to 8.1 yet");
+            Debug.WriteLine("Stats Manager is not integrated to 8.1 client");
         }
 
         public bool IsAppInsightsEnabled

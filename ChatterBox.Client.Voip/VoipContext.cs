@@ -1,4 +1,15 @@
-﻿using ChatterBox.Client.Common.Communication.Foreground.Dto;
+﻿//*********************************************************
+//
+// Copyright (c) Microsoft. All rights reserved.
+// This code is licensed under the MIT License (MIT).
+// THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF
+// ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY
+// IMPLIED WARRANTIES OF FITNESS FOR A PARTICULAR
+// PURPOSE, MERCHANTABILITY, OR NON-INFRINGEMENT.
+//
+//*********************************************************
+
+using ChatterBox.Client.Common.Communication.Foreground.Dto;
 using ChatterBox.Client.Common.Communication.Voip.States;
 using ChatterBox.Client.Common.Communication.Voip.Dto;
 using ChatterBox.Client.Common.Settings;
@@ -219,6 +230,11 @@ namespace ChatterBox.Client.Common.Communication.Voip
         public void SaveTrace(TraceServerConfig traceServer)
         {
             RtcEngine.SaveTrace(traceServer.Ip, traceServer.Port);
+        }
+
+        public void ToggleETWStats(bool enabled)
+        {
+            ETWStatsEnabled = enabled;
         }
 
         public void ReleaseDevices()
@@ -486,6 +502,21 @@ namespace ChatterBox.Client.Common.Communication.Voip
             }
         }
 
+        private bool _etwStatsEnabled = false;
+
+        public bool ETWStatsEnabled
+        {
+            get { return _etwStatsEnabled; }
+            set
+            {
+                _etwStatsEnabled = value;
+                if (_peerConnection != null)
+                {
+                    _peerConnection.ToggleETWStats(_etwStatsEnabled);
+                }
+            }
+        }
+
         private RtcPeerConnection _peerConnection { get; set; }
         public RtcPeerConnection PeerConnection
         {
@@ -510,6 +541,9 @@ namespace ChatterBox.Client.Common.Communication.Voip
                         _hub.InitialiazeStatsManager(_peerConnection);
                         _hub.ToggleStatsManagerConnectionState(true);
                     }
+
+                    _peerConnection.ToggleETWStats(ETWStatsEnabled);
+
                     _peerConnection.OnAddStream += evt =>
                     {
                         if (evt.Stream != null)

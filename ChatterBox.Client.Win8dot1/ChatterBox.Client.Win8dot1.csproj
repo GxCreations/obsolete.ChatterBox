@@ -3,7 +3,7 @@
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
     <ProjectGuid>{CF1CD0D5-BF6B-457A-9927-8079FC667CA4}</ProjectGuid>
     <OutputType>AppContainerExe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
@@ -20,24 +20,6 @@
     <AppxBundlePlatforms>x86|x64</AppxBundlePlatforms>
     <PackageCertificateThumbprint>3EA9D965B77EF099A1892E870C0B601740802C4E</PackageCertificateThumbprint>
     <PackageCertificateKeyFile>ChatterBox.Client.Win8dot1_TemporaryKey.pfx</PackageCertificateKeyFile>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <PlatformTarget>x86</PlatformTarget>
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;USE_WEBRTC_API;NETFX_CORE;WINDOWS_APP;WIN81</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <Prefer32Bit>false</Prefer32Bit>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE;USE_WEBRTC_API;NETFX_CORE;WIN81</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
     <DebugSymbols>true</DebugSymbols>
@@ -84,6 +66,12 @@
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
     <Prefer32Bit>true</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|arm'">
+  <OutputPath>bin\arm\Debug\</OutputPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|arm'">
+  <OutputPath>bin\arm\Release\</OutputPath>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Channels\ClientChannel.cs" />
@@ -165,11 +153,17 @@
   </PropertyGroup>
   <Import Project="$(MSBuildExtensionsPath)\Microsoft\WindowsXaml\v$(VisualStudioVersion)\Microsoft.Windows.UI.Xaml.CSharp.targets" />
   <Import Project="..\packages\WebRTC.1.1.267\build\netcore45\WebRTC.targets" Condition="Exists('..\packages\WebRTC.1.1.267\build\netcore45\WebRTC.targets')" />
+  <Target Name="PrevertFromARMBuild" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project is not supported for 'arm' platform.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="'$(Platform)' == 'ARM'" Text="$([System.String]::Format('$(ErrorText)'))" />
+  </Target>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
-    <Error Condition="!Exists('..\packages\WebRTC.1.1.267\build\netcore45\WebRTC.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\WebRTC.1.1.267\build\netcore45\WebRTC.targets'))" />
+    <Error Condition="!Exists('..\packages\WebRTC.1.1.236\build\netcore45\WebRTC.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\WebRTC.1.1.267\build\netcore45\WebRTC.targets'))" />
   </Target>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

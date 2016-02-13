@@ -417,7 +417,9 @@ namespace ChatterBox.Client.Voip.Rtc
                 using (var @lock = new AutoLock(_lock))
                 {
                     // Since the DTLS certificate is ready the RtcDtlsTransport can now be constructed.
-                    _dtlsTransport = new RtcDtlsTransport(_iceTransport, cert.Result);
+                    var certs = new List<RtcCertificate>();
+                    certs.Add(cert.Result);
+                    _dtlsTransport = new RtcDtlsTransport(_iceTransport, certs);
                     if (_closed) _dtlsTransport.Stop();
                 }
 
@@ -688,6 +690,11 @@ namespace ChatterBox.Client.Voip.Rtc
             var constraints = RtcHelper.MakeConstraints(true, null, RtcMediaDeviceKind.AudioOutput, device);
 
             track.ApplyConstraints(constraints.Audio).AsTask();
+        }
+
+        public void ToggleETWStats(bool enabled)
+        {
+#warning ToggleETWStats is a horribly named method!
         }
 
         //public RTCIceConnectionState IceConnectionState { get; }

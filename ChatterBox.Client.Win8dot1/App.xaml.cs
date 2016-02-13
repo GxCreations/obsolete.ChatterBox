@@ -1,4 +1,15 @@
-﻿using ChatterBox.Client.Common.Avatars;
+﻿//*********************************************************
+//
+// Copyright (c) Microsoft. All rights reserved.
+// This code is licensed under the MIT License (MIT).
+// THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF
+// ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY
+// IMPLIED WARRANTIES OF FITNESS FOR A PARTICULAR
+// PURPOSE, MERCHANTABILITY, OR NON-INFRINGEMENT.
+//
+//*********************************************************
+
+using ChatterBox.Client.Common.Avatars;
 using ChatterBox.Client.Common.Background;
 using ChatterBox.Client.Common.Communication.Foreground;
 using ChatterBox.Client.Common.Communication.Signaling;
@@ -164,7 +175,6 @@ namespace ChatterBox.Client.Win8dot1
             msgDialog.Commands.Add(new UICommand("OK", (cmd) => Current.Exit()) { Id = 0 });
             msgDialog.DefaultCommandIndex = 0;
             msgDialog.CancelCommandIndex = 0;
-            Debug.WriteLine("Message dialog for missing lock screen showed");
             await msgDialog.ShowAsync();
         }
 

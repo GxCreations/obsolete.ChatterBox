@@ -1,4 +1,15 @@
-﻿using System;
+﻿//*********************************************************
+//
+// Copyright (c) Microsoft. All rights reserved.
+// This code is licensed under the MIT License (MIT).
+// THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF
+// ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY
+// IMPLIED WARRANTIES OF FITNESS FOR A PARTICULAR
+// PURPOSE, MERCHANTABILITY, OR NON-INFRINGEMENT.
+//
+//*********************************************************
+
+using System;
 using ChatterBox.Client.Common.Settings;
 using ChatterBox.Client.Common.Media;
 using ChatterBox.Client.Common.Media.Dto;
@@ -36,6 +47,7 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
         private bool _rtcTraceEnabled;
         private string _rtcTraceServerIP="127.0.0.1";
         private string _rtcTraceServerPort="55000";
+        private bool _etwStatsEnabled = false;
         private readonly string[] incompatibleAudioCodecs =
             new string[] { "CN32000", "CN16000", "CN8000", "red8000", "telephone-event8000" };
         private string SelectedFrameRateId = nameof(SelectedFrameRateId) + "Frame";
@@ -432,6 +444,24 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
             }
         }
 
+        public bool ETWStatsEnabled
+        {
+            get
+            {
+                return _etwStatsEnabled;
+            }
+            set
+            {
+                if (!SetProperty(ref _etwStatsEnabled, value))
+                {
+                    return;
+                }
+
+                _mediaSettings.ToggleETWStats(_etwStatsEnabled);
+            }
+        }
+
+
         public bool NtpSyncEnabled
         {
             get
@@ -628,7 +658,7 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
 
         private void handleNtpTimeSync( long ntpTime)
         {
-            Debug.WriteLine($"new ntp time: {ntpTime}");
+            Debug.WriteLine($"New ntp time: {ntpTime}");
             NtpSyncInProgress = false;
             _mediaSettings.SyncWithNTP(ntpTime);
 
