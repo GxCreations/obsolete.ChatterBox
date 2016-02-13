@@ -1,4 +1,15 @@
-﻿using ChatterBox.Client.Common.Communication.Voip;
+﻿//*********************************************************
+//
+// Copyright (c) Microsoft. All rights reserved.
+// This code is licensed under the MIT License (MIT).
+// THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF
+// ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY
+// IMPLIED WARRANTIES OF FITNESS FOR A PARTICULAR
+// PURPOSE, MERCHANTABILITY, OR NON-INFRINGEMENT.
+//
+//*********************************************************
+
+using ChatterBox.Client.Common.Communication.Voip;
 using ChatterBox.Client.Common.Communication.Voip.Dto;
 using ChatterBox.Client.Common.Media;
 using ChatterBox.Client.Common.Media.Dto;
@@ -132,6 +143,11 @@ namespace ChatterBox.Client.Win8dot1.Channels
         public void SaveTrace(TraceServerConfig traceServer)
         {
             _voipContext.SaveTrace(traceServer);
+        }
+
+        public void ToggleETWStats(bool enabled)
+        {
+            _voipContext.ToggleETWStats(enabled);
         }
 
         public void ReleaseDevices()

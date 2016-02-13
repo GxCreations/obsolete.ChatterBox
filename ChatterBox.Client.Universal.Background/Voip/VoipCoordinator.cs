@@ -1,4 +1,15 @@
-﻿using ChatterBox.Client.Common.Avatars;
+﻿//*********************************************************
+//
+// Copyright (c) Microsoft. All rights reserved.
+// This code is licensed under the MIT License (MIT).
+// THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF
+// ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY
+// IMPLIED WARRANTIES OF FITNESS FOR A PARTICULAR
+// PURPOSE, MERCHANTABILITY, OR NON-INFRINGEMENT.
+//
+//*********************************************************
+
+using ChatterBox.Client.Common.Avatars;
 using ChatterBox.Client.Common.Communication.Voip.Dto;
 using ChatterBox.Client.Universal.Background.Tasks;
 using ChatterBox.Client.Voip.States.Interfaces;
@@ -33,7 +44,6 @@ namespace ChatterBox.Client.Universal.Background.Voip
 
         public void StartIncomingCall(RelayMessage message)
         {
-            Debug.WriteLine("GetForegroundState");
             var foregroundIsVisible = false;
             var state = Hub.Instance.ForegroundClient.GetForegroundState();
             if (state != null) foregroundIsVisible = state.IsForegroundVisible;
