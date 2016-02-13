@@ -70,6 +70,7 @@ namespace ChatterBox.Client.Voip.Rtc
     using RtcRtpRtxParameters = ortc_winrt_api.RTCRtpRtxParameters;
     using RtcRtpCodecCapability = ortc_winrt_api.RTCRtpCodecCapability;
     using RtcRtpHeaderExtension = ortc_winrt_api.RTCRtpHeaderExtension;
+    using RtcSettings = ortc_winrt_api.Settings;
 
     internal delegate void OnMediaCaptureDeviceFoundDelegate(MediaDevice param);
     internal delegate void RTCPeerConnectionIceEventDelegate(RTCPeerConnectionIceEvent param);
@@ -105,6 +106,7 @@ namespace ChatterBox.Client.Voip.Rtc
 
         public static void Initialize(CoreDispatcher dispatcher)
         {
+            RtcSettings.ApplyDefaults();
             RtcOrtcWithDispatcher.Setup(dispatcher);
         }
 
@@ -143,7 +145,7 @@ namespace ChatterBox.Client.Voip.Rtc
                 RtcLogger.SetLogLevel(RtcLog.Component.ServicesHttp, RtcLog.Level.Trace);
                 RtcLogger.SetLogLevel(RtcLog.Component.OrtcLib, RtcLog.Level.Trace);
 
-                if (String.IsNullOrEmpty(host))
+                if (!String.IsNullOrEmpty(host))
                 {
                     RtcLogger.InstallOutgoingTelnetLogger(host + ":" + port.ToString(), true, null);
                 }
@@ -254,8 +256,10 @@ namespace ChatterBox.Client.Voip.Rtc
 
         public IMediaSource CreateMediaSource(MediaVideoTrack track, string id)
         {
-#warning TODO IMPLEMENT CreateMediaSource
-            return null;
+            var useTrack = track.Track;
+            if (null == useTrack) return null;
+
+            return useTrack.CreateMediaSource();
         }
 
         //public IMediaSource CreateMediaStreamSource(MediaVideoTrack track, uint framerate, string id) { return null; }
@@ -383,6 +387,15 @@ namespace ChatterBox.Client.Voip.Rtc
 
         private event StepEventHandler OnStep;
 
+        /// <summary>
+        /// Constructor accepts ICE server configuration from application
+        /// layer and sets up RtcIceGather, RtcIceTransport and RtcDtlsTransport
+        /// </summary>
+        /// <remarks>
+        /// The RtcDtlsTransport is created after a DTLS web certificate is created
+        /// asynchornously. Once the DTLS certificate is created the DTLS transport
+        /// can then be constructed with the certificate.
+        /// </remarks>
         public RTCPeerConnection(RTCConfiguration configuration)
         {
             var options = RtcHelper.ToGatherOptions(configuration);
@@ -394,6 +407,8 @@ namespace ChatterBox.Client.Voip.Rtc
                 _iceGatherer = new RtcIceGatherer(options);
                 _iceTransport = new RtcIceTransport(_iceGatherer);
 
+                // An internal event handler to continue the setup process various media and
+                // device selection APIs are called by the application layer.
                 OnStep += RTCPeerConnection_OnStep;
             }
 
@@ -401,44 +416,74 @@ namespace ChatterBox.Client.Voip.Rtc
             {
                 using (var @lock = new AutoLock(_lock))
                 {
-                    _dtlsTransport = new RtcDtlsTransport(_iceTransport, cert.Result);
+                    // Since the DTLS certificate is ready the RtcDtlsTransport can now be constructed.
+                    var certs = new List<RtcCertificate>();
+                    certs.Add(cert.Result);
+                    _dtlsTransport = new RtcDtlsTransport(_iceTransport, certs);
                     if (_closed) _dtlsTransport.Stop();
                 }
+
+                // Kick start the continued setup process.
                 Wake();
             });
         }
 
+        /// <summary>
+        /// An internal helper to kick start the continued setup process of an ORTC connection with a peer.
+        /// </summary>
         private void Wake()
         {
             Task.Run(() => { OnStep(); });
         }
 
+        /// <summary>
+        /// Setup of an ORTC connection must be done in 3 main steps:
+        /// 1. Obtain the capabilities of the ORTC API.
+        /// 2. Setup an ORTC RtcRtpReciever to receiver incoming audio and video media.
+        /// 3. Setup an ORTC RtcRtpSender to send outgoing audio and video media.
+        /// </summary>
         private void RTCPeerConnection_OnStep()
         {
             using (var @lock = new AutoLock(_lock))
             {
+                // If the object was closed before the setup event is triggered then abort early.
                 if (_closed)
                 {
                     Close();
                     return;
                 }
+
+                // Can only obtain and setup the senders and receivers if the RtcDtlsTransport is ready.
                 if (null == _dtlsTransport) return;
+
+                // Perform the three main steps to setup the capabilities, and incoming and outgoing media.
                 StepGetCapabilities();
                 StepSetupReceiver();
                 StepSetupSender();
             }
         }
 
+        /// <summary>
+        /// Obtain the capabilities of the ORTC engine. The application will need to exchange
+        /// these capabilities with the remote peer so they can mutually configuring the codecs,
+        /// media and RTP parameters necessary to establish an RTC peer session.
+        /// </summary>
         private void StepGetCapabilities()
         {
             if (null == _capabilitiesTcs) return;
 
+            // Obtain basic ICE configuration information like the usernameFragment and password.
             var localParams = _iceGatherer.GetLocalParameters();
+
+            // Obtain the complete capabilities of the RtcRtpSenders/RtcRtpReceivers for both
+            // audio and video.
             var audioSenderCaps = RtcRtpSender.GetCapabilities("audio");
-            var videoSenderCaps = RtcRtpSender.GetCapabilities("audio");
+            var videoSenderCaps = RtcRtpSender.GetCapabilities("video");
             var audioReceiverCaps = RtcRtpReceiver.GetCapabilities("audio");
-            var videoReceiverCaps = RtcRtpReceiver.GetCapabilities("audio");
+            var videoReceiverCaps = RtcRtpReceiver.GetCapabilities("video");
             var dtlsParameters = _dtlsTransport.GetLocalParameters();
+
+            // Find out what type of media the application wants to send, i.e. audio, video, or both.
             bool hasAudio = false;
             bool hasVideo = false;
 
@@ -449,21 +494,40 @@ namespace ChatterBox.Client.Voip.Rtc
                 var videoTracks = _localStream.GetVideoTracks();
                 if (null != videoTracks) { hasVideo = (videoTracks.Count > 0); }
             }
+
+            // If the remote peer's capabilities are already known at this time do not offer media beyond
+            // what the remote side desires even if the local application offers the media devices needed
+            // for more.
             if (null != _remoteCapabilities)
             {
                 hasAudio = _remoteCapabilities.Description.HasAudio;
                 hasVideo = _remoteCapabilities.Description.HasVideo;
             }
 
+            // Put all this information into a "blob" that can be JSONified and sent to the remote party.
             var caps = new RTCSessionDescription(new RtcDescription(hasAudio, hasVideo, _iceRole, localParams, audioSenderCaps, videoSenderCaps, audioReceiverCaps, videoReceiverCaps, dtlsParameters));
 
+            // If the remote peer's codec information is known, readjust the codec ordering to match the
+            // remote peer's order to ensure both sender and receiver are using the same codec. This is not
+            // a requirement of ORTC but typically the same codec is used bidirectionally.
             if (null != _remoteCapabilities) {RtcHelper.PickLocalCodecBasedOnRemote(caps, _remoteCapabilities);}
+
+            // Remember the capabilities for use later when setting up the RtcRtpSenders/RtcRtpReceivers
             _localCapabilities = caps;
 
+            // Return the "blob" information asynchronously to the calling application.
             _capabilitiesTcs.SetResult(_localCapabilities);
             _capabilitiesTcs = null;
         }
 
+        /// <summary>
+        /// Setup ORTC to receive incoming audio and/or video media from the remote peer.
+        /// </summary>
+        /// <remarks>
+        /// The application is given the opportunity to override, modify, or tweak and of the RTP
+        /// settings before commiting to a particular set of media options. This section uses the
+        /// final set of parameters specificied by the application to setup incoming media.
+        /// </remarks>
         private void StepSetupReceiver()
         {
             if (null == _capabilitiesFinalTcs) return;
@@ -471,6 +535,7 @@ namespace ChatterBox.Client.Voip.Rtc
             MediaAudioTrack incomingAudioTrack = null;
             MediaVideoTrack incomingVideoTrack = null;
 
+            // Figure out of the local and remote desire to send/receive audio and video.
             bool hasAudio = _localCapabilitiesFinal.Description.HasAudio;
             bool hasVideo = _localCapabilitiesFinal.Description.HasVideo;
             if (null != _remoteCapabilities)
@@ -479,22 +544,35 @@ namespace ChatterBox.Client.Voip.Rtc
                 hasVideo = hasVideo && _remoteCapabilities.Description.HasVideo;
             }
 
+            // If audio is desired then setup the incoming audio RTP receiver
             if (hasAudio)
             {
                 _audioReceiver = new RtcRtpReceiver(_dtlsTransport);
 
+                // Given the local capabilities offered setup a receiver by converting the capabilities
+                // offered into settings needed to configure the receiver using the helper routine and
+                // label the receiver stream with identifier "a" for audio.
                 var @params = RtcHelper.CapabilitiesToParameters("a", _localCapabilities.Description.AudioReceiverCapabilities);
                 _audioReceiver.Receive(@params);
                 incomingAudioTrack = new MediaAudioTrack(_audioReceiver.Track);
             }
+
+            // If video is desired then setup the incoming audio RTP receiver
             if (hasVideo)
             {
                 _videoReceiver = new RtcRtpReceiver(_dtlsTransport);
+
+                // Given the local capabilities offered setup a receiver by converting the capabilities
+                // offered into settings needed to configure the receiver using the helper routine and
+                // label the receiver stream with identifier "v" for video.
                 var @params = RtcHelper.CapabilitiesToParameters("v", _localCapabilities.Description.VideoReceiverCapabilities);
                 _videoReceiver.Receive(@params);
                 incomingVideoTrack = new MediaVideoTrack(_videoReceiver.Track);
             }
 
+            // ORTC allows for simulcasting so return the list of audio/video streams created to the
+            // application. However, in this particular example only one audio and video stream
+            // are used since it's a peer to peer scenario.
             List<MediaAudioTrack> incomingAudioTracks = null;
             List<MediaVideoTrack> incomingVideoTracks = null;
             if (null != incomingAudioTrack)
@@ -508,30 +586,47 @@ namespace ChatterBox.Client.Voip.Rtc
                 incomingVideoTracks.Add(incomingVideoTrack);
             }
 
+            // Setup a helper media stream containing all the incoming audio and video media "tracks".
             var mediaStream = new MediaStream(incomingAudioTracks, incomingVideoTracks);
             _remoteStream = mediaStream;
             var evt = new MediaStreamEvent();
             evt.Stream = _remoteStream;
             Task.Run(() => { OnAddStream(evt); });
 
+            // Return to the application that the receving media is ready.
             _capabilitiesFinalTcs.SetResult(_localCapabilitiesFinal);
             _capabilitiesFinalTcs = null;
         }
 
+        /// <summary>
+        /// Setup ORTC to sender outgoing audio and/or video media from the remote peer.
+        /// </summary>
+        /// <remarks>
+        /// The application is given the opportunity to override, modify, or tweak and of the RTP
+        /// settings before commiting to a particular set of media options. This section uses the
+        /// final set of parameters specificied by the application to setup outgoing media.
+        /// </remarks>
         private void StepSetupSender()
         {
+            // Only setup the sender information if all the information is ready and the remote
+            // peer's capabilities are known.
             if (null == _remoteCapabilitiesTcs) return;
             if (null == _localStream) return;
             if (null == _localCapabilitiesFinal) return;
             if (null == _remoteCapabilities) return;
 
+            // Start the ICE engine communication with the remote peer.
             _iceTransport.Start(_iceGatherer, _remoteCapabilities.Description.IceParameters, _remoteCapabilities.Description.IceRole);
+
+            // Start the DTLS transport and expect a connection with a DTLS certificate provide by the remote party.
             _dtlsTransport.Start(_remoteCapabilities.Description.DtlsParameters);
 
+            // If the local and remote party are sending audio then setup the audio RtcRtpSender.
             if (_localCapabilitiesFinal.Description.HasAudio)
             {
                 if (null == _audioSender)
                 {
+                    // Figure out if the application has audio media streams to send to the remote party.
                     var tracks = _localStream.GetAudioTracks();
                     MediaAudioTrack mediaTrack = null;
                     RtcMediaStreamTrack track = null;
@@ -540,6 +635,7 @@ namespace ChatterBox.Client.Voip.Rtc
 
                     if (null != track)
                     {
+                        // If a track was found then setup the audio RtcRtpSender.
                         _audioSender = new RtcRtpSender(track, _dtlsTransport);
                         var @params = RtcHelper.CapabilitiesToParameters("a", _remoteCapabilities.Description.AudioReceiverCapabilities);
                         RtcHelper.SetupSenderEncodings(@params);
@@ -547,10 +643,13 @@ namespace ChatterBox.Client.Voip.Rtc
                     }
                 }
             }
+
+            // If the local and remote party are sending video then setup the video RtcRtpSender.
             if (_localCapabilitiesFinal.Description.HasVideo)
             {
                 if (null == _videoSender)
                 {
+                    // Figure out if the application has video media streams to send to the remote party.
                     var tracks = _localStream.GetVideoTracks();
                     MediaVideoTrack mediaTrack = null;
                     RtcMediaStreamTrack track = null;
@@ -559,6 +658,7 @@ namespace ChatterBox.Client.Voip.Rtc
 
                     if (null != track)
                     {
+                        // If a track was found then setup the video RtcRtpSender.
                         _videoSender = new RtcRtpSender(track, _dtlsTransport);
                         var @params = RtcHelper.CapabilitiesToParameters("v", _remoteCapabilities.Description.VideoReceiverCapabilities);
                         RtcHelper.SetupSenderEncodings(@params);
@@ -566,6 +666,8 @@ namespace ChatterBox.Client.Voip.Rtc
                     }
                 }
             }
+
+            // Return to the application that the sender media is ready.
             _remoteCapabilitiesTcs.SetResult(_remoteCapabilities);
             _remoteCapabilitiesTcs = null;
         }
@@ -822,7 +924,12 @@ namespace ChatterBox.Client.Voip.Rtc
 
     internal sealed class CodecInfo
     {
-        public CodecInfo(int id, int clockrate, string name) { }
+        public CodecInfo(int id, int clockrate, string name)
+        {
+            Id = id;
+            Clockrate = clockrate;
+            Name = name;
+        }
 
         public int Clockrate { get; set; }
         public int Id { get; set; }
