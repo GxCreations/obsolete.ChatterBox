@@ -692,6 +692,11 @@ namespace ChatterBox.Client.Voip.Rtc
             track.ApplyConstraints(constraints.Audio).AsTask();
         }
 
+        public void ToggleETWStats(bool enabled)
+        {
+#warning ToggleETWStats is a horribly named method!
+        }
+
         //public RTCIceConnectionState IceConnectionState { get; }
         //public RTCIceGatheringState IceGatheringState { get; }
         //public RTCSessionDescription LocalDescription { get; }
