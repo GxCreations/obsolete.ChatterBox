@@ -74,6 +74,7 @@ namespace ChatterBox.Client.Common.Signaling
                 var bufferFile = await GetBufferFile();
                 await bufferFile.DeleteAsync();
                 await SendToServer(message);
+                GetPeerList(new Message());
             }).Wait();
         }
 
