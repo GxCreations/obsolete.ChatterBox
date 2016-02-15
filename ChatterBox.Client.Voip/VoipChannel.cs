@@ -41,11 +41,17 @@ namespace ChatterBox.Client.Common.Communication.Voip
             Context = context;
         }
 
-        #region IVoipChannel Members
-
         public void DisplayOrientationChanged(DisplayOrientations orientation)
         {
             Context.DisplayOrientation = orientation;
+        }
+
+        public void InitializeRTC()
+        {
+            Context.WithContextActionAsync(cx =>
+            {
+                return cx.InitializeRTC();
+            }).Wait();
         }
 
         public void SetForegroundProcessId(uint processId)
@@ -237,34 +243,11 @@ namespace ChatterBox.Client.Common.Communication.Voip
                 }).Wait();
             });
         }
-        #endregion
 
-        // TODO these methods should probably be within the region above - why aren't they inside the interface?
         public void RegisterVideoElements(MediaElement self, MediaElement peer)
         {
             Context.LocalVideoRenderer.SetMediaElement(Dispatcher, self);
             Context.RemoteVideoRenderer.SetMediaElement(Dispatcher, peer);
-        }
-
-        // TODO MediaSettingsChannel also implements this "SyncWithNTP" method (and tracing) - why do they both need this?
-        public void SyncWithNTP(long ntpTime)
-        {
-            Context.SyncWithNTP(ntpTime);
-        }
-
-        public void StartTrace()
-        {
-            Context.StartTrace();
-        }
-
-        public void StopTrace()
-        {
-            Context.StopTrace();
-        }
-
-        public void SaveTrace(TraceServerConfig traceServer)
-        {
-            Context.SaveTrace(traceServer);
         }
 
         public void SuspendVoipVideo()

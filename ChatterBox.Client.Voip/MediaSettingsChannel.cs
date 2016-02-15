@@ -160,21 +160,6 @@ namespace ChatterBox.Client.Common.Communication.Voip
             }).Wait();
         }
 
-        public void InitializeMedia()
-        {
-            // TODO please remove this method and auto-init WebRTC as needed (Fred LaBel)
-            Context.WithContextActionAsync(async ctx => { await ctx.InitializeMediaAsync(); }).Wait();
-        }
-
-        public IAsyncAction InitializeMediaAsync()
-        {
-            // TODO please remove this method and auto-init WebRTC as needed (Fred LaBel)
-            return Task.Run(async () =>
-            {
-                await Context.WithContextActionAsync(async ctx => { await ctx.InitializeMediaAsync(); });
-            }).AsAsyncAction();
-        }
-
         public IAsyncOperation<bool> RequestAccessForMediaCaptureAsync()
         {
             // do not call for Windows 10

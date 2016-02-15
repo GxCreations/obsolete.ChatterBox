@@ -182,12 +182,6 @@ namespace ChatterBox.Client.Common.Communication.Voip
             _localSettings.Values[MediaSettingsIds.PreferredVideoCaptureFrameRate] = format.FrameRate;
         }
 
-        public async Task InitializeMediaAsync()
-        {
-            // TODO: Let's remove this.
-            await InitializeRTC();
-        }
-
         public async Task<bool> RequestAccessForMediaCaptureAsync()
         {
             return await WebRTC.RequestAccessForMediaCapture().AsTask();
@@ -424,11 +418,6 @@ namespace ChatterBox.Client.Common.Communication.Voip
         {
             get
             {
-                // TODO: lock(this) in await/async model doesn't work properly. Replace this with safer version (semaphore?)
-                // NOTE: Possible issue with using semaphores is that the semaphore on the class is not re-entrent so
-                //       the VoipChannel may lock with the semaphore, call the context via WithState which calls the
-                //       state machine which then calls back to the Context but it's already locked. Since the semaphore
-                //       is not re-entrant this could cause a deadlock.
                 lock (this)
                 {
                     return _isVideoEnabled;

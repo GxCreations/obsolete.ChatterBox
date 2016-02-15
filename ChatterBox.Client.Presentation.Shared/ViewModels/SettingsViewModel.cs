@@ -26,6 +26,7 @@ using ChatterBox.Client.Presentation.Shared.Services;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using ChatterBox.Client.Common.Communication.Voip.Dto;
+using ChatterBox.Client.Common.Communication.Voip;
 
 namespace ChatterBox.Client.Presentation.Shared.ViewModels
 {
@@ -38,6 +39,7 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
         private string _signalingServerHost;
         private int _signalingServerPort;
         private IMediaSettingsChannel _mediaSettings;
+        private IVoipChannel _voipChannel;
         private NtpService _ntpService;
         private CoreDispatcher _dispatcher;
         private bool _appInsightsEnabled;
@@ -59,6 +61,7 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
             _dispatcher = dispatcher;
 
             _mediaSettings = container.Resolve<IMediaSettingsChannel>();
+            _voipChannel = container.Resolve<IVoipChannel>();
             _ntpService = container.Resolve<NtpService>();
 
             _ntpService.OnNTPSyncFailed += handleNtpSynFailed;
@@ -195,7 +198,7 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
 
         private async Task LoadSettings()
         {
-            await _mediaSettings.InitializeMediaAsync();
+            _voipChannel.InitializeRTC();
 
             SignalingServerPort = int.Parse(SignalingSettings.SignalingServerPort);
             SignalingServerHost = SignalingSettings.SignalingServerHost;

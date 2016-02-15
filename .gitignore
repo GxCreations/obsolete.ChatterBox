@@ -2,6 +2,7 @@ bin/
 BackgroundHost/x64/
 obj/
 packages/
+AppPackages/
 x64/
 ChatterBox.Client.WebRTCSwapChainPanel/Debug/
 Debug/
