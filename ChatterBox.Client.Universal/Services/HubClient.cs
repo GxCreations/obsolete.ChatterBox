@@ -206,13 +206,9 @@ namespace ChatterBox.Client.Universal.Services
             InvokeHubChannel<IMediaSettingsChannel>(format);
         }
 
-        public void InitializeMedia()
+        public void InitializeRTC()
         {
-            InvokeHubChannel<IMediaSettingsChannel>();
-        }
-        public IAsyncAction InitializeMediaAsync()
-        {
-            return Task.Run(() => InitializeMedia()).AsAsyncAction();
+            InvokeHubChannel<IVoipChannel>();
         }
 
         public IAsyncOperation<bool> RequestAccessForMediaCaptureAsync()

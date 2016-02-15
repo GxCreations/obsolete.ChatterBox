@@ -153,9 +153,6 @@ namespace ChatterBox.Client.Common.Communication.Voip.States
 #endif
                 Context.RemoteVideoRenderer.SetupRenderer(Context.ForegroundProcessId, source, Context.RemoteVideoControlSize);
             }
-            // TODO: Delay here prevents a crash in the MF media engine when setting up the second
-            //       renderer.  Investigate why this is happening.  Occurred 100% of the time.
-            await Task.Delay(3000);
             if (Context.LocalStream != null)
             {
                 var tracks = Context.LocalStream.GetVideoTracks();

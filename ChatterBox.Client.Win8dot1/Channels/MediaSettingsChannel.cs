@@ -112,15 +112,6 @@ namespace ChatterBox.Client.Win8dot1.Channels
             _voipContext.SetPreferredVideoCaptureFormat(format);
         }
 
-        void IMediaSettingsChannel.InitializeMedia()
-        {
-            _voipContext.InitializeMediaAsync().Wait();
-        }
-        IAsyncAction IMediaSettingsChannel.InitializeMediaAsync()
-        {
-            return _voipContext.InitializeMediaAsync().AsAsyncAction();
-        }
-
         public IAsyncOperation<bool> RequestAccessForMediaCaptureAsync()
         {
             return _voipContext.RequestAccessForMediaCaptureAsync().AsAsyncOperation();

@@ -19,6 +19,7 @@ namespace ChatterBox.Client.Common.Communication.Voip
 {
     public interface IVoipChannel
     {
+        void InitializeRTC();
         void SetForegroundProcessId(uint processId);
         void DisplayOrientationChanged(DisplayOrientations orientation);
         void Answer();
@@ -40,10 +41,6 @@ namespace ChatterBox.Client.Common.Communication.Voip
         void RegisterVideoElements(MediaElement self, MediaElement peer);
 
         void ConfigureMicrophone(MicrophoneConfig config);
-        void SyncWithNTP(long ntpTime);
-        void StartTrace();
-        void StopTrace();
-        void SaveTrace(TraceServerConfig traceServer);
 
         void SuspendVoipVideo();
         void ResumeVoipVideo();

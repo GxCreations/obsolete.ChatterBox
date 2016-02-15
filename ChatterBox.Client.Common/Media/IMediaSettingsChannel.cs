@@ -49,10 +49,6 @@ namespace ChatterBox.Client.Common.Media
 
         void SetPreferredVideoCaptureFormat(VideoCaptureFormat format);
 
-        // TODO: Remove this and auto-intialize RTC
-        void InitializeMedia();
-        IAsyncAction InitializeMediaAsync();
-
         IAsyncOperation<bool> RequestAccessForMediaCaptureAsync();
 
         void SyncWithNTP(long ntpTime);
