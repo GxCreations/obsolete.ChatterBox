@@ -12,7 +12,6 @@
     d:DesignHeight="300"
     d:DesignWidth="400" x:Name="ContactsViewControl">
     <UserControl.Resources>
-        <services:ServicesBindingHelper x:Key="ServicesBindingHelper" />
         <Style x:Key="OverlayStyle" TargetType="ItemsControl">
             <Setter Property="ItemsPanel">
                 <Setter.Value>
@@ -43,7 +42,7 @@
                 <Button HorizontalAlignment="Right" FontFamily="Segoe UI Symbol" Content="&#xE115;" Margin="5" Command="{Binding ElementName=ContactsViewControl, Path=DataContext.ShowSettings}" />
             </Grid>
         </DataTemplate>
-        <converters:LayoutTypeToStyleConverter x:Key="LayoutTypeToStyleConverter" ParallelStyle="{StaticResource ParallelStyle}" OverlayStyle="{StaticResource OverlayStyle}" />
+        <converters:BooleanToStyleConverter x:Key="BooleanToStyleConverter" TrueStyle="{StaticResource ParallelStyle}" FalseStyle="{StaticResource OverlayStyle}" />
     </UserControl.Resources>
     <Grid x:Name="MainGrid">
         <Grid.RowDefinitions>
@@ -54,7 +53,7 @@
         <controls:CommunicationControl Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
                                    Conversations="{Binding Conversations}"
                                    SelectedConversation="{Binding SelectedConversation, Mode=TwoWay}"
-                                   LayoutRootStyle="{Binding  Source={StaticResource ServicesBindingHelper}, Path=LayoutService.LayoutType, Converter={StaticResource LayoutTypeToStyleConverter}}"
+                                   LayoutRootStyle="{Binding ElementName=ContactsViewControl , Path=DataContext.ShowAsParallel, Converter={StaticResource BooleanToStyleConverter}}"
                                    ContactListHeaderTemplate="{StaticResource ContactListHeaderTemplate}">
         </controls:CommunicationControl>
         <MediaElement x:Name="RingtoneElement" Grid.Row="1"/>
