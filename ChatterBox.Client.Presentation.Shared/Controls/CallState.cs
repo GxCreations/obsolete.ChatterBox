@@ -16,6 +16,6 @@ namespace ChatterBox.Client.Presentation.Shared.Controls
         Idle = 0,
         LocalRinging = 1,
         RemoteRinging = 2,
-        Connected = 3,
+        Connected = 3
     }
 }
