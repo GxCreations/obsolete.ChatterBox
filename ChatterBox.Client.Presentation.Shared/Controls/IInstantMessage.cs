@@ -16,11 +16,34 @@ namespace ChatterBox.Client.Presentation.Shared.Controls
 {
     public interface IInstantMessage
     {
+        /// <summary>
+        ///     The text body of the instant message
+        /// </summary>
         string Body { get; }
+
+        /// <summary>
+        ///     Indicates if the local peer is the sender of the instant message
+        /// </summary>
         bool IsSender { get; }
+
+        /// <summary>
+        ///     Indicates the DateTime for the delivery of the instant message
+        /// </summary>
         DateTime DeliveredAt { get; }
+
+        /// <summary>
+        ///     Gets the profile image source for the sender
+        /// </summary>
         ImageSource SenderProfileSource { get; }
+
+        /// <summary>
+        ///     Gets the name of the sender
+        /// </summary>
         string SenderName { get; }
+
+        /// <summary>
+        ///     Highlights the instant message. Can be used to indicate an unread message.
+        /// </summary>
         bool IsHighlighted { get; set; }
     }
 }
