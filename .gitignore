@@ -11,3 +11,5 @@ Release/
 ChatterBox.sln.DotSettings
 ChatterBox.sdf
 ChatterBox.VC.opendb
+project.lock.json
+*.nuget.targets

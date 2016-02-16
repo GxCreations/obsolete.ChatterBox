@@ -135,15 +135,24 @@ namespace ChatterBox.Client.Universal.Background
 
         public VoipTask VoipTaskInstance { get; set; }
 
+
+        /// <summary>
+        /// Handles requests from the foreground by invoking the requested methods on a handler object
+        /// </summary>
         private void HandleForegroundRequest(
             AppServiceConnection sender,
             AppServiceRequestReceivedEventArgs args)
         {
             using (new AppServiceDeferralWrapper(args.GetDeferral()))
             {
+                //Identiy the channel
                 var channel = args.Request.Message.Single().Key;
+
+                //Retrieve the message (format: <Method> <Argument - can be null and is serialized as JSON>)
                 var message = args.Request.Message.Single().Value.ToString();
 
+
+                //Invoke the requested method on the handler based on the channel type
                 if (channel == nameof(ISignalingSocketChannel))
                 {
                     AppServiceChannelHelper.HandleRequest(args.Request, SignalingSocketService, message);
