@@ -176,11 +176,11 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
                 _localSettings.Values[SelectedFrameRateId] = (SelectedCapFPSItem != null) ? SelectedCapFPSItem.FrameRate : 0;
             }
 
-            _mediaSettings.SetAudioPlayoutDevice(SelectedAudioPlayoutDevice);
+            
             if (SelectedAudioPlayoutDevice != null)
             {
-                var localSettings = ApplicationData.Current.LocalSettings;
-                localSettings.Values[nameof(SelectedAudioPlayoutDevice)] = SelectedAudioPlayoutDevice.Id;
+                _mediaSettings.SetAudioPlayoutDevice(SelectedAudioPlayoutDevice);
+                _localSettings.Values[nameof(SelectedAudioPlayoutDevice)] = SelectedAudioPlayoutDevice.Id;
             }
 
             var newList = new List<IceServer>();
