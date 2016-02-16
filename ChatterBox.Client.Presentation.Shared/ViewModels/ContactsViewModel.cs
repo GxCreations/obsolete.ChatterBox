@@ -24,13 +24,14 @@ using ChatterBox.Client.Presentation.Shared.Services;
 
 namespace ChatterBox.Client.Presentation.Shared.ViewModels
 {
-    public sealed class ContactsViewModel : BindableBase
+    public sealed class ContactsViewModel : DispatcherBindableBase
     {
         private readonly Func<ConversationViewModel> _contactFactory;
         private ConversationViewModel _selectedConversation;
+        private bool _showAsParallel;
 
         public ContactsViewModel(IForegroundUpdateService foregroundUpdateService,
-            Func<ConversationViewModel> contactFactory)
+            Func<ConversationViewModel> contactFactory, CoreDispatcher uiDispatcher) :base(uiDispatcher)
         {
             _contactFactory = contactFactory;
             foregroundUpdateService.OnPeerDataUpdated += OnPeerDataUpdated;
@@ -39,24 +40,36 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
             OnPeerDataUpdated();
 
             LayoutService.Instance.LayoutChanged += LayoutChanged;
+            LayoutChanged(LayoutService.Instance.LayoutType);
             ShowSettings = new DelegateCommand(() => OnShowSettings?.Invoke());
         }
 
         public MediaElement RingtoneElement { get; set; }
+        private VoipStateEnum _currentVoipState;
 
         private void OnVoipStateUpdate(VoipState voipState)
         {
-            Task.Run(async () =>
+            RunOnUiThread(async () =>
             {
+                _currentVoipState = voipState.State;
+
                 switch (voipState.State)
                 {
                     case VoipStateEnum.LocalRinging:
                         await PlaySound(true);
+                        ShowAsParallel = false;
+                        UpdateSelection();
                         break;
                     case VoipStateEnum.RemoteRinging:
                         await PlaySound(false);
+                        ShowAsParallel = false;
+                        UpdateSelection();
                         break;
                     case VoipStateEnum.Idle:
+                        await StopSound();
+                        ShowAsParallel = LayoutService.Instance.LayoutType == LayoutType.Parallel;
+                        UpdateSelection();
+                        break;
                     case VoipStateEnum.EstablishOutgoing:
                     case VoipStateEnum.EstablishIncoming:
                         await StopSound();
@@ -68,7 +81,6 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
                         throw new ArgumentOutOfRangeException();
                 }
             });
-
         }
 
 
@@ -135,6 +147,14 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
 
         private void LayoutChanged(LayoutType layout)
         {
+            if (_currentVoipState == VoipStateEnum.Idle)
+            {
+                ShowAsParallel = layout == LayoutType.Parallel;
+            }
+            else
+            {
+                ShowAsParallel = false;
+            }
             UpdateSelection();
         }
 
@@ -203,6 +223,12 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
                 }
             }
             return false;
+        }
+
+        public bool ShowAsParallel
+        {
+            get { return _showAsParallel; }
+            set { SetProperty(ref _showAsParallel, value); }
         }
     }
 }

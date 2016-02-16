@@ -16,6 +16,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Controls\CallState.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Controls\IConversation.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Controls\IInstantMessage.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Converters\BooleanToStyleConverter.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Converters\EqualityToBooleanConverter.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Converters\EqualityToVisibilityConverter.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Converters\BoolToFontWeightConverter.cs" />
