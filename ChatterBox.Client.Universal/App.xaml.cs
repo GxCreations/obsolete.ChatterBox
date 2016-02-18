@@ -36,6 +36,7 @@ using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
 using Windows.ApplicationModel.Background;
 using Windows.ApplicationModel.Core;
+using Windows.UI.Core;
 using Windows.UI.Popups;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -198,9 +199,10 @@ namespace ChatterBox.Client.Universal
             }
         }
 
-        private void App_OnDisconnectedFromHub()
+        private async void App_OnDisconnectedFromHub()
         {
-            // Nothing to do here for now. The work should be done in OnSuspending and OnResuming
+            await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(
+                CoreDispatcherPriority.Normal, ConnectHubClient);
         }
 
         private async void Resume()
@@ -390,7 +392,7 @@ namespace ChatterBox.Client.Universal
             var sessionConnTask = helper.GetTask(nameof(SessionConnectedTask)) ??
                 await helper.RegisterTask(nameof(SessionConnectedTask),
                                           typeof(SessionConnectedTask).FullName,
-                                          new SystemTrigger(SystemTriggerType.SessionConnected, oneShot: false),
+                                          new SystemTrigger(SystemTriggerType.InternetAvailable, oneShot: false),
                                           removeIfRegistered: false);
             return sessionConnTask;
         }
