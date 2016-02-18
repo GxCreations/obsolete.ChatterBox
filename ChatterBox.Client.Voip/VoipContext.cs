@@ -232,14 +232,13 @@ namespace ChatterBox.Client.Common.Communication.Voip
         /// This function must be called after VoipCoordinator.StartVoipTask()
         /// </summary>
         /// <returns></returns>
-        public async Task InitializeRTC()
+        public void InitializeRTC()
         {
             if (Media == null)
             {
                 WebRTC.Initialize(_dispatcher);
                 Media = WebRTCMedia.CreateMedia();
                 WebRTCMedia.SetDisplayOrientation(_displayOrientation);
-                await Media.EnumerateAudioVideoCaptureDevices();
 
                 // Uncomment the following line to enable WebRTC logging.
                 // Logs are:
