@@ -176,11 +176,10 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
                 _localSettings.Values[SelectedFrameRateId] = (SelectedCapFPSItem != null) ? SelectedCapFPSItem.FrameRate : 0;
             }
 
-            _mediaSettings.SetAudioPlayoutDevice(SelectedAudioPlayoutDevice);
             if (SelectedAudioPlayoutDevice != null)
             {
-                var localSettings = ApplicationData.Current.LocalSettings;
-                localSettings.Values[nameof(SelectedAudioPlayoutDevice)] = SelectedAudioPlayoutDevice.Id;
+                _localSettings.Values[nameof(SelectedAudioPlayoutDevice)] = SelectedAudioPlayoutDevice.Id;
+                _mediaSettings.SetAudioPlayoutDevice(SelectedAudioPlayoutDevice);
             }
 
             var newList = new List<IceServer>();
@@ -223,15 +222,16 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
 
             Cameras = new ObservableCollection<MediaDevice>(_mediaSettings.GetVideoCaptureDevices().Devices);
             if (_localSettings.Values[nameof(SelectedCamera)] != null)
+            SelectedCamera = null;
             {
                 var id = (string)_localSettings.Values[nameof(SelectedCamera)];
                 var camera = Cameras.SingleOrDefault(c => c.Id.Equals(id));
                 if (camera != null)
                 {
-                    SelectedCamera = camera;                    
+                    SelectedCamera = camera;
                 }
             }
-            else
+            if (SelectedCamera == null)
             {
                 SelectedCamera = Cameras.FirstOrDefault();
             }
@@ -239,15 +239,16 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
 
             Microphones = new ObservableCollection<MediaDevice>(_mediaSettings.GetAudioCaptureDevices().Devices);
             if (_localSettings.Values[nameof(SelectedMicrophone)] != null)
+            SelectedMicrophone = null;
             {
                 var id = (string)_localSettings.Values[nameof(SelectedMicrophone)];
                 var mic = Microphones.SingleOrDefault(m => m.Id.Equals(id));
                 if (mic != null)
                 {
-                    SelectedMicrophone = mic;                    
+                    SelectedMicrophone = mic;
                 }
             }
-            else
+            if (SelectedMicrophone == null)
             {
                 SelectedMicrophone = Microphones.FirstOrDefault();
             }
@@ -263,6 +264,7 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
                 }
             }
             if (_localSettings.Values[nameof(SelectedAudioCodec)] != null)
+            SelectedAudioCodec = null;
             {
                 var audioCodecId = (int)_localSettings.Values[nameof(SelectedAudioCodec)];
                 var audioCodec = AudioCodecs.SingleOrDefault(a => a.Id.Equals(audioCodecId));
@@ -271,7 +273,7 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
                     SelectedAudioCodec = audioCodec;
                 }
             }
-            else
+            if (SelectedAudioCodec == null)
             {
                 SelectedAudioCodec = AudioCodecs.FirstOrDefault();
             }
@@ -289,6 +291,7 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
             });
             VideoCodecs = new ObservableCollection<CodecInfo>(videoCodecList);
             if (_localSettings.Values[nameof(SelectedVideoCodec)] != null)
+            SelectedVideoCodec = null;
             {
                 var videoCodecId = (int)_localSettings.Values[nameof(SelectedVideoCodec)];
                 var videoCodec = VideoCodecs.SingleOrDefault(v => v.Id.Equals(videoCodecId));
@@ -297,7 +300,7 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
                     SelectedVideoCodec = videoCodec;
                 }
             }
-            else
+            if (SelectedVideoCodec == null)
             {
                 SelectedVideoCodec = VideoCodecs.FirstOrDefault();
             }
@@ -306,6 +309,7 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
             AudioPlayoutDevices = new ObservableCollection<MediaDevice>(_mediaSettings.GetAudioPlayoutDevices().Devices);
             string savedAudioPlayoutDeviceId = null;
             if (_localSettings.Values[nameof(SelectedAudioPlayoutDevice)] != null)
+            SelectedAudioPlayoutDevice = null;
             {
                 savedAudioPlayoutDeviceId = (string)_localSettings.Values[nameof(SelectedAudioPlayoutDevice)];
                 var playoutDevice = AudioPlayoutDevices.SingleOrDefault(a => a.Id.Equals(savedAudioPlayoutDeviceId));
@@ -314,12 +318,11 @@ namespace ChatterBox.Client.Presentation.Shared.ViewModels
                     SelectedAudioPlayoutDevice = playoutDevice;
                 }
             }
-            else
+            if (SelectedAudioPlayoutDevice == null)
             {
                 SelectedAudioPlayoutDevice = AudioPlayoutDevices.FirstOrDefault();
             }
             _mediaSettings.SetAudioPlayoutDevice(SelectedAudioPlayoutDevice);
-
 
             IceServers = new ObservableCollection<IceServerViewModel>(
                 IceServerSettings.IceServers.Select(ices => new IceServerViewModel(ices)));
