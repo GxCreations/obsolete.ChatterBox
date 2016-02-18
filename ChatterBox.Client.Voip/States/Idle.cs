@@ -57,7 +57,7 @@ namespace ChatterBox.Client.Common.Communication.Voip.States
         public override async Task OnLeavingState()
         {
             await Context.VoipCoordinator.StartVoipTask();
-            await Context.InitializeRTC();
+            Context.InitializeRTC();
         }
     }
 }

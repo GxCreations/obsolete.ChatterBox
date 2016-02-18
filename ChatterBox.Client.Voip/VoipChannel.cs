@@ -48,9 +48,8 @@ namespace ChatterBox.Client.Common.Communication.Voip
 
         public void InitializeRTC()
         {
-            Context.WithContextActionAsync(cx =>
-            {
-                return cx.InitializeRTC();
+            Context.WithContextAction(cx => {
+                cx.InitializeRTC();
             }).Wait();
         }
 
