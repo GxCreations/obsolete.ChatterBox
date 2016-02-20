@@ -227,11 +227,11 @@ namespace ChatterBox.Client.Voip.Rtc
                     {
                         foreach (var info in audioCaptureEventList)
                         {
-                            OnAudioCaptureDeviceFound(new MediaDevice(info.DeviceID, info.Label));
+                            OnAudioCaptureDeviceFound(new MediaDevice(info.DeviceId, info.Label));
                         }
                         foreach (var info in videoEventList)
                         {
-                            OnVideoCaptureDeviceFound(new MediaDevice(info.DeviceID, info.Label));
+                            OnVideoCaptureDeviceFound(new MediaDevice(info.DeviceId, info.Label));
                         }
                     });
 
@@ -1581,7 +1581,7 @@ namespace ChatterBox.Client.Voip.Rtc
 
             result.Codecs = new List<RtcRtpCodecParameters>();
             foreach (var codec in caps.Codecs) {result.Codecs.Add(CapabilitiesToParameters(codec));}
-            result.DegradationPreference = RtcDegradationPreference.MaintainBalanced;
+            result.DegradationPreference = RtcDegradationPreference.Balanced;
             result.HeaderExtensions = new List<RtcRtpHeaderExtensionParameters>();
             result.Encodings = new List<RtcRtpEncodingParameters>();
             foreach (var ext in caps.HeaderExtensions) { result.HeaderExtensions.Add(CapabilitiesToParameters(ext)); }
@@ -1717,8 +1717,8 @@ namespace ChatterBox.Client.Voip.Rtc
         public static bool IsMatch(RtcMediaDeviceInfo op1, RtcMediaDeviceInfo op2)
         {
             if (op1.Kind != op2.Kind) return false;
-            if (0 != String.Compare(op1.DeviceID, op2.DeviceID)) return false;
-            if (0 != String.Compare(op1.GroupID, op2.GroupID)) return false;
+            if (0 != String.Compare(op1.DeviceId, op2.DeviceId)) return false;
+            if (0 != String.Compare(op1.GroupId, op2.GroupId)) return false;
             if (0 != String.Compare(op1.Label, op2.Label)) return false;
             return true;
         }
@@ -1741,7 +1741,7 @@ namespace ChatterBox.Client.Voip.Rtc
 
         public static MediaDevice ToMediaDevice(RtcMediaDeviceInfo device)
         {
-            return new MediaDevice(device.DeviceID, device.Label);
+            return new MediaDevice(device.DeviceId, device.Label);
         }
         public static IList<MediaDevice> ToMediaDevices(IList<RtcMediaDeviceInfo> devices)
         {
