@@ -713,13 +713,14 @@ namespace ChatterBox.Client.Voip.Rtc
             {
                 using (var @lock = new AutoLock(_lock))
                 {
+                    var result = _onIceCandidate.AddEventHandler(value);
                     if (!_installedIceEvents)
                     {
                         _iceGatherer.OnICEGathererLocalCandidate += IceGatherer_OnICEGathererLocalCandidate;
                         _iceGatherer.OnICEGathererCandidateComplete += IceGatherer_OnICEGathererCandidateComplete;
                         _iceGatherer.OnICEGathererLocalCandidateGone += IceGatherer_OnICEGathererLocalCandidateGone;
                     }
-                    return _onIceCandidate.AddEventHandler(value);
+                    return result;
                 }
             }
             remove
