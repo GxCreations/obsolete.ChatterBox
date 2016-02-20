@@ -1730,8 +1730,8 @@ namespace ChatterBox.Client.Voip.Rtc
             foreach (var server in configuration.IceServers)
             {
                 var gatherServer = new RtcIceServer();
-                gatherServer.URLs = new List<String>();
-                gatherServer.URLs.Add(server.Url);
+                gatherServer.Urls = new List<String>();
+                gatherServer.Urls.Add(server.Url);
                 gatherServer.UserName = server.Username;
                 options.IceServers.Add(gatherServer);
             }
