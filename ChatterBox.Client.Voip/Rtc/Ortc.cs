@@ -396,8 +396,6 @@ namespace ChatterBox.Client.Voip.Rtc
 
         private bool _installedIceEvents;
 
-        private EventRegistrationTokenTable<RTCPeerConnectionIceEventDelegate> _onIceCandidate = new EventRegistrationTokenTable<RTCPeerConnectionIceEventDelegate>();
-
         private event StepEventHandler OnStep;
 
         /// <summary>
@@ -609,6 +607,14 @@ namespace ChatterBox.Client.Voip.Rtc
             evt.Stream = _remoteStream;
             Task.Run(() => { OnAddStream(evt); });
 
+            if (!_installedIceEvents)
+            {
+                _iceGatherer.OnICEGathererLocalCandidate += IceGatherer_OnICEGathererLocalCandidate;
+                _iceGatherer.OnICEGathererCandidateComplete += IceGatherer_OnICEGathererCandidateComplete;
+                _iceGatherer.OnICEGathererLocalCandidateGone += IceGatherer_OnICEGathererLocalCandidateGone;
+                _installedIceEvents = true;
+            }
+
             // Return to the application that the receving media is ready.
             _capabilitiesFinalTcs.SetResult(_localCapabilitiesFinal);
             _capabilitiesFinalTcs = null;
@@ -724,47 +730,14 @@ namespace ChatterBox.Client.Voip.Rtc
         public event MediaStreamEventEventDelegate OnAddStream;
         public event RTCPeerConnectionHealthStatsDelegate OnConnectionHealthStats;
         //public event RTCDataChannelEventDelegate OnDataChannel;
-        public event RTCPeerConnectionIceEventDelegate OnIceCandidate
-        {
-            add
-            {
-                using (var @lock = new AutoLock(_lock))
-                {
-                    @lock.WaitAsync().Wait();
-                    var result = _onIceCandidate.AddEventHandler(value);
-                    if (!_installedIceEvents)
-                    {
-                        _iceGatherer.OnICEGathererLocalCandidate += IceGatherer_OnICEGathererLocalCandidate;
-                        _iceGatherer.OnICEGathererCandidateComplete += IceGatherer_OnICEGathererCandidateComplete;
-                        _iceGatherer.OnICEGathererLocalCandidateGone += IceGatherer_OnICEGathererLocalCandidateGone;
-                    }
-                    return result;
-                }
-            }
-            remove
-            {
-                using (var @lock = new AutoLock(_lock))
-                {
-                    @lock.WaitAsync().Wait();
-                    _onIceCandidate.RemoveEventHandler(value);
-                }
-            }
-        }
+        public event RTCPeerConnectionIceEventDelegate OnIceCandidate;
 
         private void IceGatherer_OnICEGathererLocalCandidate(RtcIceGathererCandidateEvent evt)
         {
             RTCPeerConnectionIceEvent wrapperEvt = new RTCPeerConnectionIceEvent();
             wrapperEvt.Candidate = evt.Candidate;
 
-            RTCPeerConnectionIceEventDelegate invokeList = null;
-
-            using (var @lock = new AutoLock(_lock))
-            {
-                @lock.WaitAsync().Wait();
-                invokeList = _onIceCandidate.InvocationList;
-            }
-
-            invokeList.Invoke(wrapperEvt);
+            OnIceCandidate(wrapperEvt);
         }
 
         private void IceGatherer_OnICEGathererCandidateComplete(RtcIceGathererCandidateCompleteEvent evt)
@@ -809,6 +782,14 @@ namespace ChatterBox.Client.Voip.Rtc
             using (var @lock = new AutoLock(_lock))
             {
                 @lock.WaitAsync().Wait();
+                if (_installedIceEvents)
+                {
+                    _iceGatherer.OnICEGathererLocalCandidate -= IceGatherer_OnICEGathererLocalCandidate;
+                    _iceGatherer.OnICEGathererCandidateComplete -= IceGatherer_OnICEGathererCandidateComplete;
+                    _iceGatherer.OnICEGathererLocalCandidateGone -= IceGatherer_OnICEGathererLocalCandidateGone;
+                    _installedIceEvents = false;
+                }
+
                 if (null != _dtlsTransport) _dtlsTransport.Stop();
                 if (null != _capabilitiesTcs)
                 {
