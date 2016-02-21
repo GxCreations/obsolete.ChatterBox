@@ -119,6 +119,7 @@ namespace ChatterBox.Client.Voip.Rtc
         {
             using (var @lock = new AutoLock(Singleton._lock))
             {
+                @lock.WaitAsync().Wait();
                 Singleton._tracingHost = host;
                 Singleton._tracingPort = (UInt16)port;
             }
@@ -134,6 +135,7 @@ namespace ChatterBox.Client.Voip.Rtc
         {
             using (var @lock = new AutoLock(Singleton._lock))
             {
+                @lock.WaitAsync().Wait();
                 var port = Singleton._tracingPort;
                 if (0 == port) port = 59999;
 
@@ -161,6 +163,7 @@ namespace ChatterBox.Client.Voip.Rtc
         {
             using (var @lock = new AutoLock(Singleton._lock))
             {
+                @lock.WaitAsync().Wait();
                 RtcLogger.UninstallOutgoingTelnetLogger();
                 RtcLogger.UninstallTelnetLogger();
             }
@@ -197,6 +200,7 @@ namespace ChatterBox.Client.Voip.Rtc
             var media = new Media();
             using (var @lock = new AutoLock(media._lock))
             {
+                @lock.WaitAsync().Wait();
                 media._media = new RtcMediaDevices();
                 media._media.OnDeviceChange += media.Media_OnDeviceChange;
             }
@@ -223,6 +227,7 @@ namespace ChatterBox.Client.Voip.Rtc
 
                 using (var @lock = new AutoLock(_lock))
                 {
+                    @lock.WaitAsync().Wait();
                     Task.Run(() =>
                     {
                         foreach (var info in audioCaptureEventList)
@@ -274,6 +279,7 @@ namespace ChatterBox.Client.Voip.Rtc
 
                 using (var @lock = new AutoLock(_lock))
                 {
+                    @lock.WaitAsync().Wait();
                     _audioCaptureDevices = audioCaptureList;
                     _audioPlaybackDevices = audioPlaybackList;
                     _videoDevices = videoList;
@@ -288,6 +294,7 @@ namespace ChatterBox.Client.Voip.Rtc
             IList<RtcMediaDeviceInfo> result = null;
             using (var @lock = new AutoLock(_lock))
             {
+                @lock.WaitAsync().Wait();
                 result = _audioCaptureDevices;
             }
             return RtcHelper.ToMediaDevices(result);
@@ -296,6 +303,7 @@ namespace ChatterBox.Client.Voip.Rtc
             IList<RtcMediaDeviceInfo> result = null;
             using (var @lock = new AutoLock(_lock))
             {
+                @lock.WaitAsync().Wait();
                 result = _audioPlaybackDevices;
             }
            return RtcHelper.ToMediaDevices(result);
@@ -307,6 +315,7 @@ namespace ChatterBox.Client.Voip.Rtc
             MediaDevice videoDevice = null;
             using (var @lock = new AutoLock(_lock))
             {
+                @lock.WaitAsync().Wait();
                 audioCaptureDevice = _audioCaptureDevice;
                 videoDevice = _videoDevice;
             }
@@ -330,6 +339,7 @@ namespace ChatterBox.Client.Voip.Rtc
             IList<RtcMediaDeviceInfo> result = null;
             using (var @lock = new AutoLock(_lock))
             {
+                @lock.WaitAsync().Wait();
                 result = _videoDevices;
             }
             return RtcHelper.ToMediaDevices(result);
@@ -337,6 +347,7 @@ namespace ChatterBox.Client.Voip.Rtc
         public bool SelectAudioDevice(MediaDevice device) {
             using (var @lock = new AutoLock(_lock))
             {
+                @lock.WaitAsync().Wait();
                 _audioCaptureDevice = device;
             }
             return true;
@@ -345,6 +356,7 @@ namespace ChatterBox.Client.Voip.Rtc
         {
             using (var @lock = new AutoLock(_lock))
             {
+                @lock.WaitAsync().Wait();
                 _audioPlaybackDevice = device;
             }
             return true;
@@ -353,6 +365,7 @@ namespace ChatterBox.Client.Voip.Rtc
         {
             using (var @lock = new AutoLock(_lock))
             {
+                @lock.WaitAsync().Wait();
                 _videoDevice = device;
             }
         }
@@ -402,6 +415,7 @@ namespace ChatterBox.Client.Voip.Rtc
 
             using (var @lock = new AutoLock(_lock))
             {
+                @lock.WaitAsync().Wait();
                 _installedIceEvents = false;
 
                 _iceGatherer = new RtcIceGatherer(options);
@@ -416,6 +430,7 @@ namespace ChatterBox.Client.Voip.Rtc
             {
                 using (var @lock = new AutoLock(_lock))
                 {
+                    @lock.WaitAsync().Wait();
                     // Since the DTLS certificate is ready the RtcDtlsTransport can now be constructed.
                     var certs = new List<RtcCertificate>();
                     certs.Add(cert.Result);
@@ -446,6 +461,7 @@ namespace ChatterBox.Client.Voip.Rtc
         {
             using (var @lock = new AutoLock(_lock))
             {
+                @lock.WaitAsync().Wait();
                 // If the object was closed before the setup event is triggered then abort early.
                 if (_closed)
                 {
@@ -678,6 +694,7 @@ namespace ChatterBox.Client.Voip.Rtc
 
             using (var @lock = new AutoLock(_lock))
             {
+                @lock.WaitAsync().Wait();
                 _audioPlaybackDevice = device;
                 if (null == device) return;
                 if (null == _audioReceiver) return;
@@ -713,6 +730,7 @@ namespace ChatterBox.Client.Voip.Rtc
             {
                 using (var @lock = new AutoLock(_lock))
                 {
+                    @lock.WaitAsync().Wait();
                     var result = _onIceCandidate.AddEventHandler(value);
                     if (!_installedIceEvents)
                     {
@@ -727,6 +745,7 @@ namespace ChatterBox.Client.Voip.Rtc
             {
                 using (var @lock = new AutoLock(_lock))
                 {
+                    @lock.WaitAsync().Wait();
                     _onIceCandidate.RemoveEventHandler(value);
                 }
             }
@@ -741,6 +760,7 @@ namespace ChatterBox.Client.Voip.Rtc
 
             using (var @lock = new AutoLock(_lock))
             {
+                @lock.WaitAsync().Wait();
                 invokeList = _onIceCandidate.InvocationList;
             }
 
@@ -775,6 +795,7 @@ namespace ChatterBox.Client.Voip.Rtc
         {
             using (var @lock = new AutoLock(_lock))
             {
+                @lock.WaitAsync().Wait();
                 _localStream = stream;
             }
             Wake();
@@ -787,6 +808,7 @@ namespace ChatterBox.Client.Voip.Rtc
 
             using (var @lock = new AutoLock(_lock))
             {
+                @lock.WaitAsync().Wait();
                 if (null != _dtlsTransport) _dtlsTransport.Stop();
                 if (null != _capabilitiesTcs)
                 {
@@ -816,6 +838,7 @@ namespace ChatterBox.Client.Voip.Rtc
             var capabilitiesTcs = new TaskCompletionSource<RTCSessionDescription>();
             using (var @lock = new AutoLock(_lock))
             {
+                @lock.WaitAsync().Wait();
                 _iceRole = RtcIceRole.Controlled;
                 _capabilitiesTcs = capabilitiesTcs;
             }
@@ -829,6 +852,7 @@ namespace ChatterBox.Client.Voip.Rtc
             var capabilitiesTcs = new TaskCompletionSource<RTCSessionDescription>();
             using (var @lock = new AutoLock(_lock))
             {
+                @lock.WaitAsync().Wait();
                 _iceRole = RtcIceRole.Controlling;
                 _capabilitiesTcs = capabilitiesTcs;
             }
@@ -845,6 +869,7 @@ namespace ChatterBox.Client.Voip.Rtc
             var capabilitiesFinalTcs = new TaskCompletionSource<RTCSessionDescription>();
             using (var @lock = new AutoLock(_lock))
             {
+                @lock.WaitAsync().Wait();
                 _localCapabilitiesFinal = description;
                 _capabilitiesFinalTcs = capabilitiesFinalTcs;
             }
@@ -856,6 +881,7 @@ namespace ChatterBox.Client.Voip.Rtc
             var remoteCapabilitiesTcs = new TaskCompletionSource<RTCSessionDescription>();
             using (var @lock = new AutoLock(_lock))
             {
+                @lock.WaitAsync().Wait();
                 _remoteCapabilities = description;
                 _remoteCapabilitiesTcs = remoteCapabilitiesTcs;
             }
