@@ -1001,10 +1001,10 @@ namespace ChatterBox.Client.Voip.Rtc
         }
 
         //public void AddTrack(IMediaStreamTrack track) { }
-        public IList<MediaAudioTrack> GetAudioTracks() { if (null == _audioTracks) return null; return new List<MediaAudioTrack>(_audioTracks); }
+        public IList<MediaAudioTrack> GetAudioTracks() { if (null == _audioTracks) return new List<MediaAudioTrack>(); return new List<MediaAudioTrack>(_audioTracks); }
         //public IMediaStreamTrack GetTrackById(string trackId) { return null; }
-        public IList<IMediaStreamTrack> GetTracks() { if (null == _mediaTracks) return null; return new List<IMediaStreamTrack>(_mediaTracks); }
-        public IList<MediaVideoTrack> GetVideoTracks() { if (null == _videoTracks) return null; return new List<MediaVideoTrack>(_videoTracks); }
+        public IList<IMediaStreamTrack> GetTracks() { if (null == _mediaTracks) return new List<IMediaStreamTrack>(); return new List<IMediaStreamTrack>(_mediaTracks); }
+        public IList<MediaVideoTrack> GetVideoTracks() { if (null == _videoTracks) return new List<MediaVideoTrack>(); return new List<MediaVideoTrack>(_videoTracks); }
         //public void RemoveTrack(IMediaStreamTrack track) { }
         public void Stop() { }
     }
