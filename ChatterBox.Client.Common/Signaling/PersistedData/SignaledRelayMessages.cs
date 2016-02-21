@@ -25,12 +25,12 @@ namespace ChatterBox.Client.Common.Signaling.PersistedData
             {
                 return RelayMessageContainer.Containers.Select(s => new RelayMessage
                 {
-                    Id = s.Value.Values[nameof(RelayMessage.Id)].ToString(),
+                    Id = s.Value.Values.GetKeyStringValue(nameof(RelayMessage.Id)),
                     SentDateTimeUtc = (DateTimeOffset) s.Value.Values[nameof(RelayMessage.SentDateTimeUtc)],
-                    FromUserId = s.Value.Values[nameof(RelayMessage.FromUserId)].ToString(),
-                    ToUserId = s.Value.Values[nameof(RelayMessage.ToUserId)].ToString(),
-                    Payload = s.Value.Values[nameof(RelayMessage.Payload)]?.ToString(),
-                    Tag = s.Value.Values[nameof(RelayMessage.Tag)].ToString()
+                    FromUserId = s.Value.Values.GetKeyStringValue(nameof(RelayMessage.FromUserId)),
+                    ToUserId = s.Value.Values.GetKeyStringValue(nameof(RelayMessage.ToUserId)),
+                    Payload = s.Value.Values.GetKeyStringValue(nameof(RelayMessage.Payload)),
+                    Tag = s.Value.Values.GetKeyStringValue(nameof(RelayMessage.Tag))
                 }).ToArray();
             }
         }
