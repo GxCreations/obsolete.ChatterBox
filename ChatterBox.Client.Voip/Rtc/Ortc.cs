@@ -557,6 +557,7 @@ namespace ChatterBox.Client.Voip.Rtc
             _localCapabilities = caps;
 
             tcs = _capabilitiesTcs;
+            _capabilitiesTcs = null;
             result = _localCapabilities;
         }
 
@@ -648,6 +649,7 @@ namespace ChatterBox.Client.Voip.Rtc
             }
 
             tcs = _capabilitiesFinalTcs;
+            _capabilitiesFinalTcs = null;
             result = _localCapabilitiesFinal;
         }
 
@@ -727,6 +729,7 @@ namespace ChatterBox.Client.Voip.Rtc
             }
 
             tcs = _remoteCapabilitiesTcs;
+            _remoteCapabilitiesTcs = null;
             result = _remoteCapabilities;
         }
 
