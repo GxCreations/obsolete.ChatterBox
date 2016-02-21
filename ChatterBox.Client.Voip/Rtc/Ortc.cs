@@ -457,6 +457,13 @@ namespace ChatterBox.Client.Voip.Rtc
         /// </summary>
         private void RTCPeerConnection_OnStep()
         {
+            TaskCompletionSource<RTCSessionDescription> capabilitiesTcs;
+            TaskCompletionSource<RTCSessionDescription> capabilitiesFinalTcs;
+            TaskCompletionSource<RTCSessionDescription> remoteCapabilitiesTcs;
+            RTCSessionDescription capabilitiesTcsResult;
+            RTCSessionDescription capabilitiesFinalTcsResult;
+            RTCSessionDescription remoteCapabilitiesTcsResult;
+
             using (var @lock = new AutoLock(_lock))
             {
                 @lock.WaitAsync().Wait();
@@ -471,9 +478,23 @@ namespace ChatterBox.Client.Voip.Rtc
                 if (null == _dtlsTransport) return;
 
                 // Perform the three main steps to setup the capabilities, and incoming and outgoing media.
-                StepGetCapabilities();
-                StepSetupReceiver();
-                StepSetupSender();
+                StepGetCapabilities(out capabilitiesTcs, out capabilitiesTcsResult);
+                StepSetupReceiver(out capabilitiesFinalTcs, out capabilitiesFinalTcsResult);
+                StepSetupSender(out remoteCapabilitiesTcs, out remoteCapabilitiesTcsResult);
+            }
+
+            // Return the "blob" information asynchronously to the calling application outside the lock.
+            if (null != capabilitiesTcs)
+            {
+                capabilitiesTcs.SetResult(capabilitiesTcsResult);
+            }
+            if (null != capabilitiesFinalTcs)
+            {
+                capabilitiesFinalTcs.SetResult(capabilitiesFinalTcsResult);
+            }
+            if (null != remoteCapabilitiesTcs)
+            {
+                remoteCapabilitiesTcs.SetResult(remoteCapabilitiesTcsResult);
             }
         }
 
@@ -482,8 +503,14 @@ namespace ChatterBox.Client.Voip.Rtc
         /// these capabilities with the remote peer so they can mutually configuring the codecs,
         /// media and RTP parameters necessary to establish an RTC peer session.
         /// </summary>
-        private void StepGetCapabilities()
+        private void StepGetCapabilities(
+            out TaskCompletionSource<RTCSessionDescription> tcs,
+            out RTCSessionDescription result
+            )
         {
+            tcs = null;
+            result = null;
+
             if (null == _capabilitiesTcs) return;
 
             // Obtain basic ICE configuration information like the usernameFragment and password.
@@ -529,9 +556,8 @@ namespace ChatterBox.Client.Voip.Rtc
             // Remember the capabilities for use later when setting up the RtcRtpSenders/RtcRtpReceivers
             _localCapabilities = caps;
 
-            // Return the "blob" information asynchronously to the calling application.
-            _capabilitiesTcs.SetResult(_localCapabilities);
-            _capabilitiesTcs = null;
+            tcs = _capabilitiesTcs;
+            result = _localCapabilities;
         }
 
         /// <summary>
@@ -542,8 +568,14 @@ namespace ChatterBox.Client.Voip.Rtc
         /// settings before commiting to a particular set of media options. This section uses the
         /// final set of parameters specificied by the application to setup incoming media.
         /// </remarks>
-        private void StepSetupReceiver()
+        private void StepSetupReceiver(
+            out TaskCompletionSource<RTCSessionDescription> tcs,
+            out RTCSessionDescription result
+            )
         {
+            tcs = null;
+            result = null;
+
             if (null == _capabilitiesFinalTcs) return;
 
             MediaAudioTrack incomingAudioTrack = null;
@@ -615,9 +647,8 @@ namespace ChatterBox.Client.Voip.Rtc
                 _installedIceEvents = true;
             }
 
-            // Return to the application that the receving media is ready.
-            _capabilitiesFinalTcs.SetResult(_localCapabilitiesFinal);
-            _capabilitiesFinalTcs = null;
+            tcs = _capabilitiesFinalTcs;
+            result = _localCapabilitiesFinal;
         }
 
         /// <summary>
@@ -628,8 +659,14 @@ namespace ChatterBox.Client.Voip.Rtc
         /// settings before commiting to a particular set of media options. This section uses the
         /// final set of parameters specificied by the application to setup outgoing media.
         /// </remarks>
-        private void StepSetupSender()
+        private void StepSetupSender(
+            out TaskCompletionSource<RTCSessionDescription> tcs,
+            out RTCSessionDescription result
+            )
         {
+            tcs = null;
+            result = null;
+
             // Only setup the sender information if all the information is ready and the remote
             // peer's capabilities are known.
             if (null == _remoteCapabilitiesTcs) return;
@@ -689,9 +726,8 @@ namespace ChatterBox.Client.Voip.Rtc
                 }
             }
 
-            // Return to the application that the sender media is ready.
-            _remoteCapabilitiesTcs.SetResult(_remoteCapabilities);
-            _remoteCapabilitiesTcs = null;
+            tcs = _remoteCapabilitiesTcs;
+            result = _remoteCapabilities;
         }
 
         public void SelectAudioPlayoutDevice(MediaDevice device)
@@ -779,6 +815,10 @@ namespace ChatterBox.Client.Voip.Rtc
             _iceGatherer.Close();
             _iceTransport.Stop();
 
+            TaskCompletionSource<RTCSessionDescription> capabilitiesTcs;
+            TaskCompletionSource<RTCSessionDescription> capabilitiesFinalTcs;
+            TaskCompletionSource<RTCSessionDescription> remoteCapabilitiesTcs;
+
             using (var @lock = new AutoLock(_lock))
             {
                 @lock.WaitAsync().Wait();
@@ -791,26 +831,28 @@ namespace ChatterBox.Client.Voip.Rtc
                 }
 
                 if (null != _dtlsTransport) _dtlsTransport.Stop();
-                if (null != _capabilitiesTcs)
-                {
-                    _capabilitiesTcs.SetResult(null);
-                    _capabilitiesTcs = null;
-                }
-                if (null != _capabilitiesFinalTcs)
-                {
-                    _capabilitiesFinalTcs.SetResult(null);
-                    _capabilitiesFinalTcs = null;
-                }
-                if (null != _remoteCapabilitiesTcs)
-                {
-                    _remoteCapabilitiesTcs.SetResult(null);
-                    _remoteCapabilitiesTcs = null;
-                }
+
+                capabilitiesTcs = _capabilitiesTcs;
+                capabilitiesFinalTcs = _capabilitiesFinalTcs;
+                remoteCapabilitiesTcs = _remoteCapabilitiesTcs;
                 if (null != _remoteStream) { _remoteStream.Stop(); }
                 if (null != _audioSender) { _audioSender.Stop(); }
                 if (null != _videoSender) { _videoSender.Stop(); }
                 if (null != _audioReceiver) { _audioReceiver.Stop(); }
                 if (null != _videoReceiver) { _videoReceiver.Stop(); }
+            }
+
+            if (null != capabilitiesTcs)
+            {
+                capabilitiesTcs.SetResult(null);
+            }
+            if (null != capabilitiesFinalTcs)
+            {
+                capabilitiesFinalTcs.SetResult(null);
+            }
+            if (null != remoteCapabilitiesTcs)
+            {
+                remoteCapabilitiesTcs.SetResult(null);
             }
         }
 
