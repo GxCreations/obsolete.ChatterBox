@@ -459,10 +459,8 @@ namespace ChatterBox.Client.Voip.Rtc
         {
             TaskCompletionSource<RTCSessionDescription> capabilitiesTcs;
             TaskCompletionSource<RTCSessionDescription> capabilitiesFinalTcs;
-            TaskCompletionSource<RTCSessionDescription> remoteCapabilitiesTcs;
             RTCSessionDescription capabilitiesTcsResult;
             RTCSessionDescription capabilitiesFinalTcsResult;
-            RTCSessionDescription remoteCapabilitiesTcsResult;
 
             using (var @lock = new AutoLock(_lock))
             {
@@ -480,7 +478,7 @@ namespace ChatterBox.Client.Voip.Rtc
                 // Perform the three main steps to setup the capabilities, and incoming and outgoing media.
                 StepGetCapabilities(out capabilitiesTcs, out capabilitiesTcsResult);
                 StepSetupReceiver(out capabilitiesFinalTcs, out capabilitiesFinalTcsResult);
-                StepSetupSender(out remoteCapabilitiesTcs, out remoteCapabilitiesTcsResult);
+                StepSetupSender();
             }
 
             // Return the "blob" information asynchronously to the calling application outside the lock.
@@ -491,10 +489,6 @@ namespace ChatterBox.Client.Voip.Rtc
             if (null != capabilitiesFinalTcs)
             {
                 capabilitiesFinalTcs.SetResult(capabilitiesFinalTcsResult);
-            }
-            if (null != remoteCapabilitiesTcs)
-            {
-                remoteCapabilitiesTcs.SetResult(remoteCapabilitiesTcsResult);
             }
         }
 
@@ -661,14 +655,8 @@ namespace ChatterBox.Client.Voip.Rtc
         /// settings before commiting to a particular set of media options. This section uses the
         /// final set of parameters specificied by the application to setup outgoing media.
         /// </remarks>
-        private void StepSetupSender(
-            out TaskCompletionSource<RTCSessionDescription> tcs,
-            out RTCSessionDescription result
-            )
+        private void StepSetupSender()
         {
-            tcs = null;
-            result = null;
-
             // Only setup the sender information if all the information is ready and the remote
             // peer's capabilities are known.
             if (null == _remoteCapabilitiesTcs) return;
@@ -728,9 +716,7 @@ namespace ChatterBox.Client.Voip.Rtc
                 }
             }
 
-            tcs = _remoteCapabilitiesTcs;
             _remoteCapabilitiesTcs = null;
-            result = _remoteCapabilities;
         }
 
         public void SelectAudioPlayoutDevice(MediaDevice device)
@@ -820,7 +806,6 @@ namespace ChatterBox.Client.Voip.Rtc
 
             TaskCompletionSource<RTCSessionDescription> capabilitiesTcs;
             TaskCompletionSource<RTCSessionDescription> capabilitiesFinalTcs;
-            TaskCompletionSource<RTCSessionDescription> remoteCapabilitiesTcs;
 
             using (var @lock = new AutoLock(_lock))
             {
@@ -837,7 +822,6 @@ namespace ChatterBox.Client.Voip.Rtc
 
                 capabilitiesTcs = _capabilitiesTcs;
                 capabilitiesFinalTcs = _capabilitiesFinalTcs;
-                remoteCapabilitiesTcs = _remoteCapabilitiesTcs;
                 if (null != _remoteStream) { _remoteStream.Stop(); }
                 if (null != _audioSender) { _audioSender.Stop(); }
                 if (null != _videoSender) { _videoSender.Stop(); }
@@ -852,10 +836,6 @@ namespace ChatterBox.Client.Voip.Rtc
             if (null != capabilitiesFinalTcs)
             {
                 capabilitiesFinalTcs.SetResult(null);
-            }
-            if (null != remoteCapabilitiesTcs)
-            {
-                remoteCapabilitiesTcs.SetResult(null);
             }
         }
 
@@ -912,7 +892,10 @@ namespace ChatterBox.Client.Voip.Rtc
                 _remoteCapabilitiesTcs = remoteCapabilitiesTcs;
             }
             Wake();
-            return remoteCapabilitiesTcs.Task.AsAsyncAction();
+
+            var result = remoteCapabilitiesTcs.Task.AsAsyncAction();
+            remoteCapabilitiesTcs.SetResult(description);
+            return result;
         }
         //public void ToggleConnectionHealthStats(bool enable) { }
         //public void ToggleETWStats(bool enable) { }
