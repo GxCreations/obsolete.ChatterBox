@@ -1816,6 +1816,8 @@ namespace ChatterBox.Client.Voip.Rtc
             constraintSet.DeviceId.Parameters = new RtcConstrainStringParameters();
             constraintSet.DeviceId.Parameters.Exact = new RtcStringOrStringList();
             constraintSet.DeviceId.Parameters.Exact.Value = device.Id;
+            constraintSet.DeviceId.Value = new RtcStringOrStringList();
+            constraintSet.DeviceId.Value.Value = device.Id;
             trackConstraints.Advanced.Add(constraintSet);
 
             switch (kind)
