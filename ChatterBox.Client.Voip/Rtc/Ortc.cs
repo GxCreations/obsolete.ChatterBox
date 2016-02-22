@@ -1621,7 +1621,7 @@ namespace ChatterBox.Client.Voip.Rtc
             result.HeaderExtensions = new List<RtcRtpHeaderExtensionParameters>();
             result.Encodings = new List<RtcRtpEncodingParameters>();
             foreach (var ext in caps.HeaderExtensions) { result.HeaderExtensions.Add(CapabilitiesToParameters(ext)); }
-            result.MuxId = muxId;
+            //result.MuxId = muxId;
             result.Rtcp = new RtcRtcpParameters();
             result.Rtcp.Mux = true;
             result.Rtcp.ReducedSize = true;
