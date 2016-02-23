@@ -1835,7 +1835,7 @@ namespace ChatterBox.Client.Voip.Rtc
             )
         {
             if (null == device) return null;
-            foreach (var track in tracks) { if (track.DeviceId != device.Id) return track; }
+            foreach (var track in tracks) { if (track.DeviceId == device.Id) return track; }
             return null;
         }
 
