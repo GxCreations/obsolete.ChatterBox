@@ -249,14 +249,15 @@ namespace ChatterBox.Client.Voip.Rtc
         }
 
         //public static IAsyncOperation<Media> CreateMediaAsync() { return null; }
+
         public static void OnAppSuspending()
         {
-#warning TODO IMPLEMENT OnAppSuspending
+            RtcMediaDevices.OnAppSuspending();
         }
 
         public static void SetDisplayOrientation(DisplayOrientations display_orientation)
         {
-#warning TODO IMPLEMENT SetDisplayOrientation
+            RtcMediaDevices.SetDisplayOrientation(display_orientation);
         }
 
         public IMediaSource CreateMediaSource(MediaVideoTrack track, string id)
