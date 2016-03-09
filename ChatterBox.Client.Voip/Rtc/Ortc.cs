@@ -1620,8 +1620,12 @@ namespace ChatterBox.Client.Voip.Rtc
             foreach (var codec in caps.Codecs) {result.Codecs.Add(CapabilitiesToParameters(codec));}
             result.DegradationPreference = RtcDegradationPreference.Balanced;
             result.HeaderExtensions = new List<RtcRtpHeaderExtensionParameters>();
+            foreach (var ext in caps.HeaderExtensions) {
+                if (ext.Uri.Equals("http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions"))
+                    continue;
+                result.HeaderExtensions.Add(CapabilitiesToParameters(ext));
+            }
             result.Encodings = new List<RtcRtpEncodingParameters>();
-            //foreach (var ext in caps.HeaderExtensions) { result.HeaderExtensions.Add(CapabilitiesToParameters(ext)); }
             //result.MuxId = muxId;
             result.Rtcp = new RtcRtcpParameters();
             result.Rtcp.Mux = true;
