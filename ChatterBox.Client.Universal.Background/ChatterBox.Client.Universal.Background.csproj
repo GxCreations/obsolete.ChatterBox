@@ -105,9 +105,9 @@
     <Compile Include="Voip\VoipCoordinator.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\winrt\projects\api\ortc-winrt-api\ortc-winrt-api\ortc-winrt-api.vcxproj">
+    <ProjectReference Include="..\..\..\winrt\projects\api\org.ortc\org.ortc\org.ortc.vcxproj">
       <Project>{f12c67f3-12a0-4532-bdde-4be043dbc140}</Project>
-      <Name>ortc-winrt-api</Name>
+      <Name>org.ortc</Name>
     </ProjectReference>
     <ProjectReference Include="..\BackgroundHost\BackgroundHost.vcxproj">
       <Project>{4497e847-8611-4545-bdbe-ce9744c7013c}</Project>
