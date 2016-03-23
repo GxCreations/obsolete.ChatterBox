@@ -71,6 +71,7 @@ namespace ChatterBox.Client.Voip.Rtc
     using RtcRtpCodecCapability = org.ortc.RTCRtpCodecCapability;
     using RtcRtpHeaderExtension = org.ortc.RTCRtpHeaderExtension;
     using RtcSettings = org.ortc.Settings;
+    using MediaStreamTrackKind = org.ortc.MediaStreamTrackKind;
 
     internal delegate void OnMediaCaptureDeviceFoundDelegate(MediaDevice param);
     internal delegate void RTCPeerConnectionIceEventDelegate(RTCPeerConnectionIceEvent param);
@@ -589,7 +590,7 @@ namespace ChatterBox.Client.Voip.Rtc
             // If audio is desired then setup the incoming audio RTP receiver
             if (hasAudio)
             {
-                _audioReceiver = new RtcRtpReceiver(_dtlsTransport);
+                _audioReceiver = new RtcRtpReceiver(MediaStreamTrackKind.Audio, _dtlsTransport);
 
                 // Given the local capabilities offered setup a receiver by converting the capabilities
                 // offered into settings needed to configure the receiver using the helper routine and
@@ -602,7 +603,7 @@ namespace ChatterBox.Client.Voip.Rtc
             // If video is desired then setup the incoming audio RTP receiver
             if (hasVideo)
             {
-                _videoReceiver = new RtcRtpReceiver(_dtlsTransport);
+                _videoReceiver = new RtcRtpReceiver(MediaStreamTrackKind.Video, _dtlsTransport);
 
                 // Given the local capabilities offered setup a receiver by converting the capabilities
                 // offered into settings needed to configure the receiver using the helper routine and
