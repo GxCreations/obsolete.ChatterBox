@@ -105,17 +105,9 @@
     <Compile Include="Voip\VoipCoordinator.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\winrt\projects\api\ortc-winrt-api\ortc-winrt-api.Windows.Universal\ortc-winrt-api.Windows.Universal.vcxproj" Condition="'$(Platform)'=='x86'">
+    <ProjectReference Include="..\..\..\winrt\projects\api\org.ortc\org.ortc\org.ortc.vcxproj">
       <Project>{f12c67f3-12a0-4532-bdde-4be043dbc140}</Project>
-      <Name>ortc-winrt-api.Windows.Universal</Name>
-    </ProjectReference>
-	<ProjectReference Include="..\..\..\winrt\projects\api\ortc-winrt-api\ortc-winrt-api.Windows.x64.Universal\ortc-winrt-api.Windows.x64.Universal.vcxproj" Condition="'$(Platform)'=='x64'">
-      <Project>{d3ad5a6e-2f77-4c74-8143-910280426f85}</Project>
-      <Name>ortc-winrt-api.Windows.x64.Universal</Name>
-    </ProjectReference>
-	<ProjectReference Include="..\..\..\winrt\projects\api\ortc-winrt-api\ortc-winrt-api.Windows.ARM.Universal\ortc-winrt-api.Windows.ARM.Universal.vcxproj" Condition="'$(Platform)'=='ARM'">
-      <Project>{f12c67f3-12a0-4532-bdde-4be043dbc140}</Project>
-      <Name>ortc-winrt-api.Windows.ARM.Universal</Name>
+      <Name>org.ortc</Name>
     </ProjectReference>
     <ProjectReference Include="..\BackgroundHost\BackgroundHost.vcxproj">
       <Project>{4497e847-8611-4545-bdbe-ce9744c7013c}</Project>

@@ -22,7 +22,7 @@ using RtcMediaStream = webrtc_winrt_api.MediaStream;
 using RtcIceCandidate = webrtc_winrt_api.RTCIceCandidate;
 #elif USE_ORTC_API
 using RtcMediaStream = ChatterBox.Client.Voip.Rtc.MediaStream;
-using RtcIceCandidate = ortc_winrt_api.RTCIceCandidate;
+using RtcIceCandidate = org.ortc.RTCIceCandidate;
 #endif //USE_WEBRTC_API
 
 #pragma warning disable 1998
