@@ -38,7 +38,7 @@ namespace ChatterBox.Client.Voip.Rtc
     using RtcMediaDevices = org.ortc.MediaDevices;
     using RtcMediaDeviceInfo = org.ortc.MediaDeviceInfo;
     using RtcMediaDeviceKind = org.ortc.MediaDeviceKind;
-    using RtcConstraints = org.ortc.Constraints;
+    using RtcConstraints = org.ortc.MediaStreamConstraints;
     using RtcMediaTrackConstraints = org.ortc.MediaTrackConstraints;
     using RtcMediaTrackConstraintSet = org.ortc.MediaTrackConstraintSet;
     using RtcConstrainString = org.ortc.ConstrainString;
@@ -224,7 +224,7 @@ namespace ChatterBox.Client.Voip.Rtc
 
                 List<RtcMediaDeviceInfo> videoEventList;
                 List<RtcMediaDeviceInfo> videoReplacementList;
-                RtcHelper.CalculateDeltas(RtcMediaDeviceKind.Video, _videoDevices, devices, out videoEventList, out videoReplacementList);
+                RtcHelper.CalculateDeltas(RtcMediaDeviceKind.VideoInput, _videoDevices, devices, out videoEventList, out videoReplacementList);
 
                 using (var @lock = new AutoLock(_lock))
                 {
@@ -277,7 +277,7 @@ namespace ChatterBox.Client.Voip.Rtc
 
                 var audioCaptureList = RtcHelper.Filter(RtcMediaDeviceKind.AudioInput, devices);
                 var audioPlaybackList = RtcHelper.Filter(RtcMediaDeviceKind.AudioOutput, devices);
-                var videoList = RtcHelper.Filter(RtcMediaDeviceKind.Video, devices);
+                var videoList = RtcHelper.Filter(RtcMediaDeviceKind.VideoInput, devices);
 
                 using (var @lock = new AutoLock(_lock))
                 {
@@ -325,7 +325,7 @@ namespace ChatterBox.Client.Voip.Rtc
             return Task.Run<MediaStream>(async () =>
             {
                 var constraints = RtcHelper.MakeConstraints(mediaStreamConstraints.audioEnabled, null, RtcMediaDeviceKind.AudioInput, audioCaptureDevice);
-                constraints = RtcHelper.MakeConstraints(mediaStreamConstraints.videoEnabled, constraints, RtcMediaDeviceKind.Video, videoDevice);
+                constraints = RtcHelper.MakeConstraints(mediaStreamConstraints.videoEnabled, constraints, RtcMediaDeviceKind.VideoInput, videoDevice);
 
                 if (null == constraints) { return new MediaStream(); }
 
@@ -1818,7 +1818,7 @@ namespace ChatterBox.Client.Voip.Rtc
             {
                 case RtcMediaDeviceKind.AudioInput: trackConstraints = existingConstraints.Audio; break;
                 case RtcMediaDeviceKind.AudioOutput: trackConstraints = existingConstraints.Audio; break;
-                case RtcMediaDeviceKind.Video: trackConstraints = existingConstraints.Video; break;
+                case RtcMediaDeviceKind.VideoInput: trackConstraints = existingConstraints.Video; break;
             }
             if (null == trackConstraints) trackConstraints = new RtcMediaTrackConstraints();
 
@@ -1837,7 +1837,7 @@ namespace ChatterBox.Client.Voip.Rtc
             {
                 case RtcMediaDeviceKind.AudioInput: existingConstraints.Audio = trackConstraints; break;
                 case RtcMediaDeviceKind.AudioOutput: existingConstraints.Audio = trackConstraints; break;
-                case RtcMediaDeviceKind.Video: existingConstraints.Video = trackConstraints; break;
+                case RtcMediaDeviceKind.VideoInput: existingConstraints.Video = trackConstraints; break;
             }
             return existingConstraints;
         }
