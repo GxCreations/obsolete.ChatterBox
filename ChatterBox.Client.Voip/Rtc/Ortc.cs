@@ -638,9 +638,9 @@ namespace ChatterBox.Client.Voip.Rtc
 
             if (!_installedIceEvents)
             {
-                _iceGatherer.OnICEGathererLocalCandidate += IceGatherer_OnICEGathererLocalCandidate;
-                _iceGatherer.OnICEGathererCandidateComplete += IceGatherer_OnICEGathererCandidateComplete;
-                _iceGatherer.OnICEGathererLocalCandidateGone += IceGatherer_OnICEGathererLocalCandidateGone;
+                _iceGatherer.OnLocalCandidate += IceGatherer_OnICEGathererLocalCandidate;
+                _iceGatherer.OnLocalCandidateComplete += IceGatherer_OnICEGathererCandidateComplete;
+                _iceGatherer.OnLocalCandidateGone += IceGatherer_OnICEGathererLocalCandidateGone;
                 _installedIceEvents = true;
             }
 
@@ -814,9 +814,9 @@ namespace ChatterBox.Client.Voip.Rtc
                 @lock.WaitAsync().Wait();
                 if (_installedIceEvents)
                 {
-                    _iceGatherer.OnICEGathererLocalCandidate -= IceGatherer_OnICEGathererLocalCandidate;
-                    _iceGatherer.OnICEGathererCandidateComplete -= IceGatherer_OnICEGathererCandidateComplete;
-                    _iceGatherer.OnICEGathererLocalCandidateGone -= IceGatherer_OnICEGathererLocalCandidateGone;
+                    _iceGatherer.OnLocalCandidate -= IceGatherer_OnICEGathererLocalCandidate;
+                    _iceGatherer.OnLocalCandidateComplete -= IceGatherer_OnICEGathererCandidateComplete;
+                    _iceGatherer.OnLocalCandidateGone -= IceGatherer_OnICEGathererLocalCandidateGone;
                     _installedIceEvents = false;
                 }
 
