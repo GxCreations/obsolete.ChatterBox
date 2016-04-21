@@ -57,7 +57,6 @@ namespace ChatterBox.Client.Voip.Rtc
     using RtcIceParameters = org.ortc.RTCIceParameters;
     using RtcRtpCapabilities = org.ortc.RTCRtpCapabilities;
     using RtcIceRole = org.ortc.RTCIceRole;
-    using RtcIceTypes = org.ortc.RTCIceTypes;
     using RtcRtpParameters = org.ortc.RTCRtpParameters;
     using RtcRtpCodecParameters = org.ortc.RTCRtpCodecParameters;
     using RtcDegradationPreference = org.ortc.RTCDegradationPreference;
@@ -1130,7 +1129,7 @@ namespace ChatterBox.Client.Voip.Rtc
         {
             HasAudio = description.HasAudio;
             HasVideo = description.HasVideo;
-            IceRole = RtcIceTypes.ToString(description.IceRole);
+            IceRole = description.IceRole.ToString();
             IceParameters = description.IceParameters.ToJsonString();
             AudioSenderCapabilities = description.AudioSenderCapabilities.ToJsonString();
             VideoSenderCapabilities = description.VideoSenderCapabilities.ToJsonString();
@@ -1196,7 +1195,7 @@ namespace ChatterBox.Client.Voip.Rtc
         {
             HasAudio = description.HasAudio;
             HasVideo = description.HasVideo;
-            IceRole = RtcIceTypes.ToRole(description.IceRole);
+            IceRole = (RtcIceRole)Enum.Parse(typeof(RtcIceRole), description.IceRole);
             IceParameters = RtcIceParameters.FromJsonString(description.IceParameters);
             AudioSenderCapabilities = RtcRtpCapabilities.FromJsonString(description.AudioSenderCapabilities);
             VideoSenderCapabilities = RtcRtpCapabilities.FromJsonString(description.VideoSenderCapabilities);

@@ -56,16 +56,16 @@ namespace ChatterBox.Client.Voip
                 SdpMid = obj.SdpMid,
                 SdpMLineIndex = obj.SdpMLineIndex
 #elif USE_ORTC_API
-                CandidateType = org.ortc.RTCIceTypes.ToCandidateType(obj.CandidateType),
+                CandidateType = (org.ortc.RTCIceCandidateType)System.Enum.Parse(typeof(org.ortc.RTCIceCandidateType), obj.CandidateType),
                 Foundation = obj.Foundation,
                 InterfaceType = obj.InterfaceType,
                 Ip = obj.Ip,
                 Port = obj.Port,
                 Priority = obj.Priority,
-                Protocol = org.ortc.RTCIceTypes.ToProtocol(obj.Protocol),
+                Protocol = (org.ortc.RTCIceProtocol)System.Enum.Parse(typeof(org.ortc.RTCIceProtocol), obj.Protocol),
                 RelatedAddress = obj.RelatedAddress,
                 RelatedPort = obj.RelatedPort,
-                TcpType = org.ortc.RTCIceTypes.ToTcpCandidateType(obj.TcpType),
+                TcpType = (org.ortc.RTCIceTcpCandidateType)System.Enum.Parse(typeof(org.ortc.RTCIceTcpCandidateType), obj.TcpType),
                 UnfreezePriority = obj.UnfreezePriority
 #endif //USE_WEBRTC_API
             };
@@ -80,16 +80,16 @@ namespace ChatterBox.Client.Voip
                 SdpMid = obj.SdpMid,
                 SdpMLineIndex = obj.SdpMLineIndex
 #elif USE_ORTC_API
-                CandidateType = org.ortc.RTCIceTypes.ToString(obj.CandidateType),
+                CandidateType = obj.CandidateType.ToString(),
                 Foundation = obj.Foundation,
                 InterfaceType = obj.InterfaceType,
                 Ip = obj.Ip,
                 Port = obj.Port,
                 Priority = obj.Priority,
-                Protocol = org.ortc.RTCIceTypes.ToString(obj.Protocol),
+                Protocol = obj.Protocol.ToString(),
                 RelatedAddress = obj.RelatedAddress,
                 RelatedPort = obj.RelatedPort,
-                TcpType = org.ortc.RTCIceTypes.ToString(obj.TcpType),
+                TcpType = obj.TcpType.ToString(),
                 UnfreezePriority = obj.UnfreezePriority
 #endif //USE_WEBRTC_API
             };
