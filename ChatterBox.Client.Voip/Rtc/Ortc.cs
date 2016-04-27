@@ -201,7 +201,7 @@ namespace ChatterBox.Client.Voip.Rtc
             using (var @lock = new AutoLock(media._lock))
             {
                 @lock.WaitAsync().Wait();
-                media._media = new RtcMediaDevices();
+                media._media = RtcMediaDevices.Singleton;
                 media._media.OnDeviceChange += media.Media_OnDeviceChange;
             }
             return media;
